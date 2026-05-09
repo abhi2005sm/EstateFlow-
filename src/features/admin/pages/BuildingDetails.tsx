@@ -4,7 +4,7 @@ import Link from 'next/link';
 import BuildingDetailsTable from '../components/BuildingDetailsTable';
 import { buildingsData } from '../../../mock/buildingsData';
 import { tenantsData } from '../../../mock/tenantsData';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Mail } from 'lucide-react';
 
 export default function BuildingDetails({ buildingId }: { buildingId: string }) {
   const building = buildingsData.find(b => b.id === buildingId);
@@ -14,6 +14,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    email: '',
     floorNumber: '',
     rentAmount: ''
   });
@@ -31,7 +32,22 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
     e.preventDefault();
     alert(`Tenant "${formData.name}" added successfully!`);
     setIsModalOpen(false);
-    setFormData({ name: '', phone: '', floorNumber: '', rentAmount: '' });
+    setFormData({ name: '', phone: '', email: '', floorNumber: '', rentAmount: '' });
+  };
+
+  const handleSendAllReminders = () => {
+    const unpaidTenants = tenants.filter(t => t.rentStatus === 'Unpaid');
+    if (unpaidTenants.length === 0) {
+      alert("All tenants have paid their rent!");
+      return;
+    }
+
+    const emails = unpaidTenants.map(t => t.email).join(',');
+    const subject = encodeURIComponent(`Rent Payment Reminder - ${building.name}`);
+    const body = encodeURIComponent(`Hi everyone,\n\nThis is a collective reminder to please check your rent status for ${building.name}. Our records show that payment is currently outstanding.\n\nPlease clear your dues at your earliest convenience.\n\nThank you!`);
+    
+    // Using BCC so tenants don't see each others' emails
+    window.location.href = `mailto:?bcc=${emails}&subject=${subject}&body=${body}`;
   };
 
   return (
@@ -65,13 +81,22 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-8">
         <h2 className="text-xl font-bold text-gray-900">Tenant List</h2>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-colors shadow-sm w-fit"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Tenant</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleSendAllReminders}
+            className="flex items-center space-x-2 bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl font-medium transition-colors shadow-sm w-fit"
+          >
+            <Mail className="w-5 h-5" />
+            <span>Send All Reminders</span>
+          </button>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-colors shadow-sm w-fit"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Tenant</span>
+          </button>
+        </div>
       </div>
       
       <BuildingDetailsTable tenants={tenants} />
@@ -112,6 +137,18 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
                   onChange={e => setFormData({...formData, phone: e.target.value})} 
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400" 
                   placeholder="e.g. +1 555-0123" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                <input 
+                  required 
+                  type="email" 
+                  value={formData.email} 
+                  onChange={e => setFormData({...formData, email: e.target.value})} 
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400" 
+                  placeholder="e.g. john@example.com" 
                 />
               </div>
 

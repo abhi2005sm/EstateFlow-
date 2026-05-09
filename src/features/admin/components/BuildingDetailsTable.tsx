@@ -1,5 +1,13 @@
+import { Mail } from 'lucide-react';
+
 export default function BuildingDetailsTable({ tenants }: { tenants: any[] }) {
   if(!tenants || tenants.length === 0) return <div className="p-8 text-center text-gray-500 bg-white rounded-xl border border-gray-100 mt-6">No tenants found for this building.</div>
+
+  const handleSendReminder = (t: any) => {
+    const subject = encodeURIComponent(`Rent Payment Reminder - Floor ${t.floorNumber}`);
+    const body = encodeURIComponent(`Hi ${t.name},\n\nThis is a friendly reminder to pay your rent for Floor ${t.floorNumber}.\n\nDetails:\n- Rent Amount: $${t.rentAmount.toLocaleString()}\n- Due Amount: $${t.dueAmount.toLocaleString()}\n\nPlease make the payment at your earliest convenience.\n\nThank you!`);
+    window.location.href = `mailto:${t.email}?subject=${subject}&body=${body}`;
+  };
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mt-6">
@@ -14,6 +22,7 @@ export default function BuildingDetailsTable({ tenants }: { tenants: any[] }) {
               <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Rent Amount</th>
               <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Rent Status</th>
               <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Due Amount</th>
+              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs text-center">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -33,7 +42,17 @@ export default function BuildingDetailsTable({ tenants }: { tenants: any[] }) {
                   </span>
                 </td>
                 <td className={`px-6 py-4 font-bold ${t.dueAmount > 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                  ${t.dueAmount > 0 ? `$${t.dueAmount.toLocaleString()}` : '-'}
+                  {t.dueAmount > 0 ? `$${t.dueAmount.toLocaleString()}` : '-'}
+                </td>
+                <td className="px-6 py-4 text-center">
+                  {t.rentStatus === 'Unpaid' && (
+                    <button 
+                      onClick={() => handleSendReminder(t)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors title='Send Reminder'"
+                    >
+                      <Mail className="w-5 h-5" />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
