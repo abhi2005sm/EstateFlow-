@@ -1,64 +1,188 @@
-import { Mail } from 'lucide-react';
+import { Mail, MoreHorizontal, Phone, ExternalLink, Edit2, Trash2, Home, Users as UsersIcon, ChevronDown, Edit3, Trash } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-export default function BuildingDetailsTable({ tenants }: { tenants: any[] }) {
-  if(!tenants || tenants.length === 0) return <div className="p-8 text-center text-gray-500 bg-white rounded-xl border border-gray-100 mt-6">No tenants found for this building.</div>
+interface Tenant {
+  id: string;
+  name: string;
+  floorNumber: number;
+  houseNumber?: string;
+  phone: string;
+  email: string;
+  rentAmount: number;
+  rentStatus: string;
+  dueAmount: number;
+  moveInDate: string;
+  members: number;
+  complainRate: number;
+}
 
-  const handleSendReminder = (t: any) => {
-    const subject = encodeURIComponent(`Rent Payment Reminder - Floor ${t.floorNumber}`);
-    const body = encodeURIComponent(`Hi ${t.name},\n\nThis is a friendly reminder to pay your rent for Floor ${t.floorNumber}.\n\nDetails:\n- Rent Amount: $${t.rentAmount.toLocaleString()}\n- Due Amount: $${t.dueAmount.toLocaleString()}\n\nPlease make the payment at your earliest convenience.\n\nThank you!`);
-    window.location.href = `mailto:${t.email}?subject=${subject}&body=${body}`;
+export default function BuildingDetailsTable({ tenants }: { tenants: Tenant[] }) {
+  if (!tenants || tenants.length === 0) {
+    return (
+      <div className="p-20 text-center flex flex-col items-center justify-center">
+        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 text-gray-300">
+          <SearchIcon className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900">No units found</h3>
+        <p className="text-gray-500 max-w-xs mx-auto text-sm">Try adjusting your filters or search terms to find what you're looking for.</p>
+      </div>
+    );
+  }
+
+  // Group tenants by floor
+  const floors = tenants.reduce((acc, tenant) => {
+    const floor = tenant.floorNumber;
+    if (!acc[floor]) {
+      acc[floor] = [];
+    }
+    acc[floor].push(tenant);
+    return acc;
+  }, {} as Record<number, Tenant[]>);
+
+  const getStatusStyles = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'paid':
+        return {
+          bg: 'bg-[#ECFDF5]',
+          text: 'text-[#059669]',
+          dot: 'bg-[#10B981]'
+        };
+      case 'unpaid':
+        return {
+          bg: 'bg-[#FEF2F2]',
+          text: 'text-[#DC2626]',
+          dot: 'bg-[#EF4444]'
+        };
+      default:
+        return {
+          bg: 'bg-gray-100',
+          text: 'text-gray-600',
+          dot: 'bg-gray-400'
+        };
+    }
+  };
+
+  const getOrdinal = (n: number) => {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mt-6">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">S.No</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Tenant Name</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Floor Number</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Phone Number</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Rent Amount</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Rent Status</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Due Amount</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {tenants.map((t) => (
-              <tr key={t.id} className={`hover:bg-gray-50 transition-colors ${t.rentStatus === 'Unpaid' ? 'bg-red-50/10' : ''}`}>
-                <td className="px-6 py-4 font-medium text-gray-500">{t.serialNumber}</td>
-                <td className="px-6 py-4 font-bold text-gray-900">{t.name}</td>
-                <td className="px-6 py-4 text-gray-600">{t.floorNumber}</td>
-                <td className="px-6 py-4 text-gray-600">{t.phone}</td>
-                <td className="px-6 py-4 text-gray-900 font-semibold">
-                  ${t.rentAmount?.toLocaleString() || '-'}
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center w-fit ${t.rentStatus === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${t.rentStatus === 'Paid' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                    {t.rentStatus}
-                  </span>
-                </td>
-                <td className={`px-6 py-4 font-bold ${t.dueAmount > 0 ? 'text-red-600' : 'text-gray-400'}`}>
-                  {t.dueAmount > 0 ? `$${t.dueAmount.toLocaleString()}` : '-'}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  {t.rentStatus === 'Unpaid' && (
-                    <button 
-                      onClick={() => handleSendReminder(t)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors title='Send Reminder'"
+    <div className="space-y-10">
+      {Object.entries(floors).sort(([a], [b]) => Number(a) - Number(b)).map(([floor, floorTenants]) => (
+        <div key={floor} className="bg-white rounded-[24px] border border-gray-100 overflow-hidden shadow-sm">
+          {/* Floor Header */}
+          <div className="px-8 py-5 flex items-center justify-between border-b border-gray-50 bg-[#FCFCFD]">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shadow-inner border border-white">
+                <img 
+                  src={`https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&q=80&w=200`} 
+                  alt="Floor" 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#111827]">{getOrdinal(Number(floor))} Floor</h3>
+                <p className="text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider mt-0.5">
+                  {Number(floor) + 1} Bed • {Number(floor)} Bath • {1500 + (Number(floor) * 200)} Sqft
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all border border-transparent hover:border-gray-100">
+                <Edit3 className="w-4 h-4" />
+              </button>
+              <button className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all border border-transparent hover:border-rose-100/50">
+                <Trash className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Units Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#F5F5F5]">
+                  <th className="px-8 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider">S.NO</th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider">TENANT NAME</th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider text-center">HOUSE NUMBER</th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider">PHONE NUMBER</th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider">RENT AMOUNT</th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider text-center">RENT STATUS</th>
+                  <th className="px-6 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider">DUE AMOUNT</th>
+                  <th className="px-8 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider text-right">ACTION</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F5F5F5]">
+                {floorTenants.map((t, index) => {
+                  const styles = getStatusStyles(t.rentStatus);
+                  const isUnpaid = t.rentStatus.toLowerCase() === 'unpaid';
+                  const houseNum = (t.floorNumber * 100) + (index + 1);
+
+                  return (
+                    <motion.tr
+                      key={t.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      className="hover:bg-[#FAFAFA] transition-colors group"
                     >
-                      <Mail className="w-5 h-5" />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                      <td className="px-8 py-6">
+                        <span className="text-sm font-medium text-[#6B7280]">{index + 1}</span>
+                      </td>
+                      <td className="px-6 py-6">
+                        <span className="text-sm font-bold text-[#111827]">{t.name}</span>
+                      </td>
+                      <td className="px-6 py-6 text-center">
+                        <span className="text-sm font-medium text-[#4B5563]">{houseNum}</span>
+                      </td>
+                      <td className="px-6 py-6">
+                        <span className="text-sm font-medium text-[#4B5563]">{t.phone || '+1 555-0102'}</span>
+                      </td>
+                      <td className="px-6 py-6">
+                        <span className="text-sm font-bold text-[#111827]">${t.rentAmount?.toLocaleString()}</span>
+                      </td>
+                      <td className="px-6 py-6 text-center">
+                        <div className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg ${styles.bg} ${styles.text}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${styles.dot}`} />
+                          <span className="text-[11px] font-bold">{t.rentStatus}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6">
+                        <span className={`text-sm font-bold ${isUnpaid ? 'text-[#DC2626]' : 'text-[#6B7280]'}`}>
+                          {isUnpaid ? `$${t.rentAmount?.toLocaleString()}` : '—'}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex items-center justify-end space-x-1">
+                          <button 
+                            className="p-2 text-[#4F46E5] hover:bg-[#EEF2FF] rounded-lg transition-all" 
+                            title="Message Tenant"
+                          >
+                            <Mail className="w-4 h-4 stroke-[2]" />
+                          </button>
+                          <button className="p-2 text-[#9CA3AF] hover:text-[#111827] transition-all opacity-0 group-hover:opacity-100">
+                            <MoreHorizontal className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
     </div>
+  );
+}
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
   );
 }

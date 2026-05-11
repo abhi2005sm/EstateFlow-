@@ -1,5 +1,5 @@
-import Dashboard from '@/src/features/admin/pages/Dashboard';
+import RealPropertyDashboard from '@/src/features/admin/pages/RealPropertyDashboard';
 
 export default function AdminPage() {
-  return <Dashboard />;
+  return <RealPropertyDashboard />;
 }

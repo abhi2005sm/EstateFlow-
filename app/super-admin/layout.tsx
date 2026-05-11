@@ -1,4 +1,4 @@
-import Sidebar from '../../src/features/superadmin/components/Sidebar';
+import Sidebar from '@/src/features/superadmin/components/layout/Sidebar';
 
 export default function SuperAdminLayout({
   children,
