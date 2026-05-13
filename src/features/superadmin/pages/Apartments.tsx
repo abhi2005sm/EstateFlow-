@@ -2,27 +2,54 @@
 
 import { useState } from 'react';
 import ApartmentsTable from '../components/ApartmentsTable';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Loader2, AlertCircle } from 'lucide-react';
+import { superAdminApi, OwnerRegistrationData } from '../api/api';
 
 export default function Apartments() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
+  const [formData, setFormData] = useState<OwnerRegistrationData>({
     email: '',
-    areaName: '',
-    state: ''
+    name: '',
+    phone_number: '',
+    area_name: '',
+    city: '',
+    state: '',
+    zip_code: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Submitting new owner:', formData);
-    alert(`Successfully added owner: ${formData.name}`);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-    // Close modal and reset form
-    setIsModalOpen(false);
-    setFormData({ name: '', phone: '', email: '', areaName: '', state: '' });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      await superAdminApi.addOwner(formData);
+      alert(`Successfully added owner: ${formData.name}`);
+      
+      // Trigger table refresh
+      setRefreshKey(prev => prev + 1);
+
+      // Close modal and reset form
+      setIsModalOpen(false);
+      setFormData({
+        email: '',
+        name: '',
+        phone_number: '',
+        area_name: '',
+        city: '',
+        state: '',
+        zip_code: ''
+      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to register owner. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +72,7 @@ export default function Apartments() {
         </button>
       </div>
 
-      <ApartmentsTable />
+      <ApartmentsTable key={refreshKey} />
 
       {/* Add Owner Modal */}
       {isModalOpen && (
@@ -63,7 +90,14 @@ export default function Apartments() {
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              {error && (
+                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm animate-in slide-in-from-top-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <p className="font-medium">{error}</p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Owner Name</label>
                 <input
@@ -82,11 +116,11 @@ export default function Apartments() {
                 <input
                   required
                   type="tel"
-                  name="phone"
-                  value={formData.phone}
+                  name="phone_number"
+                  value={formData.phone_number}
                   onChange={handleChange}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
-                  placeholder="e.g. +1 (555) 000-0000"
+                  placeholder="e.g. +91 7455545454"
                 />
               </div>
 
@@ -109,13 +143,28 @@ export default function Apartments() {
                   <input
                     required
                     type="text"
-                    name="areaName"
-                    value={formData.areaName}
+                    name="area_name"
+                    value={formData.area_name}
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
-                    placeholder="e.g. Downtown"
+                    placeholder="e.g. BTM LAYOUT"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">City</label>
+                  <input
+                    required
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                    placeholder="e.g. Bengaluru"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">State</label>
                   <input
@@ -125,7 +174,19 @@ export default function Apartments() {
                     value={formData.state}
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
-                    placeholder="e.g. CA"
+                    placeholder="e.g. Karnataka"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Zip Code</label>
+                  <input
+                    required
+                    type="text"
+                    name="zip_code"
+                    value={formData.zip_code}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                    placeholder="e.g. 560020"
                   />
                 </div>
               </div>
@@ -133,16 +194,25 @@ export default function Apartments() {
               <div className="pt-4 flex justify-end space-x-3">
                 <button
                   type="button"
+                  disabled={isLoading}
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition-colors shadow-sm"
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 disabled:opacity-70"
                 >
-                  Submit
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    <span>Submit</span>
+                  )}
                 </button>
               </div>
             </form>

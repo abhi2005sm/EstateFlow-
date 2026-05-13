@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, Mail, Lock, LogIn, AlertCircle, ArrowRight, Layout, Globe, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import { authApi } from '@/src/features/api/api';
 
 const INSIGHTS = [
   {
@@ -58,26 +59,48 @@ export default function LoginPage() {
     setError('');
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    if (email !== MOCK_CREDENTIALS[role].email || password !== MOCK_CREDENTIALS[role].password) {
-      setError('Invalid email or password for selected role.');
-      return;
-    }
-
     setIsLoading(true);
     
-    setTimeout(() => {
-      if (role === 'superadmin') {
+    try {
+      const response = await authApi.login({ email, password });
+      
+      // Store tokens for cross-domain access
+      // Store tokens for cross-domain access - checking multiple common keys
+      const token = response.access_token || response.access || response.token || response.data?.token || response.accessToken;
+      const refreshToken = response.refresh_token || response.refresh || response.data?.refresh;
+
+      if (token) {
+        localStorage.setItem('access_token', token);
+        console.log('[Login] Token stored successfully');
+      }
+      if (refreshToken) {
+        localStorage.setItem('refresh_token', refreshToken);
+      }
+      
+      console.log('[Login] API Response:', response);
+      
+      // Determine role from various possible fields in API response
+      let detectedRole = response.role || response.user_type || role;
+      if (response.is_superuser) detectedRole = 'superadmin';
+      else if (response.is_staff) detectedRole = 'admin';
+      
+      const userRole = String(detectedRole).toLowerCase(); 
+
+      if (userRole === 'superadmin') {
         router.push('/super-admin');
-      } else if (role === 'admin') {
+      } else if (userRole === 'admin' || userRole === 'owner') {
         router.push('/admin'); 
       } else {
         router.push('/tenant'); 
       }
-    }, 1200);
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

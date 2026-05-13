@@ -1,43 +1,67 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-
-const occupancyData = [
-  { name: 'Occupied', value: 83, color: '#F26922' },
-  { name: 'Vacant', value: 17, color: '#E8E6E0' },
-];
-
-const rentData = [
-  { name: 'Paid', value: 76, color: '#22C55E' },
-  { name: 'Unpaid', value: 24, color: '#EF4444' },
-];
-
-const monthlyData = [
-  { month: 'Jan', paid: 65000, unpaid: 12000 },
-  { month: 'Feb', paid: 72000, unpaid: 9000 },
-  { month: 'Mar', paid: 68000, unpaid: 14000 },
-  { month: 'Apr', paid: 80000, unpaid: 8000 },
-  { month: 'May', paid: 75000, unpaid: 11000 },
-  { month: 'Jun', paid: 85000, unpaid: 7000 },
-];
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 
 const RADIAN = Math.PI / 180;
-const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
+const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+  if (!percent || percent < 0.01) return null; // Don't render 0% labels
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={13} fontWeight={800}>
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={800}>
       {`${(percent * 100).toFixed(0)}%`}
     </text>
   );
 };
 
-export default function DashboardCharts({ delay = 0 }) {
+interface DashboardChartsProps {
+  buildings: any[];
+  tenants: any[];
+  delay?: number;
+}
+
+export default function DashboardCharts({ buildings, tenants, delay = 0 }: DashboardChartsProps) {
+  // 1. Calculate Occupancy Data
+  const totalUnits = buildings.reduce((acc, b) => acc + (b.total_units || 0), 0);
+  
+  // Calculate physically occupied units from buildings data
+  const physicallyOccupied = buildings.reduce((acc, b) => {
+    return acc + (b.units?.filter((u: any) => u.is_occupied).length || 0);
+  }, 0);
+
+  // Use physically occupied count if available, otherwise fallback to tenant count
+  const occupiedCount = physicallyOccupied > 0 ? physicallyOccupied : (tenants?.length || 0);
+  const vacantCount = Math.max(0, totalUnits - occupiedCount);
+  
+  const occupancyRate = totalUnits > 0 ? Math.round((occupiedCount / totalUnits) * 100) : 0;
+  const vacancyRate = Math.max(0, 100 - occupancyRate);
+
+  const occupancyChartData = [
+    { name: 'Occupied', value: occupancyRate, color: '#F26922' },
+    { name: 'Vacant', value: vacancyRate, color: '#E8E6E0' },
+  ];
+
+  // 2. Dynamic Property Performance (Bar Graph)
+  const propertyPerformance = buildings.map(b => {
+    // Filter tenants for this building
+    const bTenants = tenants.filter(t => t.property === b.id || t.building_id === b.id || t.property === b.name);
+    
+    const paid = bTenants.reduce((sum, t) => t.rentStatus === 'Paid' ? sum + (t.rentAmount || 0) : sum, 0);
+    const due = bTenants.reduce((sum, t) => t.rentStatus === 'Unpaid' ? sum + (t.rentAmount || 0) : sum, 0);
+
+    return {
+      name: b.name?.split(' ')[0] || 'Property', // Short name for axis
+      fullName: b.name,
+      paid: paid, // Removed random fallback
+      due: due, // Removed random fallback
+    };
+  }).slice(0, 6); // Show top 6 properties
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Occupied vs Vacant */}
+      {/* Occupancy Pie Chart */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -45,15 +69,15 @@ export default function DashboardCharts({ delay = 0 }) {
         className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-8"
       >
         <div className="mb-6">
-          <h3 className="text-lg font-black text-[#121110] tracking-tight">Occupied vs Vacant</h3>
-          <p className="text-xs font-bold text-[#61605D] uppercase tracking-widest mt-1">Unit Occupancy Overview</p>
+          <h3 className="text-lg font-black text-[#121110] tracking-tight">Portfolio Occupancy</h3>
+          <p className="text-xs font-bold text-[#61605D] uppercase tracking-widest mt-1">Live Resident Distribution</p>
         </div>
         <div className="flex items-center justify-between">
           <div className="w-1/2 h-52">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={occupancyData}
+                  data={occupancyChartData}
                   cx="50%"
                   cy="50%"
                   innerRadius={50}
@@ -64,7 +88,7 @@ export default function DashboardCharts({ delay = 0 }) {
                   label={renderCustomLabel}
                   animationDuration={1800}
                 >
-                  {occupancyData.map((entry, index) => (
+                  {occupancyChartData.map((entry, index) => (
                     <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
@@ -73,7 +97,7 @@ export default function DashboardCharts({ delay = 0 }) {
             </ResponsiveContainer>
           </div>
           <div className="w-1/2 pl-6 space-y-5">
-            {occupancyData.map((d, i) => (
+            {occupancyChartData.map((d, i) => (
               <div key={i} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -95,52 +119,66 @@ export default function DashboardCharts({ delay = 0 }) {
             ))}
             <div className="pt-4 border-t border-[#F5F3F1] space-y-2">
               <div className="flex justify-between">
-                <span className="text-xs font-bold text-[#61605D]">Occupied Units</span>
-                <span className="text-xs font-black text-[#121110]">498</span>
+                <span className="text-xs font-bold text-[#61605D]">Total Units</span>
+                <span className="text-xs font-black text-[#121110]">{totalUnits}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-xs font-bold text-[#61605D]">Vacant Units</span>
-                <span className="text-xs font-black text-[#121110]">102</span>
+                <span className="text-xs font-bold text-[#61605D]">Active Tenants</span>
+                <span className="text-xs font-black text-[#121110]">{occupiedCount}</span>
               </div>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Paid vs Unpaid Rent */}
+      {/* Property Performance Bar Chart */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: delay + 0.15 }}
         className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-8"
       >
-        <div className="mb-6">
-          <h3 className="text-lg font-black text-[#121110] tracking-tight">Paid vs Unpaid Rent</h3>
-          <p className="text-xs font-bold text-[#61605D] uppercase tracking-widest mt-1">Monthly Collection Breakdown</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-black text-[#121110] tracking-tight">Revenue by Property</h3>
+            <p className="text-xs font-bold text-[#61605D] uppercase tracking-widest mt-1">Financial Performance Snapshot</p>
+          </div>
         </div>
-        <div className="h-52 w-full">
+        <div className="h-56 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyData} barGap={4}>
+            <BarChart data={propertyPerformance} barGap={8}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F5F3F1" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#61605D', fontSize: 11, fontWeight: 700 }} dy={8} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#61605D', fontSize: 10, fontWeight: 700 }} tickFormatter={(v) => `$${v/1000}k`} />
-              <Tooltip
-                formatter={(v: any, name: any) => [`$${Number(v).toLocaleString()}`, name === 'Paid' || name === 'paid' ? 'Paid' : 'Unpaid']}
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', padding: '12px' }}
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#61605D', fontSize: 10, fontWeight: 800 }} 
+                dy={10} 
               />
-              <Bar dataKey="paid" fill="#22C55E" radius={[6, 6, 0, 0]} barSize={20} name="Paid" />
-              <Bar dataKey="unpaid" fill="#EF4444" radius={[6, 6, 0, 0]} barSize={20} name="Unpaid" />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#61605D', fontSize: 10, fontWeight: 700 }} 
+                tickFormatter={(v) => `₹${v >= 1000 ? (v/1000).toFixed(0) + 'k' : v}`} 
+              />
+              <Tooltip
+                cursor={{ fill: '#F5F3F1' }}
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', padding: '12px' }}
+                formatter={(v: any) => [`₹${Number(v).toLocaleString()}`, '']}
+              />
+              <Bar dataKey="paid" fill="#22C55E" radius={[8, 8, 4, 4]} barSize={32} name="Collected" />
+              <Bar dataKey="due" fill="#EF4444" radius={[8, 8, 4, 4]} barSize={32} name="Due" />
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex items-center space-x-6 mt-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-green-500" />
-            <span className="text-[10px] font-black text-[#61605D] uppercase tracking-widest">Paid Rent</span>
+        <div className="flex items-center space-x-6 mt-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 rounded-full bg-[#22C55E]" />
+            <span className="text-[11px] font-black text-[#121110] uppercase tracking-widest">Collected</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-[10px] font-black text-[#61605D] uppercase tracking-widest">Unpaid Rent</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 rounded-full bg-[#EF4444]" />
+            <span className="text-[11px] font-black text-[#121110] uppercase tracking-widest">Outstanding</span>
           </div>
         </div>
       </motion.div>

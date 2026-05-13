@@ -9,8 +9,8 @@ const navLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Buildings', href: '/admin/buildings', icon: Building2 },
   { name: 'Tenants', href: '/admin/tenants', icon: Users },
+  { name: 'Payments', href: '/admin/payments', icon: Receipt },
   { name: 'Analytics', href: '/admin/analytics', icon: PieChart },
-  { name: 'Invoices', href: '/admin/invoices', icon: Receipt },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

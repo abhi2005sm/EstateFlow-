@@ -17,7 +17,7 @@ export default function DefaultersList() {
             <tr>
               <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Name</th>
               <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Phone Number</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Building Name</th>
+              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Property Name</th>
               <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Due Amount</th>
             </tr>
           </thead>

@@ -22,7 +22,7 @@ export default function Sidebar() {
 
   const navLinks = [
     { name: 'Dashboard', href: '/super-admin/dashboard', icon: LayoutDashboard },
-    { name: 'Apartments', href: '/super-admin/apartments', icon: Building},
+    { name: 'Properties', href: '/super-admin/apartments', icon: Building},
     { name: 'Analytics', href: '/super-admin/analytics', icon: PieChart },
 
     { name: 'Settings', href: '/super-admin/settings', icon: Settings },

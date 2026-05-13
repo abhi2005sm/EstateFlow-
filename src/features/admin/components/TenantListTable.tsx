@@ -1,6 +1,18 @@
-import { Mail, Phone, Edit2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Mail, Phone, MoreHorizontal } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function TenantListTable({ tenants }: { tenants: any[] }) {
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (activeMenuId) setActiveMenuId(null);
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [activeMenuId]);
+
   if (!tenants || tenants.length === 0) {
     return (
       <div className="p-20 text-center flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -13,9 +25,9 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
     );
   }
 
-  // Group tenants by floor
+  // Group tenants by floor - fallback to 0 if missing
   const groupedByFloor = tenants.reduce((acc: any, t) => {
-    const floor = t.floorNumber;
+    const floor = t.floor_number || 0;
     if (!acc[floor]) acc[floor] = [];
     acc[floor].push(t);
     return acc;
@@ -51,7 +63,7 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
                 <tr className="bg-white border-b border-gray-50">
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">S.NO</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">TENANT NAME</th>
-                  <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">HOUSE NUMBER</th>
+                  <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">UNIT NUMBER</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">PHONE NUMBER</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">RENT AMOUNT</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">RENT STATUS</th>
@@ -72,39 +84,67 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
                       <span className="text-sm font-bold text-gray-900">{t.name}</span>
                     </td>
                     <td className="px-6 py-6 text-xs text-gray-500 font-medium">
-                      {t.houseNumber || `${parseInt(floor) === 0 ? '' : parseInt(floor)}${(index + 1).toString().padStart(2, '0')}`}
+                      {t.unit_number || t.unit_id || t.unit || '-'}
                     </td>
                     <td className="px-6 py-6 text-xs text-gray-500 font-medium">
-                      {t.phone}
+                      {t.phone_number || t.phone || '-'}
                     </td>
                     <td className="px-6 py-6">
-                      <span className="text-sm font-bold text-gray-900">${t.rentAmount?.toLocaleString()}</span>
+                      <span className="text-sm font-bold text-gray-900">₹{t.rent_amount?.toLocaleString('en-IN')}</span>
                     </td>
                     <td className="px-6 py-6">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${
-                        t.rentStatus === 'Paid' 
+                        t.rent_status === 'Paid' 
                           ? 'bg-[#E6FFFA] text-[#047857]' 
                           : 'bg-[#FFF5F5] text-[#C53030]'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                          t.rentStatus === 'Paid' ? 'bg-[#38B2AC]' : 'bg-[#F56565]'
+                          t.rent_status === 'Paid' ? 'bg-[#38B2AC]' : 'bg-[#F56565]'
                         }`} />
-                        {t.rentStatus}
+                        {t.rent_status || 'Unpaid'}
                       </span>
                     </td>
                     <td className="px-6 py-6">
-                      <span className={`text-sm font-bold ${t.dueAmount > 0 ? 'text-[#C53030]' : 'text-gray-300'}`}>
-                        {t.dueAmount > 0 ? `$${t.dueAmount.toLocaleString()}` : '-'}
+                      <span className={`text-sm font-bold ${Number(t.due_amount) > 0 ? 'text-[#C53030]' : 'text-gray-300'}`}>
+                        {Number(t.due_amount) > 0 ? `₹${Number(t.due_amount).toLocaleString('en-IN')}` : '-'}
                       </span>
                     </td>
                     <td className="px-6 py-6 text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95" title="Call Tenant">
-                          <Phone className="w-3.5 h-3.5" />
-                        </button>
-                        <button className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95" title="Email Tenant">
-                          <Mail className="w-3.5 h-3.5" />
-                        </button>
+                      <div className="flex items-center justify-end space-x-2 h-9">
+                        {activeMenuId === t.id ? (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex items-center space-x-2"
+                          >
+                            <a 
+                              href={`tel:${t.phone_number || t.phone}`} 
+                              className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95" 
+                              title="Call Tenant"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                            </a>
+                            <a 
+                              href={`mailto:${t.email}`} 
+                              className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95" 
+                              title="Email Tenant"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Mail className="w-3.5 h-3.5" />
+                            </a>
+                          </motion.div>
+                        ) : (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(t.id);
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-gray-900 transition-all"
+                          >
+                            <MoreHorizontal className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

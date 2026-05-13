@@ -7,7 +7,7 @@ export default function DashboardCards() {
       <div>
         <h2 className="text-xl font-bold text-gray-800 mb-4">Property Overview</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <Card title="Total Buildings" value={overview.totalBuildings} />
+          <Card title="Total Properties" value={overview.totalBuildings} />
           <Card title="Residential" value={overview.residentialBuildings} />
           <Card title="Commercial" value={overview.commercialBuildings} />
           <Card title="Total Units" value={overview.totalUnits} />

@@ -1,58 +1,122 @@
 "use client";
-import { useState } from 'react';
 
-export default function PaymentsTable({ data }: { data: any[] }) {
-  const [payments, setPayments] = useState(data);
+import React from 'react';
+import { motion } from 'framer-motion';
+import { 
+  CreditCard, 
+  CheckCircle2, 
+  Clock, 
+  XCircle, 
+  AlertCircle,
+  Calendar,
+  Download
+} from 'lucide-react';
+import { PaymentRequest } from '../../admin/payments/types';
 
-  const handlePay = (id: string) => {
-    alert('Payment initiated for ID: ' + id);
-    setPayments(payments.map(p => p.id === id ? { ...p, status: 'Paid' } : p));
-  };
+interface PaymentsTableProps {
+  data: PaymentRequest[];
+}
 
+export default function PaymentsTable({ data }: PaymentsTableProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">S.No</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Fee Type</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Amount</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Due Date</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Status</th>
-              <th className="px-6 py-4 font-semibold text-gray-500 uppercase tracking-wider text-xs">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {payments.map((p) => (
-              <tr key={p.id} className={`transition-colors ${p.status === 'Unpaid' ? 'bg-red-50/20 hover:bg-red-50/40' : 'hover:bg-gray-50'}`}>
-                <td className="px-6 py-4 font-medium text-gray-500">{p.serialNumber}</td>
-                <td className="px-6 py-4 font-bold text-gray-800">{p.feeType}</td>
-                <td className="px-6 py-4 font-semibold text-gray-800">$${p.amount.toLocaleString()}</td>
-                <td className="px-6 py-4 text-gray-500">{p.dueDate}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center w-fit ${p.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${p.status === 'Paid' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                    {p.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  {p.status === 'Unpaid' ? (
-                    <button 
-                      onClick={() => handlePay(p.id)}
-                      className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
-                    >
-                      Pay Now
-                    </button>
-                  ) : (
-                    <span className="text-gray-400 text-sm font-medium px-2">Completed</span>
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b border-gray-50">
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Transaction</th>
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Fee Type</th>
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Amount & Dues</th>
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Date</th>
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Approval Status</th>
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((payment, index) => (
+            <motion.tr
+              key={payment.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="group hover:bg-gray-50/50 transition-colors border-b border-gray-50/50"
+            >
+              <td className="px-8 py-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
+                    <CreditCard className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">{payment.transaction_id || `TRX-${payment.id}`}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{payment.payment_method || 'Standard'}</p>
+                  </div>
+                </div>
+              </td>
+              <td className="px-8 py-6">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{payment.fee_type || (payment as any).feeType}</p>
+                  <p className="text-[11px] font-medium text-gray-400">
+                    {payment.rent_month ? `${payment.rent_month} ${payment.rent_year}` : (payment as any).dueDate || 'No Date'}
+                  </p>
+                </div>
+              </td>
+              <td className="px-8 py-6">
+                <div className="flex flex-col">
+                  <p className="text-sm font-black text-gray-900">₹{(Number(payment.amount) || 0).toLocaleString('en-IN')}</p>
+                  {(payment.due_amount || (payment as any).dueAmount) && Number(payment.due_amount || (payment as any).dueAmount) > 0 && (
+                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-tighter mt-0.5">
+                      Remaining: ₹{(Number(payment.due_amount || (payment as any).dueAmount)).toLocaleString('en-IN')}
+                    </p>
                   )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </td>
+              <td className="px-8 py-6">
+                <div className="flex items-center text-sm font-bold text-gray-500">
+                  <Calendar className="w-4 h-4 mr-2 opacity-50" />
+                  {payment.created_at 
+                    ? new Date(payment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : (payment as any).date || 'N/A'}
+                </div>
+              </td>
+              <td className="px-8 py-6">
+                <div className="flex flex-col space-y-1">
+                  <span className={`w-fit px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                    payment.approval_status === 'Pending' || (payment as any).status === 'Pending' ? 'bg-amber-50 text-amber-600' :
+                    payment.approval_status === 'Approved' || payment.status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
+                    'bg-rose-50 text-rose-600'
+                  }`}>
+                    {payment.approval_status === 'Approved' || payment.status === 'Paid' ? 'Rent Paid' : (payment.approval_status || payment.status)}
+                  </span>
+                  <span className={`w-fit px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-tighter ${
+                    payment.status === 'Paid' ? 'text-emerald-500' : 
+                    Number(payment.due_amount || (payment as any).dueAmount) > 0 ? 'text-rose-500' : 'text-gray-400'
+                  }`}>
+                    {payment.status === 'Paid' ? 'Completed' : 
+                     Number(payment.due_amount || (payment as any).dueAmount) > 0 ? 'Partial Payment' : payment.status}
+                  </span>
+                </div>
+              </td>
+              <td className="px-8 py-6 text-right">
+                <button 
+                  disabled={payment.approval_status !== 'Approved'}
+                  className="p-2.5 text-gray-400 hover:text-[#F26922] hover:bg-[#F26922]/5 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-5 h-5" />
+                </button>
+              </td>
+            </motion.tr>
+          ))}
+        </tbody>
+      </table>
+
+      {data.length === 0 && (
+        <div className="py-20 text-center">
+          <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
+            <Clock className="w-10 h-10 text-gray-300" />
+          </div>
+          <h3 className="text-lg font-black text-gray-900">No payment history</h3>
+          <p className="text-gray-400 text-sm font-medium mt-1">Submit a payment to see it here</p>
+        </div>
+      )}
     </div>
   );
 }

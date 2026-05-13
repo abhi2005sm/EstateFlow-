@@ -5,7 +5,7 @@ export default function Filters({ onSearch, onFilter, onSort }: any) {
       <div className="flex-1">
         <input 
           type="text" 
-          placeholder="Search building by name..." 
+          placeholder="Search property by name..." 
           onChange={(e) => onSearch(e.target.value)}
           className="w-full sm:max-w-md border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
         />

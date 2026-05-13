@@ -28,7 +28,7 @@ import {
   Tooltip
 } from 'recharts';
 
-// Custom data for the charts
+// Mock revenue data (Can be made dynamic once revenue API is available)
 const revenueData = [
   { day: 'Sat', value: 300 },
   { day: 'Sun', value: 450 },
@@ -37,26 +37,6 @@ const revenueData = [
   { day: 'Wed', value: 850 },
   { day: 'Thr', value: 500 },
   { day: 'Fri', value: 350 },
-];
-
-const statusData = [
-  { name: 'Active', value: 25, color: '#10B981' },
-  { name: 'Expired', value: 35, color: '#FF6B6B' },
-  { name: 'Expiring', value: 40, color: '#FCD34D' },
-];
-
-const recentOwners = [
-  { id: 1, initial: 'A', name: 'Alice Smith', buildings: 3 },
-  { id: 2, initial: 'B', name: 'Bob Johnson', buildings: 1 },
-  { id: 3, initial: 'C', name: 'Charlie Davis', buildings: 5 },
-  { id: 4, initial: 'D', name: 'Diana Roberts', buildings: 2 },
-];
-
-const expiringSoon = [
-  { id: 1, initial: 'A', name: 'Alice Smith', property: 'Sunset Apartments', days: 5 },
-  { id: 2, initial: 'B', name: 'Bob Johnson', property: 'Ocean View Complex', days: 12 },
-  { id: 3, initial: 'C', name: 'Charlie Davis', property: 'Downtown Lofts', days: 15 },
-  { id: 4, initial: 'E', name: 'Eve Miller', property: 'Green Valley Estates', days: 20 },
 ];
 
 const containerVariants: Variants = {
@@ -76,7 +56,75 @@ const itemVariants: Variants = {
   },
 };
 
+import { superAdminApi, Owner } from '../api/api';
+import { Loader2 } from 'lucide-react';
+
 export default function Dashboard() {
+  const [data, setData] = React.useState<{
+    owners: Owner[];
+    summary: any;
+    loading: boolean;
+  }>({
+    owners: [],
+    summary: null,
+    loading: true
+  });
+
+  const fetchData = async () => {
+    try {
+      const res = await superAdminApi.getOwners();
+      setData({
+        owners: res.owners || [],
+        summary: res.summary,
+        loading: false
+      });
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      setData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  React.useEffect(() => {
+    fetchData();
+  }, []);
+
+  const stats = React.useMemo(() => {
+    const owners = data.owners;
+    const totalBuildings = owners.reduce((acc, o) => acc + (o.total_buildings || 0), 0);
+    const activeUsers = owners.filter(o => o.is_active).length;
+    const expiredUsers = owners.filter(o => !o.is_active).length;
+    
+    return {
+      totalOwners: data.summary?.total_owners || owners.length,
+      totalBuildings,
+      activeUsers,
+      expiredUsers,
+      // Fallback for tenants if not provided by backend directly
+      totalTenants: owners.reduce((acc, o) => acc + (o.total_buildings * 6), 0) 
+    };
+  }, [data]);
+
+  const statusDistribution = React.useMemo(() => [
+    { name: 'Active', value: stats.activeUsers, color: '#10B981' },
+    { name: 'Inactive', value: stats.expiredUsers, color: '#FF6B6B' },
+    { name: 'Total', value: stats.totalOwners, color: '#3B82F6' },
+  ], [stats]);
+
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
+  if (data.loading) {
+    return (
+      <div className="min-h-screen bg-[#eaedf2] flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+          <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Synchronizing Super Admin Portal...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#eaedf2] font-sans text-[#121110] relative overflow-x-hidden">
 
@@ -108,11 +156,11 @@ export default function Dashboard() {
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search Owners..."
               className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-2xl py-2.5 pl-12 pr-4 w-64 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/10 shadow-sm"
             />
           </div>
-          <button className="relative w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center border border-gray-100 shadow-sm">
+          <button onClick={() => fetchData()} className="relative w-10 h-10 bg-white/80 backdrop-blur-md rounded-xl flex items-center justify-center border border-gray-100 shadow-sm transition-all hover:bg-white active:scale-95">
             <Bell className="w-5 h-5 text-gray-600" />
             <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
           </button>
@@ -127,9 +175,9 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-6 space-y-12">
             <div>
               <h1 className="text-5xl font-black tracking-tight text-[#121110]">
-                Good Afternoon,
+                {greeting},
               </h1>
-              <p className="text-gray-400 text-lg font-bold mt-2">Here's What's Happening Today.</p>
+              <p className="text-gray-400 text-lg font-bold mt-2">Here's What's Happening Across Your Portfolio.</p>
             </div>
 
             {/* 2x2 Metrics Grid */}
@@ -140,10 +188,10 @@ export default function Dashboard() {
               className="grid grid-cols-2 gap-6 max-w-[500px]"
             >
               {[
-                { label: 'TOTAL BUILDINGS', value: '124', icon: Building2, color: 'text-blue-600', bgColor: 'bg-blue-50' },
-                { label: 'TOTAL TENANTS', value: '842', icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-50' },
-                { label: 'EXPIRED USERS', value: '45', icon: History, color: 'text-red-500', bgColor: 'bg-red-50' },
-                { label: 'ACTIVE USERS', value: '712', icon: UserCheck, color: 'text-green-500', bgColor: 'bg-green-50' },
+                { label: 'TOTAL OWNERS', value: stats.totalOwners, icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+                { label: 'TOTAL BUILDINGS', value: stats.totalBuildings, icon: Building2, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+                { label: 'INACTIVE OWNERS', value: stats.expiredUsers, icon: History, color: 'text-red-500', bgColor: 'bg-red-50' },
+                { label: 'ACTIVE OWNERS', value: stats.activeUsers, icon: UserCheck, color: 'text-green-500', bgColor: 'bg-green-50' },
               ].map((m, i) => (
                 <motion.div
                   key={i}
@@ -175,7 +223,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={statusData}
+                    data={statusDistribution}
                     cx="50%"
                     cy="50%"
                     innerRadius={75}
@@ -184,7 +232,7 @@ export default function Dashboard() {
                     dataKey="value"
                     stroke="none"
                   >
-                    {statusData.map((entry, index) => (
+                    {statusDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -193,7 +241,7 @@ export default function Dashboard() {
               <div className="absolute top-[18%] left-[28%] w-4 h-4 bg-[#10B981] transform rotate-45 rounded-sm shadow-sm" />
             </div>
             <div className="flex justify-center gap-8 mt-8">
-              {statusData.map((s, i) => (
+              {statusDistribution.map((s, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
                   <span className="text-[12px] font-bold text-gray-500">{s.name}</span>
@@ -206,7 +254,7 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-8 bg-white/90 backdrop-blur-xl border border-gray-100 rounded-[40px] p-10 shadow-sm">
             <div className="flex justify-between items-center mb-10">
               <h3 className="font-black text-xl tracking-tight text-[#121110]">Market Revenue Overview</h3>
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border border-gray-100 rounded-2xl text-[11px] font-black text-gray-500 hover:bg-white transition-colors">
+              <button onClick={() => alert("Time filter selector")} className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border border-gray-100 rounded-2xl text-[11px] font-black text-gray-500 hover:bg-white transition-colors">
                 Last 7 Days <ChevronDown className="w-4 h-4" />
               </button>
             </div>
@@ -248,18 +296,18 @@ export default function Dashboard() {
           <div className="col-span-12 lg:col-span-6 bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm">
             <div className="flex justify-between items-center mb-10">
               <h3 className="text-xl font-black tracking-tight text-[#121110]">Recent Owners</h3>
-              <button className="text-[11px] font-black text-gray-400 uppercase tracking-widest hover:text-[#121110] transition-colors">View All</button>
+              <button onClick={() => alert("Viewing all owners")} className="text-[11px] font-black text-gray-400 uppercase tracking-widest hover:text-[#121110] transition-colors">View All</button>
             </div>
             <div className="space-y-6">
-              {recentOwners.map(owner => (
+              {data.owners.slice(0, 4).map(owner => (
                 <div key={owner.id} className="flex items-center gap-5 p-4 hover:bg-gray-50 rounded-[32px] transition-all group cursor-pointer border border-transparent hover:border-gray-100">
                   <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 font-black flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">
-                    {owner.initial}
+                    {owner.name.charAt(0)}
                   </div>
                   <div>
                     <h4 className="font-black text-base">{owner.name}</h4>
                     <p className="text-xs font-bold text-gray-400 flex items-center gap-2 mt-1">
-                      <Building2 className="w-4 h-4 text-blue-500" /> {owner.buildings} Buildings
+                      <Building2 className="w-4 h-4 text-blue-500" /> {owner.total_buildings} Properties
                     </p>
                   </div>
                 </div>
@@ -267,30 +315,30 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Expiring Soon */}
+          {/* Portfolio Insights */}
           <div className="col-span-12 lg:col-span-6 bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm">
             <div className="flex justify-between items-center mb-10">
-              <h3 className="text-xl font-black tracking-tight text-[#121110]">Expiring Soon</h3>
-              <button className="w-11 h-11 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors shadow-sm">
+              <h3 className="text-xl font-black tracking-tight text-[#121110]">Portfolio Insights</h3>
+              <button onClick={() => fetchData()} className="w-11 h-11 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors shadow-sm">
                 <History className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-6">
-              {expiringSoon.map(user => (
-                <div key={user.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-[32px] transition-all group cursor-pointer border border-transparent hover:border-gray-100">
+              {data.owners.slice(-4).reverse().map(owner => (
+                <div key={owner.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-[32px] transition-all group cursor-pointer border border-transparent hover:border-gray-100">
                   <div className="flex items-center gap-5">
                     <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 font-black flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">
-                      {user.initial}
+                      {owner.name.charAt(0)}
                     </div>
                     <div>
-                      <h4 className="font-black text-base">{user.name}</h4>
+                      <h4 className="font-black text-base">{owner.name}</h4>
                       <p className="text-xs font-bold text-gray-400 flex items-center gap-2 mt-1">
-                        <Building2 className="w-4 h-4 text-blue-500" /> {user.property}
+                        <Building2 className="w-4 h-4 text-blue-500" /> {owner.residential_count} Res | {owner.commercial_count} Com
                       </p>
                     </div>
                   </div>
-                  <div className="bg-orange-50 text-orange-600 px-5 py-3 rounded-2xl text-[12px] font-black flex items-center gap-2 border border-orange-100 shadow-sm">
-                    <Clock className="w-4 h-4" /> {user.days}d
+                  <div className={`px-5 py-3 rounded-2xl text-[12px] font-black border shadow-sm ${owner.is_active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
+                    {owner.is_active ? 'Active' : 'Inactive'}
                   </div>
                 </div>
               ))}
