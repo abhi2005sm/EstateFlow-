@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Mail, Phone, MoreHorizontal } from 'lucide-react';
+import { Mail, Phone, MoreHorizontal, Eye, Edit3, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function TenantListTable({ tenants }: { tenants: any[] }) {
+export default function TenantListTable({ tenants, onViewTenant, onEditTenant, onDeleteTenant, buildingName }: { tenants: any[], onViewTenant?: (tenantId: number) => void, onEditTenant?: (tenant: any) => void, onDeleteTenant?: (tenantId: number, tenantName: string) => void, buildingName?: string }) {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
                 />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-900">{floorNames[parseInt(floor)] || `${floor}th Floor`}</h3>
+                <h3 className="text-sm font-bold text-gray-900">{floorNames[parseInt(floor)] || `${floor}th Floor`} {buildingName ? `- ${buildingName}` : ''}</h3>
                 <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Tenant Directory · Active</p>
               </div>
             </div>
@@ -63,7 +63,7 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
                 <tr className="bg-white border-b border-gray-50">
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">S.NO</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">TENANT NAME</th>
-                  <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">UNIT NUMBER</th>
+                  <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">UNIT ID</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">PHONE NUMBER</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">RENT AMOUNT</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">RENT STATUS</th>
@@ -74,7 +74,7 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
               <tbody className="divide-y divide-gray-50">
                 {floorTenants.map((t: any, index: number) => (
                   <tr 
-                    key={t.id}
+                    key={t.tenant_id || t.id}
                     className="hover:bg-gray-50/50 transition-colors duration-200"
                   >
                     <td className="px-6 py-6 text-xs text-gray-400 font-medium">
@@ -83,8 +83,16 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
                     <td className="px-6 py-6">
                       <span className="text-sm font-bold text-gray-900">{t.name}</span>
                     </td>
-                    <td className="px-6 py-6 text-xs text-gray-500 font-medium">
-                      {t.unit_number || t.unit_id || t.unit || '-'}
+                    <td className="px-6 py-6 text-xs">
+                      {t.unit_code || t.unit_id || t.unit || t.unit_number ? (
+                        <span className="font-medium text-gray-500">
+                          {t.unit_code || t.unit_number || t.unit_id || t.unit}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 italic font-medium">
+                          {t.past_unit_identifier || "Unknown"}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-6 text-xs text-gray-500 font-medium">
                       {t.phone_number || t.phone || '-'}
@@ -94,24 +102,26 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
                     </td>
                     <td className="px-6 py-6">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${
-                        t.rent_status === 'Paid' 
-                          ? 'bg-[#E6FFFA] text-[#047857]' 
-                          : 'bg-[#FFF5F5] text-[#C53030]'
+                        t.rent_status === 'Paid' ? 'bg-[#E6FFFA] text-[#047857]' :
+                        t.rent_status === 'Partial' ? 'bg-amber-50 text-amber-600' :
+                        'bg-[#FFF5F5] text-[#C53030]'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                          t.rent_status === 'Paid' ? 'bg-[#38B2AC]' : 'bg-[#F56565]'
+                          t.rent_status === 'Paid' ? 'bg-[#38B2AC]' : 
+                          t.rent_status === 'Partial' ? 'bg-amber-500' :
+                          'bg-[#F56565]'
                         }`} />
                         {t.rent_status || 'Unpaid'}
                       </span>
                     </td>
                     <td className="px-6 py-6">
-                      <span className={`text-sm font-bold ${Number(t.due_amount) > 0 ? 'text-[#C53030]' : 'text-gray-300'}`}>
-                        {Number(t.due_amount) > 0 ? `₹${Number(t.due_amount).toLocaleString('en-IN')}` : '-'}
+                      <span className={`text-sm font-bold ${(t.rent_status === 'Partial' || t.rent_status === 'Unpaid' || Number(t.due_amount) > 0) ? 'text-[#C53030]' : 'text-gray-300'}`}>
+                        {(t.rent_status === 'Partial' || t.rent_status === 'Unpaid' || Number(t.due_amount) > 0) ? `₹${Number(t.due_amount || 0).toLocaleString('en-IN')}` : '-'}
                       </span>
                     </td>
                     <td className="px-6 py-6 text-right">
                       <div className="flex items-center justify-end space-x-2 h-9">
-                        {activeMenuId === t.id ? (
+                        {activeMenuId === (t.tenant_id || t.id) ? (
                           <motion.div 
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -133,12 +143,48 @@ export default function TenantListTable({ tenants }: { tenants: any[] }) {
                             >
                               <Mail className="w-3.5 h-3.5" />
                             </a>
+                            {onViewTenant && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onViewTenant(t.tenant_id || t.id);
+                                }}
+                                className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95"
+                                title="View Profile"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {onEditTenant && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEditTenant(t);
+                                }}
+                                className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95"
+                                title="Edit Tenant"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {onDeleteTenant && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteTenant(t.tenant_id || t.id, t.name);
+                                }}
+                                className="p-1.5 text-red-600 border border-red-100 bg-red-50/30 rounded-lg transition-all hover:bg-red-100 active:scale-95"
+                                title="Delete Tenant"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </motion.div>
                         ) : (
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveMenuId(t.id);
+                              setActiveMenuId(t.tenant_id || t.id);
                             }}
                             className="p-1.5 text-gray-400 hover:text-gray-900 transition-all"
                           >

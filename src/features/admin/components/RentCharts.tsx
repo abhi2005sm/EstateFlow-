@@ -1,9 +1,26 @@
 "use client";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { adminDashboardData } from '../../../mock/adminDashboardData';
 
-export default function RentCharts() {
-  const { charts } = adminDashboardData;
+export default function RentCharts({ data }: { data?: any }) {
+  if (!data) return null;
+  const overview = data.property_overview || {};
+  const rentSummary = data.rent_summary || {};
+
+  const charts = {
+    occupancy: [
+      { name: 'Occupied', value: overview.occupied_units || 0, fill: '#10b981' },
+      { name: 'Vacant', value: overview.vacant_units || 0, fill: '#ef4444' }
+    ],
+    rentStatus: [
+      { name: 'Paid', value: rentSummary.paid_units || 0, fill: '#3b82f6' },
+      { name: 'Unpaid/Partial', value: rentSummary.unpaid_units || 0, fill: '#f59e0b' }
+    ],
+    buildingTypes: [
+      { name: 'Residential', value: overview.residential || 0, fill: '#8b5cf6' },
+      { name: 'Commercial', value: overview.commercial || 0, fill: '#ec4899' }
+    ]
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <ChartCard title="Occupied vs Vacant">

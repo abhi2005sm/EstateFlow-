@@ -18,8 +18,18 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const cleanBaseUrl = (BASE_URL || '').replace(/\/$/, '');
   const cleanEndpoint = endpoint.replace(/^\//, '');
   
-  // Ensure the endpoint always has a trailing slash for Django/Backend compatibility
-  const endpointWithSlash = cleanEndpoint.endsWith('/') ? cleanEndpoint : `${cleanEndpoint}/`;
+  // Ensure the endpoint always has a trailing slash for Django/Backend compatibility (ignoring query params)
+  let endpointWithSlash = cleanEndpoint;
+  const queryIndex = cleanEndpoint.indexOf('?');
+  
+  if (queryIndex !== -1) {
+    const path = cleanEndpoint.substring(0, queryIndex);
+    const query = cleanEndpoint.substring(queryIndex);
+    const pathWithSlash = path.endsWith('/') ? path : `${path}/`;
+    endpointWithSlash = `${pathWithSlash}${query}`;
+  } else {
+    endpointWithSlash = cleanEndpoint.endsWith('/') ? cleanEndpoint : `${cleanEndpoint}/`;
+  }
   
   const url = endpoint.startsWith('http') ? endpoint : `${cleanBaseUrl}/${endpointWithSlash}`;
   
@@ -72,7 +82,6 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
         }
         
         const errorData = await response.json().catch(() => ({}));
-      console.error(`[API Error Response] ${response.status}:`, errorData);
       
       // Extract the most descriptive error message
       const errorMessage = errorData.detail || 
@@ -84,7 +93,13 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       throw new Error(errorMessage);
     }
 
-    return response.json();
+    if (response.status === 204) {
+      return null;
+    }
+    
+    // For other responses, check if there's actually a body before parsing
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
   } catch (error: any) {
     if (error.message === 'Failed to fetch') {
       console.error(`[API Network Error] Could not connect to: ${url}. Is the backend server/ngrok running?`);

@@ -3,7 +3,7 @@ import { Mail, MoreHorizontal, Phone, ExternalLink, Edit2, Trash2, Home, Users a
 import { motion, AnimatePresence } from 'framer-motion';
 import { Unit } from '../buildings/api/buildingsApi';
 
-export default function BuildingDetailsTable({ units, onAddTenant }: { units: Unit[], onAddTenant?: (unitId: string) => void }) {
+export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant, onEditUnit, onDeleteUnit }: { units: Unit[], onAddTenant?: (unitId: string) => void, onViewTenant?: (unitId: string) => void, onEditUnit?: (unit: any) => void, onDeleteUnit?: (unit: any) => void }) {
   const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
   const [collapsedFloors, setCollapsedFloors] = useState<Record<number, boolean>>({});
 
@@ -121,7 +121,7 @@ export default function BuildingDetailsTable({ units, onAddTenant }: { units: Un
 
                         return (
                           <motion.tr
-                            key={unit.id}
+                            key={unit.id || unit.unit_id || unit.unit_code || index}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.03 }}
@@ -173,10 +173,22 @@ export default function BuildingDetailsTable({ units, onAddTenant }: { units: Un
                                     <UsersIcon className="w-4 h-4" />
                                   </button>
                                 )}
-                                <button className="p-2 text-[#9CA3AF] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditUnit?.(unit);
+                                  }}
+                                  className="p-2 text-[#9CA3AF] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                >
                                   <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button className="p-2 text-[#9CA3AF] hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteUnit?.(unit);
+                                  }}
+                                  className="p-2 text-[#9CA3AF] hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>

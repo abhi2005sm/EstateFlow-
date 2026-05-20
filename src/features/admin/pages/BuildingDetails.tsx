@@ -9,6 +9,7 @@ import AddTenantModal from '../tenants/components/AddTenantModal';
 import TenantDetailsModal from '../tenants/components/TenantDetailsModal';
 import { buildingsApi, Building, Unit } from '../buildings/api/buildingsApi';
 import { tenantsApi } from '../tenants/api/tenantsApi';
+import { getUnitsByBuilding, createUnit, updateUnit, deleteUnit } from '@/src/features/api/unitsApi';
 
 export default function BuildingDetails({ buildingId }: { buildingId: string }) {
   const [building, setBuilding] = useState<Building | null>(null);
@@ -18,10 +19,22 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
   const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
   const [isTenantModalOpen, setIsTenantModalOpen] = useState(false);
   const [isViewTenantModalOpen, setIsViewTenantModalOpen] = useState(false);
-  const [selectedUnitCode, setSelectedUnitCode] = useState<string>('');
+  const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
   const [prefilledUnitId, setPrefilledUnitId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [viewingPast, setViewingPast] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<any>(null);
+
+  const [viewingPastUnits, setViewingPastUnits] = useState(false);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [editingUnit, setEditingUnit] = useState<any>(null);
+  const [unitFormData, setUnitFormData] = useState({
+    unit_number: '',
+    floor_number: '',
+    unit_type: '1 BHK',
+    price: ''
+  });
 
   const fetchData = async () => {
     setLoading(true);
@@ -40,7 +53,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
       setBuilding(buildingData);
       
       if (buildingData) {
-        const tenantsData = await tenantsApi.getTenantsByBuildingId(buildingId);
+        const tenantsData = await tenantsApi.getTenantsByBuildingId(buildingId, viewingPast ? 'past' : 'active');
         const rawTenants = Array.isArray(tenantsData?.tenants) ? tenantsData.tenants : [];
         
         // Map unit IDs to numbers/floors from the building object
@@ -74,15 +87,32 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
         setTenants(enrichedTenants);
       }
     } catch (error) {
-      console.error('Failed to fetch building details:', error);
+      console.warn('Failed to fetch building details:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const [hasFetchedUnits, setHasFetchedUnits] = useState(false);
+
+  const fetchUnits = async () => {
+    try {
+      const status = viewingPastUnits ? 'past' : 'active';
+      const data = await getUnitsByBuilding(buildingId, status);
+      setUnits(Array.isArray(data) ? data : (data.results || data.units || []));
+      setHasFetchedUnits(true);
+    } catch (error) {
+      console.warn('Failed to fetch units:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
-  }, [buildingId]);
+  }, [buildingId, viewingPast]);
+
+  useEffect(() => {
+    fetchUnits();
+  }, [buildingId, viewingPastUnits]);
 
   const handleAction = (action: string) => {
     if (building) {
@@ -90,10 +120,78 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
     }
   };
 
-  const handleAddUnit = (e: React.FormEvent) => {
+  const handleDeleteTenant = async (tenantId: number, tenantName: string) => {
+    const confirmDelete = window.confirm(`Are you sure you want to remove ${tenantName}? Their unit will become vacant, but their historical data will be saved.`);
+    
+    if (confirmDelete) {
+      try {
+        await tenantsApi.deleteTenant(tenantId);
+        alert(`${tenantName} has been successfully moved to Past Tenants.`);
+        fetchData();
+      } catch (error) {
+        alert("Failed to remove tenant.");
+        console.warn(error);
+      }
+    }
+  };
+
+  const handleEditTenant = (tenant: any) => {
+    setEditingTenant(tenant);
+    setIsTenantModalOpen(true);
+  };
+
+  const handleAddUnitSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("New unit added successfully!");
-    setIsUnitModalOpen(false);
+    try {
+      if (editingUnit) {
+        await updateUnit(editingUnit.unit_code || editingUnit.unit_id || editingUnit.id.toString(), unitFormData);
+        alert("Unit updated successfully!");
+      } else {
+        await createUnit(buildingId, {
+          ...unitFormData,
+          floor_number: Number(unitFormData.floor_number),
+          price: Number(unitFormData.price)
+        });
+        alert("New unit added successfully!");
+      }
+      setIsUnitModalOpen(false);
+      setEditingUnit(null);
+      setUnitFormData({ unit_number: '', floor_number: '', unit_type: '1 BHK', price: '' });
+      fetchUnits();
+    } catch (error) {
+      alert("Failed to save unit.");
+      console.warn(error);
+    }
+  };
+
+  const handleDeleteUnit = async (unit: any) => {
+    if (unit.is_occupied) {
+      alert("Cannot delete this unit. Please remove the tenant first!");
+      return;
+    }
+    
+    const confirm = window.confirm(`Are you sure you want to soft delete Unit ${unit.unit_number}?`);
+    if (confirm) {
+      try {
+        await deleteUnit(unit.unit_code || unit.unit_id || unit.id.toString());
+        alert("Unit moved to history successfully!");
+        fetchUnits();
+      } catch (error) {
+        alert("Failed to delete unit.");
+        console.warn(error);
+      }
+    }
+  };
+
+  const handleEditUnit = (unit: any) => {
+    setEditingUnit(unit);
+    setUnitFormData({
+      unit_number: unit.unit_number || '',
+      floor_number: unit.floor_number?.toString() || '',
+      unit_type: unit.unit_type || '1 BHK',
+      price: unit.price?.toString() || ''
+    });
+    setIsUnitModalOpen(true);
   };
   
   const filteredTenants = useMemo(() => {
@@ -195,7 +293,29 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
         {/* Units Content Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Management Overview</h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg font-bold text-gray-900">
+                {activeTab === 'Tenant' 
+                  ? (viewingPast ? "Past Tenants (Historical)" : "Management Overview") 
+                  : (viewingPastUnits ? "Past Units (Historical)" : "Management Overview")}
+              </h2>
+              {activeTab === 'Tenant' && (
+                <button 
+                  onClick={() => setViewingPast(!viewingPast)}
+                  className="px-3 py-1.5 text-xs font-bold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  {viewingPast ? "View Active Tenants" : "View Past Tenants"}
+                </button>
+              )}
+              {activeTab === 'Units' && (
+                <button 
+                  onClick={() => setViewingPastUnits(!viewingPastUnits)}
+                  className="px-3 py-1.5 text-xs font-bold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  {viewingPastUnits ? "View Active Units" : "View Past Units"}
+                </button>
+              )}
+            </div>
             <div className="flex bg-gray-100 p-1 rounded-xl">
               {['Units', 'Tenant'].map(tab => (
                 <button
@@ -230,7 +350,11 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
                 <Plus className="w-4 h-4" />
                 <span>Add Tenant</span>
               </button>
-              <button onClick={() => setIsUnitModalOpen(true)} className="flex items-center space-x-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-bold hover:bg-blue-50 transition-all active:scale-95">
+              <button onClick={() => {
+                setEditingUnit(null);
+                setUnitFormData({ unit_number: '', floor_number: '', unit_type: '1 BHK', price: '' });
+                setIsUnitModalOpen(true);
+              }} className="flex items-center space-x-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-bold hover:bg-blue-50 transition-all active:scale-95">
                 <Plus className="w-4 h-4" />
                 <span>Add new unit</span>
               </button>
@@ -241,35 +365,55 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
         {/* Dynamic Table Content based on Tab */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
           {activeTab === 'Tenant' ? (
-            <TenantListTable tenants={filteredTenants} />
+            <TenantListTable 
+              tenants={filteredTenants} 
+              buildingName={building.name} 
+              onViewTenant={(id) => {
+                setSelectedTenantId(id);
+                setIsViewTenantModalOpen(true);
+              }}
+              onEditTenant={handleEditTenant}
+              onDeleteTenant={handleDeleteTenant}
+            />
           ) : (
             <BuildingDetailsTable 
-              units={building.units || []} 
+              units={hasFetchedUnits ? units : (building.units || [])} 
               onAddTenant={(unitId) => {
                 setPrefilledUnitId(unitId);
                 setIsTenantModalOpen(true);
               }}
               onViewTenant={(unitCode) => {
-                setSelectedUnitCode(unitCode);
-                setIsViewTenantModalOpen(true);
+                const tenant = tenants.find(t => t.unit_code === unitCode || t.unit_id === unitCode || String(t.unit) === unitCode || t.unit_number === unitCode);
+                if (tenant) {
+                  setSelectedTenantId(tenant.tenant_id || tenant.id);
+                  setIsViewTenantModalOpen(true);
+                } else {
+                  alert("Could not find tenant ID for this unit.");
+                }
               }}
+              onEditUnit={handleEditUnit}
+              onDeleteUnit={handleDeleteUnit}
             />
           )}
         </div>
 
-        {/* Add Tenant Modal */}
+        {/* Add/Edit Tenant Modal */}
         <AddTenantModal 
           isOpen={isTenantModalOpen} 
           onClose={() => {
             setIsTenantModalOpen(false);
             setPrefilledUnitId('');
+            setEditingTenant(null);
           }} 
           onSuccess={() => {
             fetchData();
-            alert("Tenant registered successfully!");
+            alert(`Tenant ${editingTenant ? 'updated' : 'registered'} successfully!`);
+            setEditingTenant(null);
           }}
-          buildingId={buildingId}
+          buildings={building ? [building] : []}
+          defaultBuildingId={buildingId}
           prefilledUnitId={prefilledUnitId}
+          editData={editingTenant}
         />
 
         {/* View Tenant Details Modal */}
@@ -277,33 +421,79 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
           isOpen={isViewTenantModalOpen}
           onClose={() => {
             setIsViewTenantModalOpen(false);
-            setSelectedUnitCode('');
+            setSelectedTenantId(null);
           }}
-          unitCode={selectedUnitCode}
+          tenantId={selectedTenantId}
         />
 
-        {/* Add Unit Modal */}
+        {/* Add/Edit Unit Modal */}
         {isUnitModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Add New Unit</h2>
+                <h2 className="text-xl font-bold text-gray-900">{editingUnit ? 'Edit Unit' : 'Add New Unit'}</h2>
                 <button onClick={() => setIsUnitModalOpen(false)} className="text-gray-400 hover:bg-gray-100 p-1.5 rounded-lg transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <form onSubmit={handleAddUnit} className="p-6 space-y-4">
-                <div className="space-y-4">
-                  <input required type="text" placeholder="Unit Number (e.g. 101)" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500" />
-                  <input required type="text" placeholder="Floor" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <input type="number" placeholder="Beds" className="border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500" />
-                    <input type="number" placeholder="Baths" className="border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500" />
+              <form onSubmit={handleAddUnitSubmit} className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Unit Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. 101"
+                      value={unitFormData.unit_number}
+                      onChange={(e) => setUnitFormData({...unitFormData, unit_number: e.target.value})}
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={!!editingUnit} // Prevent changing unit number after creation
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Floor Number</label>
+                    <input 
+                      type="number" 
+                      placeholder="e.g. 1"
+                      value={unitFormData.floor_number}
+                      onChange={(e) => setUnitFormData({...unitFormData, floor_number: e.target.value})}
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Unit Type</label>
+                    <select 
+                      value={unitFormData.unit_type}
+                      onChange={(e) => setUnitFormData({...unitFormData, unit_type: e.target.value})}
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="1 RK">1 RK</option>
+                      <option value="1 BHK">1 BHK</option>
+                      <option value="2 BHK">2 BHK</option>
+                      <option value="3 BHK">3 BHK</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Rent (₹)</label>
+                    <input 
+                      type="number" 
+                      placeholder="e.g. 15000"
+                      value={unitFormData.price}
+                      onChange={(e) => setUnitFormData({...unitFormData, price: e.target.value})}
+                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
                   </div>
                 </div>
                 <div className="flex justify-end space-x-3 mt-6">
                   <button type="button" onClick={() => setIsUnitModalOpen(false)} className="px-4 py-2 text-gray-600 font-bold text-sm">Cancel</button>
-                  <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm shadow-md">Add Unit</button>
+                  <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm shadow-md">
+                    {editingUnit ? 'Save Changes' : 'Add Unit'}
+                  </button>
                 </div>
               </form>
             </div>

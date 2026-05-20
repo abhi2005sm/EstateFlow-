@@ -18,7 +18,7 @@ export const paymentsApi = {
     // Owner approve/decline payment
     // Approved: {{bas}}/users/payments/{id}/approve/ -> {"approval_status": "Approved"}
     return apiRequest(`/users/payments/${id}/approve/`, {
-      method: 'POST',
+      method: 'PATCH',
       body: JSON.stringify({
         approval_status: status
       }),
@@ -26,8 +26,8 @@ export const paymentsApi = {
   },
 
   submitPayment: async (data: any): Promise<PaymentRequest> => {
-    // Standard POST to /users/payments/ for creation
-    return apiRequest('/users/payments/', {
+    // Standard POST to /users/payments/submit/ for creation
+    return apiRequest('/users/payments/submit/', {
       method: 'POST',
       body: JSON.stringify(data),
     });

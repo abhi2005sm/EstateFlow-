@@ -2,25 +2,58 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Building2, LogOut, Users, Receipt, Settings, PieChart, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Building2, LogOut, Users, Receipt, Settings, PieChart, ChevronDown, PlusCircle, Wrench } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { apiRequest } from '../../api/api';
 
 const navLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Buildings', href: '/admin/buildings', icon: Building2 },
   { name: 'Tenants', href: '/admin/tenants', icon: Users },
   { name: 'Payments', href: '/admin/payments', icon: Receipt },
-  { name: 'Analytics', href: '/admin/analytics', icon: PieChart },
+  { name: 'Requests', href: '/admin/requests', icon: Wrench },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
+    } catch(e) {}
+
+    const fetchOwnerProfile = async () => {
+      try {
+        const profileData = await apiRequest('/users/owners/me/');
+        if (profileData && profileData.name) {
+          const updatedUser = {
+            ...JSON.parse(localStorage.getItem('user') || '{}'),
+            name: profileData.name,
+            email: profileData.email || profileData.user?.email
+          };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          window.dispatchEvent(new Event('user-profile-updated'));
+        }
+      } catch (err) {
+        console.error("Failed to fetch owner profile", err);
+      }
+    };
+    fetchOwnerProfile();
+  }, []);
 
   const activeIndex = navLinks.findIndex(
     (link) => pathname === link.href || (link.href !== '/admin' && pathname.startsWith(link.href))
   );
+
+  const displayName = user?.name || "Admin Owner";
+
+
 
   return (
     <div className="w-72 bg-white border-r border-gray-100 flex flex-col h-screen sticky top-0 overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.03)]">
@@ -93,20 +126,23 @@ export default function AdminSidebar() {
 
       {/* Admin profile + logout */}
       <div className="p-5 border-t border-gray-100 shrink-0 space-y-2">
-        <motion.div
-          whileHover={{ backgroundColor: '#F5F3F0' }}
-          transition={{ duration: 0.15 }}
-          className="flex items-center space-x-3 px-3 py-3 rounded-2xl cursor-pointer"
-        >
-          <div className="w-9 h-9 rounded-xl bg-[#F26922]/10 border border-[#F26922]/10 overflow-hidden">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin" className="w-full h-full" />
+        <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-200 mt-auto">
+          {/* Avatar/Icon */}
+          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="User" className="w-full h-full" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[#121110] text-xs font-black truncate">Admin Owner</p>
-
+          
+          {/* Name & Email Column */}
+          <div className="flex flex-col overflow-hidden">
+            <span className="text-sm font-semibold text-gray-900 truncate capitalize">
+              {displayName}
+            </span>
+            {/* ADDED EMAIL HERE */}
+            <span className="text-xs text-gray-500 truncate">
+              {user?.email || "superadmin@estatia.com"} 
+            </span>
           </div>
-          <ChevronDown className="w-4 h-4 text-[#61605D]/30 shrink-0" />
-        </motion.div>
+        </div>
 
         <motion.button
           whileHover={{ backgroundColor: '#FEF2F2' }}

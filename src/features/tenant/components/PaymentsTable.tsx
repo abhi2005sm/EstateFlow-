@@ -24,17 +24,17 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
         <thead>
           <tr className="border-b border-gray-50">
             <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Transaction</th>
-            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Fee Type</th>
-            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Amount & Dues</th>
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Tenant & Unit</th>
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Amount</th>
             <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Date</th>
-            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Approval Status</th>
+            <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status</th>
             <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Receipt</th>
           </tr>
         </thead>
         <tbody>
           {data.map((payment, index) => (
             <motion.tr
-              key={payment.id}
+              key={payment.payment_id || payment.id || index}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -46,16 +46,20 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
                     <CreditCard className="w-5 h-5 text-gray-500" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">{payment.transaction_id || `TRX-${payment.id}`}</p>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{payment.payment_method || 'Standard'}</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      {payment.fee_type || (payment as any).feeType} - {payment.rent_month} {payment.rent_year}
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+                      {payment.transaction_id || `TRX-${payment.payment_id || payment.id || index}`}
+                    </p>
                   </div>
                 </div>
               </td>
               <td className="px-8 py-6">
                 <div>
-                  <p className="text-sm font-bold text-gray-900">{payment.fee_type || (payment as any).feeType}</p>
+                  <p className="text-sm font-bold text-gray-900">{payment.tenant_name}</p>
                   <p className="text-[11px] font-medium text-gray-400">
-                    {payment.rent_month ? `${payment.rent_month} ${payment.rent_year}` : (payment as any).dueDate || 'No Date'}
+                    {payment.unit_code}
                   </p>
                 </div>
               </td>
@@ -72,19 +76,21 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
               <td className="px-8 py-6">
                 <div className="flex items-center text-sm font-bold text-gray-500">
                   <Calendar className="w-4 h-4 mr-2 opacity-50" />
-                  {payment.created_at 
-                    ? new Date(payment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                    : (payment as any).date || 'N/A'}
+                  {payment.payment_date 
+                    ? new Date(payment.payment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : payment.created_at 
+                      ? new Date(payment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
+                      : 'N/A'}
                 </div>
               </td>
               <td className="px-8 py-6">
                 <div className="flex flex-col space-y-1">
                   <span className={`w-fit px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                    payment.approval_status === 'Pending' || (payment as any).status === 'Pending' ? 'bg-amber-50 text-amber-600' :
-                    payment.approval_status === 'Approved' || payment.status === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
+                    payment.approval_status === 'Pending' ? 'bg-amber-50 text-amber-600' :
+                    payment.approval_status === 'Approved' ? 'bg-emerald-50 text-emerald-600' :
                     'bg-rose-50 text-rose-600'
                   }`}>
-                    {payment.approval_status === 'Approved' || payment.status === 'Paid' ? 'Rent Paid' : (payment.approval_status || payment.status)}
+                    {payment.approval_status}
                   </span>
                   <span className={`w-fit px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-tighter ${
                     payment.status === 'Paid' ? 'text-emerald-500' : 
@@ -98,7 +104,7 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
               <td className="px-8 py-6 text-right">
                 <button 
                   disabled={payment.approval_status !== 'Approved'}
-                  className="p-2.5 text-gray-400 hover:text-[#F26922] hover:bg-[#F26922]/5 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                  className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                 >
                   <Download className="w-5 h-5" />
                 </button>

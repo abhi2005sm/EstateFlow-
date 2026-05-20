@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import PaymentsTable from '../components/PaymentsTable';
 import SubmitPaymentModal from '../components/SubmitPaymentModal';
-import { Plus, Loader2, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { paymentsApi } from '../../admin/payments/api/paymentsApi';
 import { PaymentRequest } from '../../admin/payments/types';
+import { CheckCircle2, Clock, Filter, XCircle, Building2, Calendar, History, Search, CreditCard, Download, Plus, Loader2, AlertCircle } from 'lucide-react';
 
 export default function Payments() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,9 +23,12 @@ export default function Payments() {
       setPayments(Array.isArray(data) ? data : (data as any).results || []);
     } catch (err: any) {
       console.error('Failed to fetch payments:', err);
-      // FALLBACK TO MOCK DATA ON ERROR
-      const { tenantPaymentsData } = await import('../../../mock/tenantPaymentsData');
-      setPayments(tenantPaymentsData as any);
+      if (err.message && err.message.includes('404')) {
+        // Backend GET might not be implemented yet. Let it be empty.
+        setPayments([]);
+      } else {
+        setError(err.message || 'Failed to load payments.');
+      }
       // We don't set the error state here so the user doesn't see a scary message
     } finally {
       setLoading(false);
@@ -36,72 +39,138 @@ export default function Payments() {
     fetchPayments();
   }, []);
 
+  const [activeTab, setActiveTab] = useState<'pending' | 'history'>('history');
+
   const filteredPayments = payments.filter(p => {
     const searchStr = searchTerm.toLowerCase();
-    return (
-      (p.fee_type?.toLowerCase() || '').includes(searchStr) ||
-      (p.rent_month?.toLowerCase() || '').includes(searchStr) ||
-      (p.transaction_id?.toLowerCase() || '').includes(searchStr)
-    );
+    const matchesSearch = (p.fee_type?.toLowerCase() || '').includes(searchStr) ||
+                          (p.rent_month?.toLowerCase() || '').includes(searchStr) ||
+                          (p.transaction_id?.toLowerCase() || '').includes(searchStr);
+    
+    const isPending = p.approval_status === 'Pending';
+    const matchesTab = activeTab === 'pending' ? isPending : true; // History shows all for tenant
+
+    return matchesSearch && matchesTab;
   });
 
+  const stats = {
+    pending: payments.filter(p => p.approval_status === 'Pending').length,
+    totalPaid: payments.filter(p => p.approval_status === 'Approved' || p.status === 'Paid').reduce((acc, p) => acc + (Number(p.amount) || 0), 0),
+    totalDue: payments.reduce((acc, p) => acc + (Number(p.due_amount) || 0), 0)
+  };
+
   return (
-    <div className="p-10 max-w-[1600px] mx-auto space-y-10">
+    <div className="space-y-8 p-8 max-w-7xl mx-auto min-h-screen bg-[#F8F9FA]">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">My Payments</h1>
-          <p className="text-gray-500 font-semibold mt-1">Manage your upcoming dues and payment history.</p>
+          <h1 className="text-4xl font-black text-[#1A1C1E] tracking-tight">Payments Overview</h1>
+          <p className="text-[#64748B] font-medium mt-1">Review, submit, and track all your rent payments.</p>
         </div>
         
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="relative group w-full md:w-72">
-            <input
-              type="text"
-              placeholder="Search payments..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-white border-none rounded-2xl text-sm font-bold shadow-sm focus:ring-2 focus:ring-[#F26922]/10 transition-all outline-none"
-            />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#F26922] transition-colors">
-              <Plus className="w-5 h-5 rotate-45" /> {/* Using Plus rotated as a placeholder for Search if Search is not imported */}
-            </div>
-          </div>
-          
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center space-x-3 bg-[#F26922] text-white px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-widest shadow-lg shadow-[#F26922]/20 hover:bg-[#d95a1d] transition-all whitespace-nowrap"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Submit New Payment</span>
-          </motion.button>
-        </div>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center space-x-2 bg-[#1A1C1E] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-black transition-all whitespace-nowrap"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Submit Payment</span>
+        </motion.button>
       </div>
 
-      <div className="bg-white/40 backdrop-blur-xl border border-white/60 rounded-[3rem] p-1 shadow-sm overflow-hidden">
+      {error && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-rose-50 border border-rose-100 p-4 rounded-2xl flex items-center space-x-3 text-rose-600"
+        >
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p className="text-sm font-bold">{error}</p>
+          <button onClick={fetchPayments} className="ml-auto text-xs underline font-black uppercase tracking-widest">Retry</button>
+        </motion.div>
+      )}
+
+      {/* Header section with Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          { label: 'Pending Approvals', value: stats.pending, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
+          { label: 'Total Paid', value: `₹${stats.totalPaid.toLocaleString('en-IN')}`, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+          { label: 'Total Due', value: `₹${stats.totalDue.toLocaleString('en-IN')}`, icon: XCircle, color: 'text-rose-500', bg: 'bg-rose-50' },
+        ].map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center space-x-4"
+          >
+            <div className={`w-12 h-12 ${stat.bg} rounded-2xl flex items-center justify-center`}>
+              <stat.icon className={`w-6 h-6 ${stat.color}`} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
+              <h3 className="text-2xl font-black text-gray-900">{stat.value}</h3>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="bg-white border border-[#E2E8F0] rounded-[32px] p-2 shadow-sm overflow-hidden mb-8">
+        {/* Table Controls */}
+        <div className="p-8 border-b border-gray-50 space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex bg-gray-50/50 p-1.5 rounded-2xl w-fit">
+              <button
+                onClick={() => setActiveTab('pending')}
+                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  activeTab === 'pending' 
+                    ? 'bg-white text-[#F26922] shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Pending Requests
+              </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  activeTab === 'history' 
+                    ? 'bg-white text-[#F26922] shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Payment History
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#F26922] transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search payments..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-11 pr-4 py-3 bg-gray-50/50 border-none rounded-2xl text-sm font-medium w-full md:w-72 focus:ring-2 focus:ring-[#F26922]/10 transition-all outline-none"
+                />
+              </div>
+              <button onClick={fetchPayments} className="p-3 bg-gray-50/50 rounded-2xl text-gray-500 hover:bg-gray-100 transition-all">
+                <Filter className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center">
             <Loader2 className="w-10 h-10 text-[#F26922] animate-spin mb-4" />
-            <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Loading My Payments...</p>
+            <p className="text-sm font-bold text-[#64748B] animate-pulse">Loading My Payments...</p>
           </div>
-        ) : error ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center px-4">
-            <div className="w-20 h-20 bg-rose-50 rounded-[32px] flex items-center justify-center mb-6">
-              <AlertCircle className="w-10 h-10 text-rose-500" />
+        ) : payments.length === 0 && !loading ? (
+          <div className="py-20 text-center">
+            <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
+              <History className="w-10 h-10 text-gray-300" />
             </div>
-            <h3 className="text-xl font-black text-gray-900">Payment Synchronization Issue</h3>
-            <p className="text-gray-500 font-medium max-w-md mx-auto mt-2 mb-8">
-              {error.includes('404') 
-                ? "The payment service is currently being updated. Your transaction history will be available shortly."
-                : error}
-            </p>
-            <button 
-              onClick={fetchPayments}
-              className="px-8 py-3 bg-[#121110] text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#F26922] transition-all shadow-lg shadow-black/5 active:scale-95"
-            >
-              Try Again
-            </button>
+            <h3 className="text-lg font-black text-gray-900">No payments found</h3>
+            <p className="text-gray-400 text-sm font-medium mt-1">Try adjusting your filters or search terms</p>
           </div>
         ) : (
           <PaymentsTable data={filteredPayments} />
@@ -111,7 +180,13 @@ export default function Payments() {
       <SubmitPaymentModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onSuccess={fetchPayments}
+        onSuccess={(newPayment?: PaymentRequest) => {
+          if (newPayment) {
+            setPayments(prev => [newPayment, ...prev]);
+          } else {
+            fetchPayments();
+          }
+        }}
       />
     </div>
   );

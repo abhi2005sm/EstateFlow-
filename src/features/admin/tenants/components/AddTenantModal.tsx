@@ -9,11 +9,13 @@ interface AddTenantModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  buildingId?: string;
+  buildings?: any[];
+  defaultBuildingId?: string;
   prefilledUnitId?: string;
+  editData?: any;
 }
 
-export default function AddTenantModal({ isOpen, onClose, onSuccess, buildingId, prefilledUnitId }: AddTenantModalProps) {
+export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings = [], defaultBuildingId, prefilledUnitId, editData }: AddTenantModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<RegisterTenantPayload>({
     email: '',
@@ -30,17 +32,72 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildingId,
     occupancy_type: 'Rent',
   });
 
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
+
   React.useEffect(() => {
-    if (prefilledUnitId) {
-      setFormData(prev => ({ ...prev, unit_code: prefilledUnitId }));
+    if (isOpen) {
+      if (editData) {
+        setFormData({
+          email: editData.email || '',
+          name: editData.name || '',
+          phone_number: editData.phone_number || editData.phone || '',
+          unit_code: editData.unit_code || editData.unit_id || editData.unit || '',
+          tenant_type: editData.tenant_type || 'Family',
+          male_count: editData.male_count || 0,
+          female_count: editData.female_count || 0,
+          adult_count: editData.adult_count || 1,
+          children_count: editData.children_count || 0,
+          dietary_preference: editData.dietary_preference || 'Veg',
+          pet_details: editData.pet_details || 'None',
+          occupancy_type: editData.occupancy_type || 'Rent',
+        });
+        if (editData.building) {
+           setSelectedBuildingId(editData.building.toString());
+        } else if (defaultBuildingId) {
+           setSelectedBuildingId(defaultBuildingId);
+        }
+      } else {
+        setFormData({
+          email: '',
+          name: '',
+          phone_number: '',
+          unit_code: prefilledUnitId || '',
+          tenant_type: 'Family',
+          male_count: 0,
+          female_count: 0,
+          adult_count: 1,
+          children_count: 0,
+          dietary_preference: 'Veg',
+          pet_details: 'None',
+          occupancy_type: 'Rent',
+        });
+        if (defaultBuildingId && buildings.some(b => b.id?.toString() === defaultBuildingId || b.building_id?.toString() === defaultBuildingId)) {
+          setSelectedBuildingId(defaultBuildingId);
+        } else if (buildings.length > 0) {
+          setSelectedBuildingId((buildings[0].id || buildings[0].building_id || '').toString());
+        }
+      }
     }
-  }, [prefilledUnitId]);
+  }, [isOpen, defaultBuildingId, buildings, prefilledUnitId, editData]);
+
+  const selectedBuilding = buildings.find(b => b.id?.toString() === selectedBuildingId || b.building_id?.toString() === selectedBuildingId);
+  const units = selectedBuilding?.units || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.email) {
+      alert("Email is required! Please fill out the email field.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await tenantsApi.registerTenant(formData);
+      if (editData && (editData.tenant_id || editData.id)) {
+        await tenantsApi.updateTenant(editData.tenant_id || editData.id, formData);
+      } else {
+        await tenantsApi.registerTenant(formData);
+      }
       onSuccess();
       onClose();
     } catch (error) {
@@ -82,8 +139,12 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildingId,
             <div className="p-10 pb-6 bg-[#F8F9FA] border-b border-gray-100">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <h2 className="text-[32px] font-black text-[#1A1C1E] tracking-tight leading-none">Register Tenant</h2>
-                  <p className="text-[#64748B] font-medium text-sm">Onboard a new resident with complete profile details.</p>
+                  <h2 className="text-[32px] font-black text-[#1A1C1E] tracking-tight leading-none">
+                    {editData ? 'Edit Tenant' : 'Register Tenant'}
+                  </h2>
+                  <p className="text-[#64748B] font-medium text-sm">
+                    {editData ? 'Update resident profile details.' : 'Onboard a new resident with complete profile details.'}
+                  </p>
                 </div>
                 <button
                   onClick={onClose}
@@ -96,7 +157,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildingId,
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form id="add-tenant-form" onSubmit={handleSubmit} className="space-y-6">
                 {/* Section 1: Basic Information */}
                 <div className="bg-white border border-[#E2E8F0] rounded-[24px] overflow-hidden shadow-sm">
                   <div className="px-6 py-4 bg-[#F8F9FA] border-b border-[#E2E8F0] flex items-center space-x-3">
@@ -160,16 +221,50 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildingId,
                     <span className="text-xs font-black text-[#1A1C1E] uppercase tracking-wider">Unit Allocation</span>
                   </div>
                   <div className="p-6 grid grid-cols-2 gap-x-6 gap-y-4">
-                    <div className="space-y-1.5 col-span-2">
+                    <div className="space-y-1.5 col-span-2 md:col-span-1">
+                      <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Building</label>
+                      <div className="relative">
+                        <select
+                          value={selectedBuildingId}
+                          onChange={(e) => {
+                            setSelectedBuildingId(e.target.value);
+                            setFormData(prev => ({ ...prev, unit_code: '' }));
+                          }}
+                          className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
+                          required
+                        >
+                          <option value="" disabled>Select a building</option>
+                          {buildings.map((b, i) => {
+                            const bid = b.id || b.building_id || `b-${i}`;
+                            return <option key={bid} value={bid}>{b.name}</option>;
+                          })}
+                        </select>
+                        <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none" />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1.5 col-span-2 md:col-span-1">
                       <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Assigned Unit Code</label>
-                      <input
-                        name="unit_code"
-                        required
-                        placeholder="e.g. o-5-b-2-201"
-                        className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/5 transition-all"
-                        value={formData.unit_code}
-                        onChange={handleChange}
-                      />
+                      <div className="relative">
+                        <select
+                          name="unit_code"
+                          className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
+                          value={formData.unit_code}
+                          onChange={handleChange}
+                          required
+                          disabled={!selectedBuildingId || units.length === 0}
+                        >
+                          <option value="" disabled>
+                            {!selectedBuildingId ? 'Select building first' : units.length === 0 ? 'No units available' : 'Choose a unit'}
+                          </option>
+                          {units.map((u: any) => (
+                            <option key={u.unit_id || u.id} value={u.unit_code || u.unit_id || u.id}>
+                              {u.unit_number} ({u.unit_type}) {u.is_occupied ? '- Occupied' : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none" />
+                      </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Occupancy Type</label>
@@ -294,7 +389,8 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildingId,
                 Cancel Process
               </button>
               <button
-                onClick={handleSubmit}
+                type="submit"
+                form="add-tenant-form"
                 disabled={loading}
                 className="px-10 py-4 bg-[#1A1C1E] text-white rounded-2xl text-sm font-bold shadow-xl shadow-[#1A1C1E]/20 hover:bg-[#000000] transition-all disabled:opacity-50 flex items-center space-x-3 active:scale-95"
               >
@@ -303,7 +399,11 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildingId,
                 ) : (
                   <CheckCircle2 className="w-5 h-5" />
                 )}
-                <span>{loading ? 'Processing Registration...' : 'Complete Registration'}</span>
+                <span>
+                  {loading 
+                    ? (editData ? 'Updating Profile...' : 'Processing Registration...') 
+                    : (editData ? 'Save Changes' : 'Complete Registration')}
+                </span>
               </button>
             </div>
           </motion.div>

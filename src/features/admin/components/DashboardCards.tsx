@@ -1,28 +1,28 @@
-import { adminDashboardData } from '../../../mock/adminDashboardData';
-
-export default function DashboardCards() {
-  const { overview, rentSummary } = adminDashboardData;
+export default function DashboardCards({ data }: { data?: any }) {
+  if (!data) return null;
+  const overview = data.property_overview || {};
+  const rentSummary = data.rent_summary || {};
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-bold text-gray-800 mb-4">Property Overview</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <Card title="Total Properties" value={overview.totalBuildings} />
-          <Card title="Residential" value={overview.residentialBuildings} />
-          <Card title="Commercial" value={overview.commercialBuildings} />
-          <Card title="Total Units" value={overview.totalUnits} />
-          <Card title="Occupied Units" value={overview.occupiedUnits} color="text-emerald-600" />
-          <Card title="Vacant Units" value={overview.vacantUnits} color="text-red-600" />
+          <Card title="Total Properties" value={overview.total_buildings || 0} />
+          <Card title="Residential" value={overview.residential || 0} />
+          <Card title="Commercial" value={overview.commercial || 0} />
+          <Card title="Total Units" value={overview.total_units || 0} />
+          <Card title="Occupied Units" value={overview.occupied_units || 0} color="text-emerald-600" />
+          <Card title="Vacant Units" value={overview.vacant_units || 0} color="text-red-600" />
         </div>
       </div>
 
       <div>
         <h2 className="text-xl font-bold text-gray-800 mb-4">Rent Summary</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card title="Total Collected" value={`$${rentSummary.totalRentCollected.toLocaleString()}`} color="text-emerald-600" />
-          <Card title="Total Due" value={`$${rentSummary.totalRentDue.toLocaleString()}`} color="text-red-600" />
-          <Card title="Paid Units" value={rentSummary.paidUnits} color="text-emerald-600" />
-          <Card title="Unpaid Units" value={rentSummary.unpaidUnits} color="text-red-600" />
+          <Card title="Total Collected" value={`₹${Number(rentSummary.total_collected || 0).toLocaleString('en-IN')}`} color="text-emerald-600" />
+          <Card title="Total Due" value={`₹${Number(rentSummary.total_due || 0).toLocaleString('en-IN')}`} color="text-red-600" />
+          <Card title="Paid Units" value={rentSummary.paid_units || 0} color="text-emerald-600" />
+          <Card title="Unpaid Units" value={rentSummary.unpaid_units || 0} color="text-red-600" />
         </div>
       </div>
     </div>

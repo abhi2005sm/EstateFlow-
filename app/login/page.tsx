@@ -82,6 +82,12 @@ export default function LoginPage() {
       
       console.log('[Login] API Response:', response);
       
+      // Store user info for UI display
+      localStorage.setItem('user', JSON.stringify({
+        email: response.email || response.user?.email || email,
+        name: response.name || response.first_name || response.user?.name || (role === 'admin' ? 'Admin Owner' : role),
+      }));
+      
       // Determine role from various possible fields in API response
       let detectedRole = response.role || response.user_type || role;
       if (response.is_superuser) detectedRole = 'superadmin';

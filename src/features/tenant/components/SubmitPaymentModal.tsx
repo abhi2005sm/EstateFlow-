@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, CreditCard, Send, Loader2, CheckCircle2 } from 'lucide-react';
 import { paymentsApi } from '../../admin/payments/api/paymentsApi';
 
+import { PaymentRequest } from '../../admin/payments/types';
+
 interface SubmitPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (payment?: PaymentRequest) => void;
 }
 
 export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: SubmitPaymentModalProps) {
@@ -29,9 +31,9 @@ export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: Submi
     setLoading(true);
     setError(null);
     try {
-      await paymentsApi.submitPayment(formData);
+      const response = await paymentsApi.submitPayment(formData);
       setSuccess(true);
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(response);
       // Reset form
       setFormData({
         fee_type: 'Rent',
@@ -83,8 +85,8 @@ export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: Submi
               <>
                 <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-[#F26922]/10 rounded-xl flex items-center justify-center">
-                      <CreditCard className="w-5 h-5 text-[#F26922]" />
+                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
                       <h2 className="text-lg font-black text-gray-900">Submit Payment</h2>
@@ -103,7 +105,7 @@ export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: Submi
                       <select
                         value={formData.rent_month}
                         onChange={(e) => setFormData({ ...formData, rent_month: e.target.value })}
-                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[#F26922]/10 transition-all outline-none"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all outline-none"
                       >
                         {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(m => (
                           <option key={m} value={m}>{m}</option>
@@ -116,7 +118,7 @@ export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: Submi
                         type="number"
                         value={formData.rent_year}
                         onChange={(e) => setFormData({ ...formData, rent_year: parseInt(e.target.value) })}
-                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[#F26922]/10 transition-all outline-none"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -129,7 +131,7 @@ export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: Submi
                       placeholder="e.g. 12000"
                       value={formData.amount}
                       onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[#F26922]/10 transition-all outline-none"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all outline-none"
                     />
                   </div>
 
@@ -141,10 +143,10 @@ export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: Submi
                           key={m}
                           type="button"
                           onClick={() => setFormData({ ...formData, payment_method: m })}
-                          className={`py-3 rounded-2xl text-xs font-black uppercase tracking-wider border-2 transition-all ${
+                          className={`py-3 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
                             formData.payment_method === m 
-                              ? 'border-[#F26922] bg-[#F26922]/5 text-[#F26922]' 
-                              : 'border-gray-50 bg-gray-50 text-gray-400 hover:bg-gray-100'
+                              ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm' 
+                              : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
                           }`}
                         >
                           {m}
@@ -161,7 +163,7 @@ export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: Submi
                       placeholder={formData.payment_method === 'Cash' ? "e.g. Received by [Name] (Optional)" : "e.g. UPI-123456789"}
                       value={formData.transaction_id}
                       onChange={(e) => setFormData({ ...formData, transaction_id: e.target.value })}
-                      className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[#F26922]/10 transition-all outline-none"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 transition-all outline-none"
                     />
                   </div>
                   
@@ -181,7 +183,7 @@ export default function SubmitPaymentModal({ isOpen, onClose, onSuccess }: Submi
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-[#121110] text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#F26922] transition-all shadow-lg shadow-black/5 disabled:opacity-50 flex items-center justify-center space-x-3"
+                    className="w-full py-4 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-3 active:scale-95"
                   >
                     {loading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />

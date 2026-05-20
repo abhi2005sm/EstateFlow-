@@ -39,6 +39,7 @@ export default function RealPropertyDashboard() {
     loading: true
   });
   const [summary, setSummary] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
 
   const fetchData = async () => {
     try {
@@ -111,8 +112,24 @@ export default function RealPropertyDashboard() {
   };
 
   useEffect(() => {
+    const loadUser = () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) setUser(JSON.parse(storedUser));
+      } catch(e) {}
+    };
+
+    loadUser();
+    window.addEventListener('user-profile-updated', loadUser);
+
     fetchData();
+
+    return () => window.removeEventListener('user-profile-updated', loadUser);
   }, []);
+
+  const displayName = user?.name || "Admin Owner";
+
+
 
   const stats = useMemo(() => {
     const totalBuildings = summary?.total_buildings || data.buildings.length;
@@ -214,7 +231,7 @@ export default function RealPropertyDashboard() {
                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=F26922" alt="Admin" className="w-full h-full" />
               </div>
               <div>
-                <p className="text-xs font-black text-[#121110]">Admin Owner</p>
+                <p className="text-xs font-black text-[#121110] capitalize">{displayName}</p>
               </div>
             </div>
           </div>
@@ -233,7 +250,7 @@ export default function RealPropertyDashboard() {
             >
               <motion.div variants={itemVariants} className="space-y-3">
                 <h1 className="text-5xl font-black tracking-tight leading-[1.1] text-[#121110]">
-                  {greeting},<br />Admin
+                  {greeting},<br /><span className="capitalize">{displayName.split(' ')[0]}</span>
                 </h1>
                 <p className="text-[#61605D] font-semibold text-base leading-relaxed">
                   Here's your live portfolio snapshot based on your active registrations.

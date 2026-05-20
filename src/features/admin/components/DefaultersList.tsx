@@ -1,7 +1,6 @@
-import { adminDashboardData } from '../../../mock/adminDashboardData';
-
-export default function DefaultersList() {
-  const { defaulters } = adminDashboardData;
+export default function DefaultersList({ data }: { data?: any }) {
+  if (!data) return null;
+  const defaulters = data.rent_defaulters || [];
   return (
     <div className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
       <div className="p-6 border-b border-red-100 bg-red-50/50">
@@ -22,12 +21,12 @@ export default function DefaultersList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {defaulters.map((d) => (
-              <tr key={d.id} className="hover:bg-red-50/30 transition-colors">
+            {defaulters.map((d: any, i: number) => (
+              <tr key={d.name + i} className="hover:bg-red-50/30 transition-colors">
                 <td className="px-6 py-4 font-bold text-gray-900">{d.name}</td>
-                <td className="px-6 py-4 text-gray-600">{d.phone}</td>
-                <td className="px-6 py-4 text-gray-600">{d.buildingName}</td>
-                <td className="px-6 py-4 font-bold text-red-600 bg-red-50/30">$${d.dueAmount.toLocaleString()}</td>
+                <td className="px-6 py-4 text-gray-600">{d.phone_number}</td>
+                <td className="px-6 py-4 text-gray-600">{d.building_name}</td>
+                <td className="px-6 py-4 font-bold text-red-600 bg-red-50/30">₹{Number(d.due_amount || 0).toLocaleString('en-IN')}</td>
               </tr>
             ))}
           </tbody>

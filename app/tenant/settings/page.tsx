@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { apiRequest } from "@/src/features/api/api";
 
-export default function SettingsPage() {
+export default function TenantSettingsPage() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

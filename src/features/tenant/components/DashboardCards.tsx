@@ -1,13 +1,31 @@
-import { tenantDashboardData } from '../../../mock/tenantDashboardData';
+import { PaymentRequest } from '../../admin/payments/types';
 
-export default function DashboardCards() {
-  const { overview } = tenantDashboardData;
+interface DashboardCardsProps {
+  payments?: PaymentRequest[];
+  profile?: any;
+}
+
+export default function DashboardCards({ payments = [], profile }: DashboardCardsProps) {
+  const totalRent = profile?.rent_amount !== undefined 
+    ? Number(profile.rent_amount) 
+    : payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+  const paidAmount = payments.filter(p => p.status === 'Paid' || p.approval_status === 'Approved').reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+  
+  const dueAmount = profile?.due_amount !== undefined 
+    ? Number(profile.due_amount) 
+    : payments.reduce((acc, p) => acc + (Number(p.due_amount) || 0), 0);
+  
+  // Find next due date: get earliest due_date that is in the future
+  const upcomingPayments = payments.filter(p => p.status !== 'Paid' && p.approval_status !== 'Approved' && p.due_date);
+  upcomingPayments.sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime());
+  const nextDueDate = upcomingPayments.length > 0 ? new Date(upcomingPayments[0].due_date!).toLocaleDateString() : 'N/A';
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <Card title="Total Rent" value={`$${overview.totalRent.toLocaleString()}`} />
-      <Card title="Paid Amount" value={`$${overview.paidAmount.toLocaleString()}`} color="text-emerald-600" />
-      <Card title="Due Amount" value={`$${overview.dueAmount.toLocaleString()}`} color="text-red-600" />
-      <Card title="Next Due Date" value={overview.nextDueDate} color="text-blue-600" />
+      <Card title="Total Rent" value={`₹${totalRent.toLocaleString('en-IN')}`} />
+      <Card title="Paid Amount" value={`₹${paidAmount.toLocaleString('en-IN')}`} color="text-emerald-600" />
+      <Card title="Due Amount" value={`₹${dueAmount.toLocaleString('en-IN')}`} color={dueAmount > 0 ? "text-red-600" : "text-gray-900"} />
+      <Card title="Next Due Date" value={nextDueDate} color="text-[#F26922]" />
     </div>
   );
 }

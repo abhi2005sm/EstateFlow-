@@ -23,6 +23,18 @@ export const tenantsApi = {
     }),
   
   getTenants: () => apiRequest('/users/tenants/'),
-  getTenantsByBuildingId: (buildingId: string) => apiRequest(`/users/buildings/${buildingId}/tenants/`),
+  getTenantsByBuildingId: (buildingId: string | number, status: 'active' | 'past' = 'active') => 
+    apiRequest(`/users/buildings/${buildingId}/tenants/?status=${status}`),
   getTenantByUnitCode: (unitCode: string) => apiRequest(`/users/units/${unitCode}/tenant/`),
+  getTenantById: (tenantId: number) => apiRequest(`/users/tenants/${tenantId}/`),
+  getTenantPaymentHistory: (tenantId: number) => apiRequest(`/users/tenants/${tenantId}/payments/`),
+  updateTenant: (tenantId: number, data: any) =>
+    apiRequest(`/users/tenants/${tenantId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteTenant: (tenantId: number) =>
+    apiRequest(`/users/tenants/${tenantId}/`, {
+      method: 'DELETE',
+    }),
 };

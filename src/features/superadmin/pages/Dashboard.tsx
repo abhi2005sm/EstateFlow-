@@ -299,8 +299,8 @@ export default function Dashboard() {
               <button onClick={() => alert("Viewing all owners")} className="text-[11px] font-black text-gray-400 uppercase tracking-widest hover:text-[#121110] transition-colors">View All</button>
             </div>
             <div className="space-y-6">
-              {data.owners.slice(0, 4).map(owner => (
-                <div key={owner.id} className="flex items-center gap-5 p-4 hover:bg-gray-50 rounded-[32px] transition-all group cursor-pointer border border-transparent hover:border-gray-100">
+              {data.owners.slice(0, 4).map((owner, index) => (
+                <div key={owner.id || owner.owner_id || `recent-${index}`} className="flex items-center gap-5 p-4 hover:bg-gray-50 rounded-[32px] transition-all group cursor-pointer border border-transparent hover:border-gray-100">
                   <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 font-black flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">
                     {owner.name.charAt(0)}
                   </div>
@@ -324,8 +324,8 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="space-y-6">
-              {data.owners.slice(-4).reverse().map(owner => (
-                <div key={owner.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-[32px] transition-all group cursor-pointer border border-transparent hover:border-gray-100">
+              {data.owners.slice(-4).reverse().map((owner, index) => (
+                <div key={owner.id || owner.owner_id || `insight-${index}`} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-[32px] transition-all group cursor-pointer border border-transparent hover:border-gray-100">
                   <div className="flex items-center gap-5">
                     <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 font-black flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform">
                       {owner.name.charAt(0)}

@@ -8,28 +8,33 @@ import { tenantsApi } from '../api/tenantsApi';
 interface TenantDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  unitCode: string;
+  tenantId: number | null;
 }
 
-export default function TenantDetailsModal({ isOpen, onClose, unitCode }: TenantDetailsModalProps) {
+export default function TenantDetailsModal({ isOpen, onClose, tenantId }: TenantDetailsModalProps) {
   const [tenant, setTenant] = useState<any>(null);
+  const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isOpen && unitCode) {
-      setLoading(true);
-      tenantsApi.getTenantByUnitCode(unitCode)
-        .then(data => {
-          setTenant(data);
-        })
-        .catch(err => {
+    if (isOpen && tenantId) {
+      const loadData = async () => {
+        setLoading(true);
+        try {
+          const profileData = await tenantsApi.getTenantById(tenantId);
+          setTenant(profileData);
+          
+          const paymentData = await tenantsApi.getTenantPaymentHistory(tenantId);
+          setPayments(Array.isArray(paymentData) ? paymentData : paymentData.results || []);
+        } catch (err) {
           console.error('Failed to fetch tenant details:', err);
-        })
-        .finally(() => {
+        } finally {
           setLoading(false);
-        });
+        }
+      };
+      loadData();
     }
-  }, [isOpen, unitCode]);
+  }, [isOpen, tenantId]);
 
   if (!isOpen) return null;
 
@@ -48,7 +53,7 @@ export default function TenantDetailsModal({ isOpen, onClose, unitCode }: Tenant
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative w-full max-w-2xl bg-white rounded-[32px] overflow-hidden shadow-2xl"
+          className="relative w-full max-w-2xl bg-white rounded-[32px] overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
         >
           {loading ? (
             <div className="h-[500px] flex flex-col items-center justify-center space-y-4">
@@ -81,7 +86,7 @@ export default function TenantDetailsModal({ isOpen, onClose, unitCode }: Tenant
                       <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-md">
                         {tenant.tenant_type}
                       </span>
-                      <span className="text-[#64748B] text-sm font-medium">Resident of Unit {unitCode}</span>
+                      <span className="text-[#64748B] text-sm font-medium">Resident of Unit {tenant.unit_code || tenant.unit_id || tenant.unit || 'Unknown'}</span>
                     </div>
                   </div>
                   <div className={`px-4 py-2 rounded-2xl flex items-center space-x-2 ${tenant.rent_status === 'Paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
@@ -178,6 +183,48 @@ export default function TenantDetailsModal({ isOpen, onClose, unitCode }: Tenant
                       <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">End Date</p>
                       <p className="text-sm font-bold text-[#1A1C1E]">{tenant.lease_end_date || 'Renewable'}</p>
                     </div>
+                  </div>
+                </div>
+
+                {/* PAYMENT HISTORY SECTION */}
+                <div className="mt-6">
+                  <h3 className="text-xs font-bold text-gray-500 tracking-wider mb-3 uppercase">Payment History</h3>
+                  
+                  <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
+                    {payments.length === 0 ? (
+                      <div className="p-6 text-center text-sm text-gray-500">No payment history found.</div>
+                    ) : (
+                      <div className="max-h-48 overflow-y-auto">
+                        <table className="w-full text-sm text-left">
+                          <thead className="bg-gray-50 text-xs text-gray-500 sticky top-0">
+                            <tr>
+                              <th className="px-4 py-2 font-medium">Month</th>
+                              <th className="px-4 py-2 font-medium">Amount</th>
+                              <th className="px-4 py-2 font-medium">Date</th>
+                              <th className="px-4 py-2 font-medium">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {payments.map((payment) => (
+                              <tr key={payment.payment_id || payment.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-3">{payment.rent_month} {payment.rent_year}</td>
+                                <td className="px-4 py-3 font-medium">₹{Number(payment.amount).toLocaleString('en-IN')}</td>
+                                <td className="px-4 py-3 text-gray-500">
+                                  {payment.payment_date || payment.created_at ? new Date(payment.payment_date || payment.created_at).toLocaleDateString() : '-'}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${
+                                    payment.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                                  }`}>
+                                    {payment.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
