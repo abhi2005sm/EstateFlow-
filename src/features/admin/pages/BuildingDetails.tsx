@@ -121,15 +121,15 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
   };
 
   const handleDeleteTenant = async (tenantId: number, tenantName: string) => {
-    const confirmDelete = window.confirm(`Are you sure you want to remove ${tenantName}? Their unit will become vacant, but their historical data will be saved.`);
+    const confirmDelete = window.confirm(`This will send a vacate request to the tenant (${tenantName}). They must confirm they have received their deposit return before the unit is marked as vacant.`);
     
     if (confirmDelete) {
       try {
         await tenantsApi.deleteTenant(tenantId);
-        alert(`${tenantName} has been successfully moved to Past Tenants.`);
+        alert(`Vacate request sent to ${tenantName}. Waiting for tenant confirmation.`);
         fetchData();
       } catch (error) {
-        alert("Failed to remove tenant.");
+        alert("Failed to initiate vacate request.");
         console.warn(error);
       }
     }
@@ -213,8 +213,8 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-          <p className="text-gray-500 font-medium">Loading property details...</p>
+          <Loader2 className="w-12 h-12 text-blue-600 dark:text-white animate-spin" />
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Loading property details...</p>
         </div>
       </div>
     );
@@ -223,8 +223,8 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
   if (!building) return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
       <div className="text-center space-y-4">
-        <p className="text-xl font-bold text-gray-900">Building not found</p>
-        <Link href="/admin/buildings" className="text-blue-600 hover:underline">Return to properties</Link>
+        <p className="text-xl font-bold text-gray-900 dark:text-white">Building not found</p>
+        <Link href="/admin/buildings" className="text-blue-600 dark:text-white hover:underline">Return to properties</Link>
       </div>
     </div>
   );
@@ -232,20 +232,20 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-[#1F2937] font-sans pb-20">
       {/* Top Navigation */}
-      <header className="bg-white px-8 py-4 flex items-center justify-between border-b border-gray-100">
-        <Link href="/admin/buildings" className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+      <header className="bg-white dark:bg-[#18181b] px-8 py-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
+        <Link href="/admin/buildings" className="flex items-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white transition-colors">
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to properties
         </Link>
         <div className="flex items-center space-x-5">
-          <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-full transition-all">
+          <button className="p-2 text-gray-400 hover:bg-gray-50 dark:bg-[#27272a] rounded-full transition-all">
             <MessageSquare className="w-5 h-5" />
           </button>
-          <button onClick={() => alert("No new notifications")} className="relative p-2 text-gray-400 hover:bg-gray-50 rounded-full transition-all">
+          <button onClick={() => alert("No new notifications")} className="relative p-2 text-gray-400 hover:bg-gray-50 dark:bg-[#27272a] rounded-full transition-all">
             <Bell className="w-5 h-5" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
           </button>
-          <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-100">
+          <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-100 dark:border-gray-800">
             <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Profile" className="w-full h-full object-cover" />
           </div>
         </div>
@@ -253,14 +253,14 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
 
       <main className="max-w-[1400px] mx-auto px-8 mt-6">
         {/* Property Banner Section */}
-        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8 flex items-start justify-between">
+        <section className="bg-white dark:bg-[#18181b] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-8 flex items-start justify-between">
           <div className="flex items-start space-x-6">
-            <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden shadow-inner">
+            <div className="w-24 h-24 bg-gray-100 dark:bg-[#27272a] rounded-xl overflow-hidden shadow-inner">
                <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=200" alt="Property" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="flex items-center space-x-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900">{building.name}</h1>
+                <h1 className="text-[#121110] dark:text-whitexl font-bold text-gray-900 dark:text-white">{building.name}</h1>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${(building.rentDue ?? 0) === 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
                    Active Property
                 </span>
@@ -276,14 +276,14 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
           </div>
           
           <div className="flex items-center space-x-3">
-            <button onClick={() => handleAction('Edit')} className="p-2 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-all">
+            <button onClick={() => handleAction('Edit')} className="p-2 border border-gray-200 dark:border-white/10 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:bg-[#27272a] transition-all">
               <Edit3 className="w-4 h-4" />
             </button>
-            <button onClick={() => handleAction('Download')} className="flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">
+            <button onClick={() => handleAction('Download')} className="flex items-center space-x-2 px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-[#27272a] transition-all">
               <Download className="w-4 h-4" />
               <span>Download</span>
             </button>
-            <button onClick={() => handleAction('Share')} className="flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">
+            <button onClick={() => handleAction('Share')} className="flex items-center space-x-2 px-4 py-2 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-[#27272a] transition-all">
               <Share2 className="w-4 h-4" />
               <span>Share</span>
             </button>
@@ -294,7 +294,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 {activeTab === 'Tenant' 
                   ? (viewingPast ? "Past Tenants (Historical)" : "Management Overview") 
                   : (viewingPastUnits ? "Past Units (Historical)" : "Management Overview")}
@@ -302,7 +302,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
               {activeTab === 'Tenant' && (
                 <button 
                   onClick={() => setViewingPast(!viewingPast)}
-                  className="px-3 py-1.5 text-xs font-bold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#27272a] rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   {viewingPast ? "View Active Tenants" : "View Past Tenants"}
                 </button>
@@ -310,18 +310,18 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
               {activeTab === 'Units' && (
                 <button 
                   onClick={() => setViewingPastUnits(!viewingPastUnits)}
-                  className="px-3 py-1.5 text-xs font-bold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#27272a] rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   {viewingPastUnits ? "View Active Units" : "View Past Units"}
                 </button>
               )}
             </div>
-            <div className="flex bg-gray-100 p-1 rounded-xl">
+            <div className="flex bg-gray-100 dark:bg-[#27272a] p-1 rounded-xl">
               {['Units', 'Tenant'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                  className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === tab ? 'bg-white dark:bg-[#18181b] text-blue-600 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white'}`}
                 >
                   {tab}
                 </button>
@@ -330,7 +330,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <button className="flex items-center space-x-2 bg-white border border-gray-100 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 shadow-sm">
+              <button className="flex items-center space-x-2 bg-white dark:bg-[#18181b] border border-gray-100 dark:border-gray-800 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-300 shadow-sm">
                 <span>All type</span>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </button>
@@ -341,7 +341,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search tenants or units" 
-                  className="w-full bg-white border border-gray-100 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500/10 outline-none shadow-sm font-medium"
+                  className="w-full bg-white dark:bg-[#18181b] border border-gray-100 dark:border-gray-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500/10 outline-none shadow-sm font-medium"
                 />
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
                 setEditingUnit(null);
                 setUnitFormData({ unit_number: '', floor_number: '', unit_type: '1 BHK', price: '' });
                 setIsUnitModalOpen(true);
-              }} className="flex items-center space-x-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-bold hover:bg-blue-50 transition-all active:scale-95">
+              }} className="flex items-center space-x-2 px-4 py-2 border border-blue-600 text-blue-600 dark:text-white rounded-lg text-sm font-bold hover:bg-blue-50 transition-all active:scale-95">
                 <Plus className="w-4 h-4" />
                 <span>Add new unit</span>
               </button>
@@ -363,7 +363,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
         </div>
 
         {/* Dynamic Table Content based on Tab */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-[#18181b] border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
           {activeTab === 'Tenant' ? (
             <TenantListTable 
               tenants={filteredTenants} 
@@ -429,35 +429,35 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
         {/* Add/Edit Unit Modal */}
         {isUnitModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">{editingUnit ? 'Edit Unit' : 'Add New Unit'}</h2>
-                <button onClick={() => setIsUnitModalOpen(false)} className="text-gray-400 hover:bg-gray-100 p-1.5 rounded-lg transition-colors">
+            <div className="bg-white dark:bg-[#18181b] rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{editingUnit ? 'Edit Unit' : 'Add New Unit'}</h2>
+                <button onClick={() => setIsUnitModalOpen(false)} className="text-gray-400 hover:bg-gray-100 dark:bg-[#27272a] p-1.5 rounded-lg transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <form onSubmit={handleAddUnitSubmit} className="p-6 space-y-4">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Unit Number</label>
+                    <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Unit Number</label>
                     <input 
                       type="text" 
                       placeholder="e.g. 101"
                       value={unitFormData.unit_number}
                       onChange={(e) => setUnitFormData({...unitFormData, unit_number: e.target.value})}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                       disabled={!!editingUnit} // Prevent changing unit number after creation
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Floor Number</label>
+                    <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Floor Number</label>
                     <input 
                       type="number" 
                       placeholder="e.g. 1"
                       value={unitFormData.floor_number}
                       onChange={(e) => setUnitFormData({...unitFormData, floor_number: e.target.value})}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -465,11 +465,11 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
 
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Unit Type</label>
+                    <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Unit Type</label>
                     <select 
                       value={unitFormData.unit_type}
                       onChange={(e) => setUnitFormData({...unitFormData, unit_type: e.target.value})}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#18181b]"
                     >
                       <option value="1 RK">1 RK</option>
                       <option value="1 BHK">1 BHK</option>
@@ -478,19 +478,19 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Rent (₹)</label>
+                    <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Rent (₹)</label>
                     <input 
                       type="number" 
                       placeholder="e.g. 15000"
                       value={unitFormData.price}
                       onChange={(e) => setUnitFormData({...unitFormData, price: e.target.value})}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-200 dark:border-white/10 rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
                 </div>
                 <div className="flex justify-end space-x-3 mt-6">
-                  <button type="button" onClick={() => setIsUnitModalOpen(false)} className="px-4 py-2 text-gray-600 font-bold text-sm">Cancel</button>
+                  <button type="button" onClick={() => setIsUnitModalOpen(false)} className="px-4 py-2 text-gray-600 dark:text-gray-300 font-bold text-sm">Cancel</button>
                   <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm shadow-md">
                     {editingUnit ? 'Save Changes' : 'Add Unit'}
                   </button>

@@ -73,33 +73,38 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     console.log(`[API Response] ${response.status} ${url}`, {
       headers: Object.fromEntries(response.headers.entries())
     });
+    const contentType = response.headers.get("content-type");
 
-      if (!response.ok) {
-        if (response.status === 401 && typeof window !== 'undefined') {
-          console.warn('[API] Unauthorized access detected. Redirecting to login...');
-          localStorage.removeItem('access_token');
-          window.location.href = '/login';
-        }
-        
-        const errorData = await response.json().catch(() => ({}));
-      
-      // Extract the most descriptive error message
-      const errorMessage = errorData.detail || 
-                         errorData.error || 
-                         errorData.message || 
-                         (errorData.errors ? JSON.stringify(errorData.errors) : null) ||
-                         `API Error: ${response.status}`;
-                         
-      throw new Error(errorMessage);
+    let data: any = null;
+
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = await response.text();
+    }
+
+    console.log("STATUS:", response.status);
+    console.log("DATA:", data);
+
+    if (!response.ok) {
+      if (response.status === 401 && typeof window !== 'undefined') {
+        console.warn('[API] Unauthorized access detected. Redirecting to login...');
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+      }
+
+      throw new Error(
+        typeof data === "object"
+          ? data?.error || data?.detail || `API Error: ${response.status}`
+          : `API Error: ${response.status}`
+      );
     }
 
     if (response.status === 204) {
       return null;
     }
     
-    // For other responses, check if there's actually a body before parsing
-    const text = await response.text();
-    return text ? JSON.parse(text) : null;
+    return data;
   } catch (error: any) {
     if (error.message === 'Failed to fetch') {
       console.error(`[API Network Error] Could not connect to: ${url}. Is the backend server/ngrok running?`);

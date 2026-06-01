@@ -15,12 +15,12 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
 
   if (!tenants || tenants.length === 0) {
     return (
-      <div className="p-20 text-center flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4">
+      <div className="p-20 text-center flex flex-col items-center justify-center bg-white dark:bg-[#18181b] rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div className="w-16 h-16 bg-gray-50 dark:bg-[#27272a] rounded-2xl flex items-center justify-center mb-4">
           <Mail className="w-8 h-8 text-gray-300" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900">No tenants found</h3>
-        <p className="text-gray-500 max-w-xs mx-auto">Try adjusting your filters or search terms to find what you're looking for.</p>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">No tenants found</h3>
+        <p className="text-gray-500 dark:text-gray-400 max-w-xs mx-auto">Try adjusting your filters or search terms to find what you're looking for.</p>
       </div>
     );
   }
@@ -38,11 +38,11 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
   return (
     <div className="space-y-10">
       {Object.entries(groupedByFloor).map(([floor, floorTenants]: [string, any]) => (
-        <div key={floor} className="bg-white rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+        <div key={floor} className="bg-white dark:bg-[#18181b] rounded-2xl border border-gray-100 dark:border-gray-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
           {/* Floor Header */}
           <div className="flex items-center justify-between p-5 border-b border-gray-50 bg-[#F9FAFB]/50">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+              <div className="w-12 h-12 bg-gray-100 dark:bg-[#27272a] rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-sm">
                 <img 
                   src="https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&q=80&w=100" 
                   alt="Floor" 
@@ -50,7 +50,7 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
                 />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-900">{floorNames[parseInt(floor)] || `${floor}th Floor`} {buildingName ? `- ${buildingName}` : ''}</h3>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">{floorNames[parseInt(floor)] || `${floor}th Floor`} {buildingName ? `- ${buildingName}` : ''}</h3>
                 <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Tenant Directory · Active</p>
               </div>
             </div>
@@ -60,7 +60,7 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white border-b border-gray-50">
+                <tr className="bg-white dark:bg-[#18181b] border-b border-gray-50">
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">S.NO</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">TENANT NAME</th>
                   <th className="px-6 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">UNIT ID</th>
@@ -81,11 +81,11 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
                       {index + 1}
                     </td>
                     <td className="px-6 py-6">
-                      <span className="text-sm font-bold text-gray-900">{t.name}</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">{t.name}</span>
                     </td>
                     <td className="px-6 py-6 text-xs">
                       {t.unit_code || t.unit_id || t.unit || t.unit_number ? (
-                        <span className="font-medium text-gray-500">
+                        <span className="font-medium text-gray-500 dark:text-gray-400">
                           {t.unit_code || t.unit_number || t.unit_id || t.unit}
                         </span>
                       ) : (
@@ -94,11 +94,11 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-6 text-xs text-gray-500 font-medium">
+                    <td className="px-6 py-6 text-xs text-gray-500 dark:text-gray-400 font-medium">
                       {t.phone_number || t.phone || '-'}
                     </td>
                     <td className="px-6 py-6">
-                      <span className="text-sm font-bold text-gray-900">₹{t.rent_amount?.toLocaleString('en-IN')}</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">₹{t.rent_amount?.toLocaleString('en-IN')}</span>
                     </td>
                     <td className="px-6 py-6">
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${
@@ -129,7 +129,7 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
                           >
                             <a 
                               href={`tel:${t.phone_number || t.phone}`} 
-                              className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95" 
+                              className="p-1.5 text-blue-600 dark:text-white border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95" 
                               title="Call Tenant"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -137,7 +137,7 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
                             </a>
                             <a 
                               href={`mailto:${t.email}`} 
-                              className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95" 
+                              className="p-1.5 text-blue-600 dark:text-white border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95" 
                               title="Email Tenant"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -149,7 +149,7 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
                                   e.stopPropagation();
                                   onViewTenant(t.tenant_id || t.id);
                                 }}
-                                className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95"
+                                className="p-1.5 text-blue-600 dark:text-white border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95"
                                 title="View Profile"
                               >
                                 <Eye className="w-3.5 h-3.5" />
@@ -161,7 +161,7 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
                                   e.stopPropagation();
                                   onEditTenant(t);
                                 }}
-                                className="p-1.5 text-blue-600 border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95"
+                                className="p-1.5 text-blue-600 dark:text-white border border-blue-100 bg-blue-50/30 rounded-lg transition-all hover:bg-blue-100 active:scale-95"
                                 title="Edit Tenant"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
@@ -186,7 +186,7 @@ export default function TenantListTable({ tenants, onViewTenant, onEditTenant, o
                               e.stopPropagation();
                               setActiveMenuId(t.tenant_id || t.id);
                             }}
-                            className="p-1.5 text-gray-400 hover:text-gray-900 transition-all"
+                            className="p-1.5 text-gray-400 hover:text-gray-900 dark:text-white transition-all"
                           >
                             <MoreHorizontal className="w-5 h-5" />
                           </button>

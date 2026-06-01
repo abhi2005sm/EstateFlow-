@@ -4,10 +4,11 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import MetricCard from '../components/rp/MetricCard';
 import DashboardCharts from '../components/rp/DashboardCharts';
-import { Building2, Home, Briefcase, LayoutGrid, CheckCircle2, XCircle, DollarSign, AlertCircle, BadgeCheck, BadgeX, Bell, Search, TrendingUp, ArrowUpRight, Loader2 } from 'lucide-react';
+import { Building2, Home, Briefcase, LayoutGrid, CheckCircle2, XCircle, IndianRupee, AlertCircle, BadgeCheck, BadgeX, Bell, Search, TrendingUp, ArrowUpRight, Loader2, Activity, Wrench, Clock } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
 import { buildingsApi } from '../buildings/api/buildingsApi';
 import { tenantsApi } from '../tenants/api/tenantsApi';
+import { dashboardApi } from '../dashboard/api/dashboardApi';
 
 const containerVariants: Variants = {
   animate: {
@@ -40,12 +41,14 @@ export default function RealPropertyDashboard() {
   });
   const [summary, setSummary] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
 
   const fetchData = async () => {
     try {
-      const [buildingsRes, tenantsRes] = await Promise.allSettled([
+      const [buildingsRes, tenantsRes, dashboardRes] = await Promise.allSettled([
         buildingsApi.getBuildings(),
-        tenantsApi.getTenants()
+        tenantsApi.getTenants(),
+        dashboardApi.getOwnerDashboard().catch(() => null)
       ]);
 
       const buildingsResData = buildingsRes.status === 'fulfilled' ? buildingsRes.value : { buildings: [], summary: null };
@@ -105,6 +108,9 @@ export default function RealPropertyDashboard() {
         loading: false
       });
       setSummary(buildingsResData.summary);
+      if (dashboardRes.status === 'fulfilled' && dashboardRes.value) {
+        setDashboardData(dashboardRes.value);
+      }
     } catch (error) {
       console.error('Dashboard data fetch failed:', error);
       setData((prev: DashboardState) => ({ ...prev, loading: false }));
@@ -171,23 +177,53 @@ export default function RealPropertyDashboard() {
     };
   }, [data, summary]);
 
+  const feedEvents = useMemo(() => {
+    const events = [];
+    if (dashboardData?.lease_alerts) {
+      dashboardData.lease_alerts.forEach((alert: any) => {
+        events.push({
+          type: 'ALERT',
+          title: 'Lease expiring soon',
+          description: `Unit ${alert.unit} lease ends in ${alert.days_left} days.`,
+          time: 'Just now'
+        });
+      });
+    }
+    const recentlyPaid = data.tenants.filter(t => t.rent_status === 'Paid').slice(0, 2);
+    recentlyPaid.forEach(t => {
+      events.push({
+        type: 'PAYMENT',
+        title: `Rent received from Unit ${t.unit_number}`,
+        description: `₹${Number(t.rent_amount).toLocaleString('en-IN')} collected from ${t.name}.`,
+        time: 'Today'
+      });
+    });
+    events.push({
+      type: 'MAINTENANCE',
+      title: 'Tenant request resolved',
+      description: 'Plumbing issue was marked as resolved.',
+      time: 'Yesterday'
+    });
+    return events;
+  }, [dashboardData, data.tenants]);
+
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
   if (data.loading) {
     return (
-      <div className="min-h-screen bg-[#F5F3F0] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F3F0] dark:bg-[#09090b] flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="w-12 h-12 text-[#F26922] animate-spin" />
-          <p className="text-[#61605D] font-black uppercase tracking-widest text-xs">Synchronizing Portfolio...</p>
+          <p className="text-[#61605D] dark:text-gray-400 font-black uppercase tracking-widest text-xs">Synchronizing Portfolio...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F3F0] relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#F5F3F0] dark:bg-[#09090b] relative overflow-x-hidden">
       
       <div className="absolute top-0 left-0 h-[700px] w-[56%] overflow-hidden pointer-events-none">
         <img
@@ -208,30 +244,30 @@ export default function RealPropertyDashboard() {
           className="flex items-center justify-between px-10 h-20"
         >
           <div>
-            <p className="text-[11px] font-black text-[#61605D]/60 uppercase tracking-[0.25em]">
+            <p className="text-[11px] font-black text-[#61605D] dark:text-gray-400/60 uppercase tracking-[0.25em]">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
           </div>
           <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl px-4 py-2.5 shadow-sm">
-              <Search className="w-4 h-4 text-[#61605D]" />
+            <div className="flex items-center space-x-2 bg-white/70 dark:bg-[#18181b]/70 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl px-4 py-2.5 shadow-sm">
+              <Search className="w-4 h-4 text-[#61605D] dark:text-gray-400" />
               <input
                 type="text"
                 placeholder="Search properties, tenants..."
-                className="bg-transparent text-sm font-medium text-[#121110] placeholder-[#61605D]/50 outline-none w-52"
+                className="bg-transparent text-sm font-medium text-[#121110] dark:text-white placeholder-[#61605D]/50 outline-none w-52"
               />
             </div>
             
-            <button onClick={() => alert("Checking for notifications...")} className="relative p-3 bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-sm hover:bg-white transition-all active:scale-95">
-              <Bell className="w-5 h-5 text-[#61605D]" />
+            <button onClick={() => alert("Checking for notifications...")} className="relative p-3 bg-white/70 dark:bg-[#18181b]/70 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-sm hover:bg-white dark:bg-[#18181b] transition-all active:scale-95">
+              <Bell className="w-5 h-5 text-[#61605D] dark:text-gray-400" />
               <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#F26922] rounded-full" />
             </button>
-            <div onClick={() => alert("Admin profile settings")} className="flex items-center space-x-3 bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl px-4 py-2 shadow-sm cursor-pointer hover:bg-white transition-all active:scale-95">
+            <div onClick={() => alert("Admin profile settings")} className="flex items-center space-x-3 bg-white/70 dark:bg-[#18181b]/70 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl px-4 py-2 shadow-sm cursor-pointer hover:bg-white dark:bg-[#18181b] transition-all active:scale-95">
               <div className="w-8 h-8 rounded-xl overflow-hidden bg-[#F26922]/10 border border-[#F26922]/20">
                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=F26922" alt="Admin" className="w-full h-full" />
               </div>
               <div>
-                <p className="text-xs font-black text-[#121110] capitalize">{displayName}</p>
+                <p className="text-xs font-black text-[#121110] dark:text-white capitalize">{displayName}</p>
               </div>
             </div>
           </div>
@@ -249,24 +285,24 @@ export default function RealPropertyDashboard() {
               className="col-span-12 lg:col-span-5 space-y-8 pt-2"
             >
               <motion.div variants={itemVariants} className="space-y-3">
-                <h1 className="text-5xl font-black tracking-tight leading-[1.1] text-[#121110]">
+                <h1 className="text-5xl font-black tracking-tight leading-[1.1] text-[#121110] dark:text-white">
                   {greeting},<br /><span className="capitalize">{displayName.split(' ')[0]}</span>
                 </h1>
-                <p className="text-[#61605D] font-semibold text-base leading-relaxed">
+                <p className="text-[#61605D] dark:text-gray-400 font-semibold text-base leading-relaxed">
                   Here's your live portfolio snapshot based on your active registrations.
                 </p>
               </motion.div>
 
-              <motion.div variants={itemVariants} className="bg-white/80 backdrop-blur-xl border border-white/40 rounded-3xl p-5 shadow-sm">
+              <motion.div variants={itemVariants} className="bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-3xl p-5 shadow-sm">
                 <div className="grid grid-cols-3 divide-x divide-[#F5F3F0]">
                   {[
                     { label: 'Properties', value: stats.totalBuildings, color: 'text-[#F26922]' },
-                    { label: 'Total Units', value: stats.totalUnits, color: 'text-blue-500' },
+                    { label: 'Total Units', value: stats.totalUnits, color: 'text-blue-500 dark:text-white' },
                     { label: 'Occupancy', value: `${stats.occupancyRate}%`, color: 'text-green-500' },
                   ].map((s, i) => (
                     <div key={i} className={`flex flex-col items-center ${i > 0 ? 'pl-4' : ''} ${i < 2 ? 'pr-4' : ''}`}>
-                      <span className={`text-2xl font-black ${s.color}`}>{s.value}</span>
-                      <span className="text-[9px] font-black text-[#61605D]/60 uppercase tracking-[0.2em] mt-1">{s.label}</span>
+                      <span className={`text-[#121110] dark:text-whitexl font-black ${s.color}`}>{s.value}</span>
+                      <span className="text-[9px] font-black text-[#61605D] dark:text-gray-400/60 uppercase tracking-[0.2em] mt-1">{s.label}</span>
                     </div>
                   ))}
                 </div>
@@ -274,7 +310,7 @@ export default function RealPropertyDashboard() {
 
               <div className="grid grid-cols-3 gap-4">
                 <MetricCard title="Total Properties" value={stats.totalBuildings.toString()} icon={Building2} color="text-[#F26922]" bgColor="bg-[#F26922]/10" delay={0} />
-                <MetricCard title="Residential" value={stats.residential.toString()} icon={Home} color="text-blue-500" bgColor="bg-blue-50" delay={0} />
+                <MetricCard title="Residential" value={stats.residential.toString()} icon={Home} color="text-blue-500 dark:text-white" bgColor="bg-blue-50" delay={0} />
                 <MetricCard title="Commercial" value={stats.commercial.toString()} icon={Briefcase} color="text-purple-500" bgColor="bg-purple-50" delay={0} />
               </div>
 
@@ -288,25 +324,119 @@ export default function RealPropertyDashboard() {
 
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black text-[#121110] tracking-tight">Financial Overview</h2>
+              <h2 className="text-xl font-black text-[#121110] dark:text-white tracking-tight">Key Metrics</h2>
               <button onClick={() => fetchData()} className="flex items-center space-x-1 text-[#F26922] text-sm font-black hover:underline underline-offset-4">
                 <span>Refresh Live Data</span>
                 <TrendingUp className="w-4 h-4 ml-1" />
               </button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { 
+                  title: 'Monthly Revenue', 
+                  value: `₹${Number(dashboardData?.rent_summary?.total_collected || 0).toLocaleString('en-IN')}`, 
+                  subtitle: 'This Month', 
+                  icon: IndianRupee, 
+                  color: 'text-emerald-600', 
+                  bgColor: 'bg-emerald-50' 
+                },
+                { 
+                  title: 'Occupancy %', 
+                  value: `${dashboardData?.property_overview?.occupancy_percentage || 0}%`, 
+                  subtitle: 'Active Tenants', 
+                  icon: BadgeCheck, 
+                  color: 'text-blue-600', 
+                  bgColor: 'bg-blue-50' 
+                },
+                { 
+                  title: 'Revenue Lost', 
+                  value: `₹${Number(dashboardData?.rent_summary?.revenue_lost_to_vacancy || 0).toLocaleString('en-IN')}`, 
+                  subtitle: 'Due to Vacancy', 
+                  icon: AlertCircle, 
+                  color: 'text-rose-500', 
+                  bgColor: 'bg-rose-50' 
+                },
+                { 
+                  title: 'Collection Efficiency', 
+                  value: `${dashboardData?.rent_summary?.collection_efficiency || 0}%`, 
+                  subtitle: 'Of Total Due', 
+                  icon: BadgeCheck, 
+                  color: 'text-amber-500', 
+                  bgColor: 'bg-amber-50' 
+                },
+              ].map((m, i) => (
+                <MetricCard key={i} {...m} delay={i * 0.08} />
+              ))}
+            </div>
+          </div>
+
+          {dashboardData?.lease_alerts && dashboardData.lease_alerts.length > 0 && (
+            <div className="bg-amber-50 dark:bg-[#18181b] border border-amber-200 dark:border-amber-900/30 rounded-[3rem] p-10 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400 rounded-full blur-[80px] opacity-10 pointer-events-none" />
+              <div className="flex items-center space-x-3 mb-8 relative z-10">
+                <div className="p-3 bg-amber-100 dark:bg-amber-900/50 rounded-2xl">
+                  <Bell className="w-6 h-6 text-amber-600 dark:text-amber-500 animate-pulse" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-amber-900 dark:text-amber-100 tracking-tight">Operational Alerts</h2>
+                  <p className="text-sm font-semibold text-amber-700/70 dark:text-amber-500/70">Lease expiries in the next 30 days</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+                {dashboardData.lease_alerts.map((alert: any, idx: number) => (
+                  <div key={idx} className="bg-white/80 dark:bg-[#09090b]/80 backdrop-blur-xl border border-amber-100 dark:border-amber-900/50 rounded-[24px] p-6 flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-lg font-black text-[#121110] dark:text-white tracking-tight">{alert.tenant_name}</p>
+                        <p className="text-sm font-bold text-[#61605D] dark:text-gray-400 mt-1">Unit {alert.unit}</p>
+                      </div>
+                      <span className="px-4 py-2 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 text-[11px] font-black uppercase tracking-widest rounded-xl">
+                        {alert.days_left} Days
+                      </span>
+                    </div>
+                    <div className="mt-6 flex items-center justify-between bg-[#F5F3F0]/50 dark:bg-white/5 px-4 py-3 rounded-xl">
+                      <span className="text-[11px] font-bold text-[#61605D] dark:text-gray-400 uppercase tracking-widest">
+                        Likelihood
+                      </span>
+                      <span className="text-sm font-black text-[#121110] dark:text-white">
+                        {alert.renewal_likelihood}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-black text-[#121110] dark:text-white tracking-tight">Financial Overview</h2>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 { 
                   title: 'Rent Collected', 
-                  value: `₹${data.tenants.reduce((sum, t) => t.rentStatus === 'Paid' ? sum + (Number(t.rentAmount) || 0) : sum, 0).toLocaleString('en-IN')}`, 
+                  value: `₹${data.tenants.reduce((sum, t) => {
+                    if (t.rent_status === 'Paid') return sum + (Number(t.rent_amount) || 0);
+                    if (t.rent_status === 'Partial') return sum + ((Number(t.rent_amount) || 0) - (Number(t.due_amount) || 0));
+                    return sum;
+                  }, 0).toLocaleString('en-IN')}`, 
                   subtitle: 'This Month', 
-                  icon: DollarSign, 
+                  icon: IndianRupee, 
                   color: 'text-green-600', 
                   bgColor: 'bg-green-50' 
                 },
                 { 
+                  title: 'Deposit Collected', 
+                  value: `₹${Number(summary?.total_deposit_collected || 0).toLocaleString('en-IN')}`, 
+                  subtitle: 'Active Tenants', 
+                  icon: IndianRupee, 
+                  color: 'text-[#F26922]', 
+                  bgColor: 'bg-[#F26922]/10' 
+                },
+                { 
                   title: 'Total Due', 
-                  value: `₹${data.tenants.reduce((sum, t) => sum + (Number(t.dueAmount) || 0), 0).toLocaleString('en-IN')}`, 
+                  value: `₹${data.tenants.reduce((sum, t) => sum + (Number(t.due_amount) || 0), 0).toLocaleString('en-IN')}`, 
                   subtitle: 'Awaiting', 
                   icon: AlertCircle, 
                   color: 'text-red-500', 
@@ -320,30 +450,69 @@ export default function RealPropertyDashboard() {
             </div>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl rounded-[3rem] p-10 border border-white/60">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-black text-[#121110] tracking-tight">Portfolio Analysis</h2>
-                <p className="text-sm font-bold text-[#61605D]/60 uppercase tracking-widest mt-1">Growth & Occupancy Trends</p>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="xl:col-span-2 bg-white/40 dark:bg-[#18181b]/40 backdrop-blur-xl rounded-[3rem] p-10 border border-white/60 dark:border-white/10 shadow-sm">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-[#121110] dark:text-white text-xl font-black tracking-tight">Portfolio Analysis</h2>
+                  <p className="text-sm font-bold text-[#61605D] dark:text-gray-400/60 uppercase tracking-widest mt-1">Growth & Occupancy Trends</p>
+                </div>
+                <div className="flex items-center space-x-2 bg-white/60 dark:bg-[#27272a]/60 p-1.5 rounded-2xl border border-white/40 dark:border-white/10 shadow-sm">
+                  {['Monthly', 'Yearly'].map(t => (
+                    <button key={t} className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${t === 'Monthly' ? 'bg-[#F26922] text-white shadow-md shadow-[#F26922]/20' : 'text-[#61605D] dark:text-gray-400 hover:text-[#121110] dark:text-white'}`}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="flex items-center space-x-2 bg-white/60 p-1.5 rounded-2xl border border-white/40 shadow-sm">
-                {['Monthly', 'Yearly'].map(t => (
-                  <button key={t} className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${t === 'Monthly' ? 'bg-[#F26922] text-white shadow-md shadow-[#F26922]/20' : 'text-[#61605D] hover:text-[#121110]'}`}>
-                    {t}
-                  </button>
-                ))}
+              <DashboardCharts 
+                buildings={data.buildings} 
+                tenants={data.tenants} 
+                delay={0} 
+              />
+            </div>
+
+            <div className="xl:col-span-1 bg-white dark:bg-[#18181b] rounded-[3rem] p-8 shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-[60px] opacity-10 pointer-events-none" />
+              <div className="flex items-center justify-between mb-8 relative z-10">
+                <div>
+                  <h2 className="text-xl font-black text-[#121110] dark:text-white tracking-tight">Activity Feed</h2>
+                  <p className="text-xs font-bold text-[#61605D] dark:text-gray-400/60 uppercase tracking-widest mt-1">Real-time Operations</p>
+                </div>
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+                  <Activity className="w-4 h-4 text-blue-500" />
+                </div>
+              </div>
+              <div className="relative pl-4 border-l border-gray-100 dark:border-gray-800 space-y-6">
+                {feedEvents.map((event, idx) => {
+                  let Icon = CheckCircle2;
+                  let iconColor = 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400';
+                  if (event.type === 'PAYMENT') { Icon = IndianRupee; iconColor = 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400'; }
+                  if (event.type === 'MAINTENANCE') { Icon = Wrench; iconColor = 'bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400'; }
+                  if (event.type === 'ALERT') { Icon = Clock; iconColor = 'bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400'; }
+                  
+                  return (
+                    <motion.div key={idx} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }} className="relative">
+                      <div className={`absolute -left-[23px] top-0.5 p-1 rounded-full bg-white dark:bg-[#18181b]`}>
+                        <div className={`p-1 rounded-full ${iconColor}`}>
+                          <Icon className="w-3 h-3" />
+                        </div>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-black text-[#1A1C1E] dark:text-white leading-tight">{event.title}</p>
+                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 mt-1">{event.description}</p>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-2">{event.time}</p>
+                      </div>
+                    </motion.div>
+                  )
+                })}
               </div>
             </div>
-            <DashboardCharts 
-              buildings={data.buildings} 
-              tenants={data.tenants} 
-              delay={0} 
-            />
           </div>
 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-black text-[#121110] tracking-tight">Active Portfolio Properties</h2>
+              <h2 className="text-xl font-black text-[#121110] dark:text-white tracking-tight">Active Portfolio Properties</h2>
               <Link href="/admin/buildings" className="text-sm font-black text-[#F26922] hover:underline underline-offset-4 flex items-center">
                 <span>Manage All Properties</span>
                 <ArrowUpRight className="w-4 h-4 ml-1" />
@@ -355,44 +524,44 @@ export default function RealPropertyDashboard() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-[#F5F3F0]">
-                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D]/60 uppercase tracking-widest">S.No</th>
-                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D]/60 uppercase tracking-widest">Property Details</th>
-                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D]/60 uppercase tracking-widest">Type</th>
-                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D]/60 uppercase tracking-widest">Total Units</th>
-                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D]/60 uppercase tracking-widest text-right">Action</th>
+                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D] dark:text-gray-400/60 uppercase tracking-widest">S.No</th>
+                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D] dark:text-gray-400/60 uppercase tracking-widest">Property Details</th>
+                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D] dark:text-gray-400/60 uppercase tracking-widest">Type</th>
+                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D] dark:text-gray-400/60 uppercase tracking-widest">Total Units</th>
+                      <th className="px-6 py-5 text-[10px] font-black text-[#61605D] dark:text-gray-400/60 uppercase tracking-widest text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F5F3F0]">
                     {data.buildings.length > 0 ? (
                       data.buildings.slice(0, 5).map((b, index) => (
                         <tr key={b.id || b.building_id} className="hover:bg-white/60 transition-all group">
-                          <td className="px-6 py-6 text-sm font-bold text-[#61605D]">{index + 1}</td>
+                          <td className="px-6 py-6 text-sm font-bold text-[#61605D] dark:text-gray-400">{index + 1}</td>
                           <td className="px-6 py-6">
                             <div className="flex items-center space-x-3">
                               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F26922]/10 to-transparent flex items-center justify-center border border-[#F26922]/10">
                                 <Building2 className="w-5 h-5 text-[#F26922]" />
                               </div>
                               <div>
-                                <p className="text-sm font-black text-[#121110] group-hover:text-[#F26922] transition-colors">{b.name}</p>
-                                <p className="text-[10px] font-bold text-[#61605D]/60 uppercase tracking-wider">{b.area_name || 'Location Pending'}</p>
+                                <p className="text-sm font-black text-[#121110] dark:text-white group-hover:text-[#F26922] transition-colors">{b.name}</p>
+                                <p className="text-[10px] font-bold text-[#61605D] dark:text-gray-400/60 uppercase tracking-wider">{b.area_name || 'Location Pending'}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-6">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${b.building_type === 'Residential' ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500'}`}>
+                            <span className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${b.building_type === 'Residential' ? 'bg-blue-50 text-blue-500 dark:text-white' : 'bg-purple-50 text-purple-500'}`}>
                               {b.building_type}
                             </span>
                           </td>
                           <td className="px-6 py-6">
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm font-black text-[#121110]">{b.total_units}</span>
-                              <span className="text-[10px] font-bold text-[#61605D]/60 uppercase tracking-tight">Units</span>
+                              <span className="text-sm font-black text-[#121110] dark:text-white">{b.total_units}</span>
+                              <span className="text-[10px] font-bold text-[#61605D] dark:text-gray-400/60 uppercase tracking-tight">Units</span>
                             </div>
                           </td>
                           <td className="px-6 py-6 text-right">
                             <Link 
                               href={`/admin/buildings/${b.id || b.building_id}`}
-                              className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-[#E2E8F0] rounded-xl text-[11px] font-black uppercase tracking-wider text-[#121110] hover:bg-[#F26922] hover:text-white hover:border-[#F26922] transition-all shadow-sm"
+                              className="inline-flex items-center space-x-2 px-4 py-2 bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl text-[11px] font-black uppercase tracking-wider text-[#121110] dark:text-white hover:bg-[#F26922] hover:text-white hover:border-[#F26922] transition-all shadow-sm"
                             >
                               <span>View Stats</span>
                               <ArrowUpRight className="w-3 h-3" />

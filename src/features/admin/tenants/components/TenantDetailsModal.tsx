@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Mail, Phone, Home, Users, Utensils, PawPrint, Calendar, DollarSign, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { X, User, Mail, Phone, Home, Users, Utensils, PawPrint, Calendar, DollarSign, ShieldCheck, BadgeCheck, CheckCircle2, IndianRupee, Wrench, Clock } from 'lucide-react';
 import { tenantsApi } from '../api/tenantsApi';
 
 interface TenantDetailsModalProps {
@@ -13,7 +13,7 @@ interface TenantDetailsModalProps {
 
 export default function TenantDetailsModal({ isOpen, onClose, tenantId }: TenantDetailsModalProps) {
   const [tenant, setTenant] = useState<any>(null);
-  const [payments, setPayments] = useState<any[]>([]);
+  const [timeline, setTimeline] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,8 +24,8 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
           const profileData = await tenantsApi.getTenantById(tenantId);
           setTenant(profileData);
           
-          const paymentData = await tenantsApi.getTenantPaymentHistory(tenantId);
-          setPayments(Array.isArray(paymentData) ? paymentData : paymentData.results || []);
+          const timelineData = await tenantsApi.getTenantTimeline(tenantId);
+          setTimeline(timelineData.timeline || []);
         } catch (err) {
           console.error('Failed to fetch tenant details:', err);
         } finally {
@@ -53,12 +53,12 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative w-full max-w-2xl bg-white rounded-[32px] overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
+          className="relative w-full max-w-2xl bg-white dark:bg-[#18181b] rounded-[32px] overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
         >
           {loading ? (
             <div className="h-[500px] flex flex-col items-center justify-center space-y-4">
               <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
-              <p className="text-gray-500 font-bold text-sm tracking-widest uppercase">Fetching Resident Profile...</p>
+              <p className="text-gray-500 dark:text-gray-400 font-bold text-sm tracking-widest uppercase">Fetching Resident Profile...</p>
             </div>
           ) : tenant ? (
             <>
@@ -70,9 +70,9 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
                 >
                   <X className="w-5 h-5" />
                 </button>
-                <div className="absolute -bottom-12 left-8 p-1 bg-white rounded-[24px] shadow-lg">
+                <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-[#18181b] rounded-[24px] shadow-lg">
                   <div className="w-24 h-24 bg-blue-50 rounded-[20px] flex items-center justify-center">
-                    <User className="w-10 h-10 text-blue-600" />
+                    <User className="w-10 h-10 text-blue-600 dark:text-white" />
                   </div>
                 </div>
               </div>
@@ -83,7 +83,7 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
                   <div>
                     <h2 className="text-3xl font-black text-[#1A1C1E]">{tenant.name}</h2>
                     <div className="flex items-center space-x-2 mt-1">
-                      <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-md">
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-600 dark:text-white text-[10px] font-black uppercase tracking-wider rounded-md">
                         {tenant.tenant_type}
                       </span>
                       <span className="text-[#64748B] text-sm font-medium">Resident of Unit {tenant.unit_code || tenant.unit_id || tenant.unit || 'Unknown'}</span>
@@ -114,7 +114,7 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
 
                     <div className="space-y-4">
                       <h3 className="text-[11px] font-black text-[#64748B] uppercase tracking-[0.2em]">Occupancy Details</h3>
-                      <div className="bg-gray-50 rounded-2xl p-4 grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 dark:bg-[#27272a] rounded-2xl p-4 grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Type</p>
                           <p className="text-sm font-black text-[#1A1C1E]">{tenant.occupancy_type}</p>
@@ -138,7 +138,7 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
                           { label: 'Male', val: tenant.male_count, icon: User },
                           { label: 'Female', val: tenant.female_count, icon: User },
                         ].map((item, i) => (
-                          <div key={i} className="bg-white border border-gray-100 rounded-xl p-2 text-center">
+                          <div key={i} className="bg-white dark:bg-[#18181b] border border-gray-100 dark:border-gray-800 rounded-xl p-2 text-center">
                             <p className="text-[14px] font-black text-[#1A1C1E]">{item.val}</p>
                             <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{item.label}</p>
                           </div>
@@ -166,10 +166,10 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
                 <div className="mt-10 p-6 bg-blue-50/50 rounded-[24px] border border-blue-100/50">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-blue-600" />
+                      <Calendar className="w-4 h-4 text-blue-600 dark:text-white" />
                       <span className="text-xs font-black text-[#1A1C1E] uppercase tracking-widest">Lease Agreement</span>
                     </div>
-                    <span className="text-[10px] font-bold text-blue-600 bg-white px-3 py-1 rounded-full shadow-sm">
+                    <span className="text-[10px] font-bold text-blue-600 dark:text-white bg-white dark:bg-[#18181b] px-3 py-1 rounded-full shadow-sm">
                       Next Due: June 1st
                     </span>
                   </div>
@@ -186,44 +186,61 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
                   </div>
                 </div>
 
-                {/* PAYMENT HISTORY SECTION */}
-                <div className="mt-6">
-                  <h3 className="text-xs font-bold text-gray-500 tracking-wider mb-3 uppercase">Payment History</h3>
+                {/* CRM TIMELINE SECTION */}
+                <div className="mt-10">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl">
+                      <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <h3 className="text-xl font-black text-[#1A1C1E] dark:text-white tracking-tight">Activity Timeline</h3>
+                  </div>
                   
-                  <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
-                    {payments.length === 0 ? (
-                      <div className="p-6 text-center text-sm text-gray-500">No payment history found.</div>
+                  <div className="relative pl-6 border-l-2 border-gray-100 dark:border-gray-800 space-y-8 pb-4">
+                    {timeline.length === 0 ? (
+                      <div className="text-sm font-semibold text-gray-500">No recent activity found.</div>
                     ) : (
-                      <div className="max-h-48 overflow-y-auto">
-                        <table className="w-full text-sm text-left">
-                          <thead className="bg-gray-50 text-xs text-gray-500 sticky top-0">
-                            <tr>
-                              <th className="px-4 py-2 font-medium">Month</th>
-                              <th className="px-4 py-2 font-medium">Amount</th>
-                              <th className="px-4 py-2 font-medium">Date</th>
-                              <th className="px-4 py-2 font-medium">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {payments.map((payment) => (
-                              <tr key={payment.payment_id || payment.id} className="hover:bg-gray-50">
-                                <td className="px-4 py-3">{payment.rent_month} {payment.rent_year}</td>
-                                <td className="px-4 py-3 font-medium">₹{Number(payment.amount).toLocaleString('en-IN')}</td>
-                                <td className="px-4 py-3 text-gray-500">
-                                  {payment.payment_date || payment.created_at ? new Date(payment.payment_date || payment.created_at).toLocaleDateString() : '-'}
-                                </td>
-                                <td className="px-4 py-3">
-                                  <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${
-                                    payment.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                                  }`}>
-                                    {payment.status}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      timeline.map((event: any, idx: number) => {
+                        let Icon = CheckCircle2;
+                        let iconColor = 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400';
+                        
+                        if (event.type === 'PAYMENT') {
+                          Icon = IndianRupee;
+                          iconColor = 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400';
+                        } else if (event.type === 'MAINTENANCE') {
+                          Icon = Wrench;
+                          iconColor = 'bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400';
+                        } else if (event.type === 'LEASE_EXPIRY') {
+                          Icon = Clock;
+                          iconColor = 'bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400';
+                        }
+
+                        return (
+                          <motion.div 
+                            key={idx}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="relative"
+                          >
+                            <div className={`absolute -left-[35px] top-1 p-1 rounded-full bg-white dark:bg-[#18181b] border-4 border-white dark:border-[#18181b] shadow-sm`}>
+                              <div className={`p-1.5 rounded-full ${iconColor}`}>
+                                <Icon className="w-3.5 h-3.5" />
+                              </div>
+                            </div>
+                            <div className="bg-gray-50 dark:bg-[#27272a]/50 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 hover:shadow-md transition-shadow ml-2">
+                              <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 space-y-2 md:space-y-0">
+                                <h4 className="text-sm font-black text-[#1A1C1E] dark:text-white tracking-tight">{event.title}</h4>
+                                <span className="inline-block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest bg-white dark:bg-[#18181b] px-3 py-1.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+                                  {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold text-[#64748B] dark:text-gray-400 leading-relaxed mt-1">
+                                {event.description}
+                              </p>
+                            </div>
+                          </motion.div>
+                        );
+                      })
                     )}
                   </div>
                 </div>
@@ -234,7 +251,7 @@ export default function TenantDetailsModal({ isOpen, onClose, tenantId }: Tenant
               <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
                 <ShieldCheck className="w-8 h-8" />
               </div>
-              <p className="text-gray-500 font-bold">Resident details could not be loaded.</p>
+              <p className="text-gray-500 dark:text-gray-400 font-bold">Resident details could not be loaded.</p>
               <button onClick={onClose} className="px-6 py-2 bg-gray-900 text-white rounded-xl text-sm font-bold">Close Window</button>
             </div>
           )}

@@ -107,14 +107,14 @@ export default function TenantsPage() {
   });
 
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-screen bg-[#F8F9FA]">
+    <div className="p-8 max-w-7xl mx-auto min-h-screen bg-[#F8F9FA] dark:bg-[#09090b]">
       <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <div className="space-y-1">
           <h1 className="text-4xl font-black text-[#1A1C1E] tracking-tight">Tenants Directory</h1>
           <p className="text-[#64748B] font-medium">Manage and view all tenants across your properties.</p>
         </div>
-        <div className="flex items-center space-x-3 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
-           <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-xl text-blue-600">
+        <div className="flex items-center space-x-3 bg-white dark:bg-[#18181b] p-2 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
+           <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-xl text-blue-600 dark:text-white">
              <Building2 className="w-5 h-5" />
            </div>
            <div className="pr-2">
@@ -122,7 +122,7 @@ export default function TenantsPage() {
                value={selectedBuildingId}
                onChange={(e) => setSelectedBuildingId(e.target.value)}
                disabled={loadingBuildings}
-               className="bg-transparent border-none outline-none text-sm font-bold text-gray-900 cursor-pointer disabled:opacity-50"
+               className="bg-transparent border-none outline-none text-sm font-bold text-gray-900 dark:text-white cursor-pointer disabled:opacity-50"
              >
                <option value="" disabled>Select Property</option>
                {buildings.map((b, i) => {
@@ -135,7 +135,7 @@ export default function TenantsPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-[32px] p-2 shadow-sm overflow-hidden mb-8">
+      <div className="bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-[32px] p-2 shadow-sm overflow-hidden mb-8">
          <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
            <div className="relative group w-full sm:w-72">
              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -144,7 +144,7 @@ export default function TenantsPage() {
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
                placeholder="Search by name, email or unit..." 
-               className="w-full bg-[#F8F9FA] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 focus:bg-white outline-none transition-all font-medium"
+               className="w-full bg-[#F8F9FA] dark:bg-[#09090b] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/20 focus:bg-white dark:bg-[#18181b] outline-none transition-all font-medium"
              />
            </div>
            <button
@@ -157,7 +157,7 @@ export default function TenantsPage() {
         
         {loadingBuildings || loadingTenants ? (
           <div className="h-64 flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+            <Loader2 className="w-10 h-10 text-blue-600 dark:text-white animate-spin" />
             <p className="text-sm font-bold text-[#64748B] animate-pulse">
               {loadingBuildings ? 'Loading properties...' : 'Retrieving tenant records...'}
             </p>
@@ -170,6 +170,51 @@ export default function TenantsPage() {
                onViewTenant={(tenantId) => {
                  setSelectedTenantId(tenantId);
                  setIsViewTenantModalOpen(true);
+               }}
+               onDeleteTenant={async (tenantId, tenantName) => {
+                 const confirmDelete = window.confirm(`This will send a vacate request to the tenant (${tenantName}). They must confirm they have received their deposit return before the unit is marked as vacant.`);
+                 if (confirmDelete) {
+                   try {
+                     await tenantsApi.deleteTenant(tenantId);
+                     alert(`Vacate request sent to ${tenantName}. Waiting for tenant confirmation.`);
+                     // Re-fetch tenants
+                     if (selectedBuildingId) {
+                        setLoadingTenants(true);
+                        try {
+                          const tenantsData = await tenantsApi.getTenantsByBuildingId(selectedBuildingId);
+                          const rawTenants = Array.isArray(tenantsData?.tenants) ? tenantsData.tenants : [];
+                          const building = buildings.find(b => b.id?.toString() === selectedBuildingId || b.building_id?.toString() === selectedBuildingId);
+                          const unitMap: Record<number, { unit_number: string, floor_number: number }> = {};
+                          if (building && Array.isArray(building.units)) {
+                            building.units.forEach(u => {
+                              unitMap[u.id] = { unit_number: u.unit_number, floor_number: u.floor_number };
+                            });
+                          }
+                          const enrichedTenants = rawTenants.map((t: any) => {
+                            const unitInfo = unitMap[t.unit];
+                            let resolvedUnitNumber = unitInfo?.unit_number;
+                            if (!resolvedUnitNumber && t.unit_id) {
+                              const parts = String(t.unit_id).split('-');
+                              if (parts.length > 1) resolvedUnitNumber = parts[parts.length - 1];
+                            }
+                            return {
+                              ...t,
+                              unit_number: resolvedUnitNumber || t.unit_number || t.unit_id || t.unit,
+                              floor_number: unitInfo?.floor_number ?? t.floor_number ?? 0
+                            };
+                          });
+                          setTenants(enrichedTenants);
+                        } catch (error) {
+                          console.error(error);
+                        } finally {
+                          setLoadingTenants(false);
+                        }
+                     }
+                   } catch (error) {
+                     alert("Failed to initiate vacate request.");
+                     console.warn(error);
+                   }
+                 }
                }} 
              />
           </div>

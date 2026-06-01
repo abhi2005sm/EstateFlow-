@@ -57,11 +57,11 @@ export default function Apartments() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 bg-gray-50 min-h-screen relative">
+    <div className="p-6 max-w-7xl mx-auto space-y-6 bg-gray-50 dark:bg-[#27272a] min-h-screen relative">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Apartments Management</h1>
-          <p className="text-gray-500 mt-1">Manage all registered owners and their properties.</p>
+          <h1 className="text-[#121110] dark:text-whitexl font-bold text-gray-900 dark:text-white">Apartments Management</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage all registered owners and their properties.</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
@@ -77,13 +77,13 @@ export default function Apartments() {
       {/* Add Owner Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-[#18181b] rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Add New Owner</h2>
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add New Owner</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:bg-gray-100 p-1.5 rounded-lg transition-colors"
+                className="text-gray-400 hover:bg-gray-100 dark:bg-[#27272a] p-1.5 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -99,66 +99,66 @@ export default function Apartments() {
               )}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Owner Name</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Owner Name</label>
                 <input
                   required
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                  className="w-full border border-gray-300 dark:border-[#363636] rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
                   placeholder="e.g. John Doe"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Phone Number</label>
                 <input
                   required
                   type="tel"
                   name="phone_number"
                   value={formData.phone_number}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                  className="w-full border border-gray-300 dark:border-[#363636] rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
                   placeholder="e.g. +91 7455545454"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Email Address</label>
                 <input
                   required
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                  className="w-full border border-gray-300 dark:border-[#363636] rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
                   placeholder="e.g. john@example.com"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Area Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Area Name</label>
                   <input
                     required
                     type="text"
                     name="area_name"
                     value={formData.area_name}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                    className="w-full border border-gray-300 dark:border-[#363636] rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
                     placeholder="e.g. BTM LAYOUT"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">City</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">City</label>
                   <input
                     required
                     type="text"
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                    className="w-full border border-gray-300 dark:border-[#363636] rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
                     placeholder="e.g. Bengaluru"
                   />
                 </div>
@@ -166,26 +166,26 @@ export default function Apartments() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">State</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">State</label>
                   <input
                     required
                     type="text"
                     name="state"
                     value={formData.state}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                    className="w-full border border-gray-300 dark:border-[#363636] rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
                     placeholder="e.g. Karnataka"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Zip Code</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Zip Code</label>
                   <input
                     required
                     type="text"
                     name="zip_code"
                     value={formData.zip_code}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
+                    className="w-full border border-gray-300 dark:border-[#363636] rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-gray-400"
                     placeholder="e.g. 560020"
                   />
                 </div>
@@ -196,7 +196,7 @@ export default function Apartments() {
                   type="button"
                   disabled={isLoading}
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-[#18181b] border border-gray-300 dark:border-[#363636] hover:bg-gray-50 dark:bg-[#27272a] rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50"
                 >
                   Cancel
                 </button>

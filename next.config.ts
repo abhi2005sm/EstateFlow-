@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
+  reactStrictMode: false,
   images: {
     remotePatterns: [
       {
@@ -20,7 +21,7 @@ const config: NextConfig = {
       {
         // Whenever the frontend calls /api/..., silently forward it to Ngrok!
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://gallantly-financial-ahead.ngrok-free.dev'}/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://estateflow-api-gateway.onrender.com'}/:path*`,
       },
     ]
   },

@@ -22,11 +22,11 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
   if (!units || units.length === 0) {
     return (
       <div className="p-20 text-center flex flex-col items-center justify-center">
-        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 text-gray-300">
+        <div className="w-16 h-16 bg-gray-50 dark:bg-[#27272a] rounded-2xl flex items-center justify-center mb-4 text-gray-300">
           <SearchIcon className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900">No units found</h3>
-        <p className="text-gray-500 max-w-xs mx-auto text-sm">Try adding units to this building to see them here.</p>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">No units found</h3>
+        <p className="text-gray-500 dark:text-gray-400 max-w-xs mx-auto text-sm">Try adding units to this building to see them here.</p>
       </div>
     );
   }
@@ -68,14 +68,14 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
   return (
     <div className="space-y-4 pb-32">
       {Object.entries(floors).sort(([a], [b]) => Number(a) - Number(b)).map(([floor, floorUnits]) => (
-        <div key={floor} className="bg-white rounded-[24px] border border-gray-100 overflow-hidden shadow-sm transition-all hover:shadow-md">
+        <div key={floor} className="bg-white dark:bg-[#18181b] rounded-[24px] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm transition-all hover:shadow-md">
           {/* Floor Header */}
           <button 
             onClick={() => toggleFloor(Number(floor))}
-            className="w-full px-8 py-5 flex items-center justify-between border-b border-gray-50 bg-[#FCFCFD] hover:bg-gray-50 transition-colors"
+            className="w-full px-8 py-5 flex items-center justify-between border-b border-gray-50 bg-[#FCFCFD] hover:bg-gray-50 dark:bg-[#27272a] transition-colors"
           >
             <div className="flex items-center space-x-4 text-left">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center shadow-inner border border-white">
+              <div className="w-12 h-12 bg-gray-100 dark:bg-[#27272a] rounded-xl flex items-center justify-center shadow-inner border border-white">
                 <Home className="w-6 h-6 text-gray-400" />
               </div>
               <div>
@@ -121,7 +121,7 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
 
                         return (
                           <motion.tr
-                            key={unit.id || unit.unit_id || unit.unit_code || index}
+                            key={unit.id || unit.unit_id || index}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.03 }}
@@ -165,9 +165,9 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
                                   <button 
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      onAddTenant?.(unit.unit_id || unit.id.toString());
+                                      onAddTenant?.(String(unit.unit_id || unit.id));
                                     }}
-                                    className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                                    className="p-2 text-blue-500 dark:text-white hover:bg-blue-50 rounded-lg transition-all"
                                     title="Add Tenant"
                                   >
                                     <UsersIcon className="w-4 h-4" />
@@ -178,7 +178,7 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
                                     e.stopPropagation();
                                     onEditUnit?.(unit);
                                   }}
-                                  className="p-2 text-[#9CA3AF] hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                  className="p-2 text-[#9CA3AF] hover:text-blue-600 dark:text-white hover:bg-blue-50 rounded-lg transition-all"
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </button>

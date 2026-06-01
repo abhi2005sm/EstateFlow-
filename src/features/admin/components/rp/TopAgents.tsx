@@ -17,7 +17,7 @@ export default function TopAgents({ delay = 0 }) {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, delay }}
-      className="bg-white/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 shadow-rp"
+      className="bg-white/70 dark:bg-[#18181b]/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/20 shadow-rp"
     >
       <div className="flex justify-between items-center mb-8">
         <h3 className="text-lg font-black tracking-tight">Top Agents</h3>

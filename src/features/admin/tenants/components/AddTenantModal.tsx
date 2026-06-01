@@ -30,6 +30,11 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
     dietary_preference: 'Veg',
     pet_details: 'None',
     occupancy_type: 'Rent',
+    deposit_amount: 0,
+    rent_start_date: '',
+    rent_end_date: '',
+    agreement_start_date: '',
+    agreement_end_date: '',
   });
 
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
@@ -50,6 +55,11 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
           dietary_preference: editData.dietary_preference || 'Veg',
           pet_details: editData.pet_details || 'None',
           occupancy_type: editData.occupancy_type || 'Rent',
+          deposit_amount: editData.deposit_amount || 0,
+          rent_start_date: editData.rent_start_date || '',
+          rent_end_date: editData.rent_end_date || '',
+          agreement_start_date: editData.agreement_start_date || '',
+          agreement_end_date: editData.agreement_end_date || '',
         });
         if (editData.building) {
            setSelectedBuildingId(editData.building.toString());
@@ -61,7 +71,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
           email: '',
           name: '',
           phone_number: '',
-          unit_code: prefilledUnitId || '',
+          unit_code: prefilledUnitId ? String(prefilledUnitId) : '',
           tenant_type: 'Family',
           male_count: 0,
           female_count: 0,
@@ -70,6 +80,11 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
           dietary_preference: 'Veg',
           pet_details: 'None',
           occupancy_type: 'Rent',
+          deposit_amount: 0,
+          rent_start_date: '',
+          rent_end_date: '',
+          agreement_start_date: '',
+          agreement_end_date: '',
         });
         if (defaultBuildingId && buildings.some(b => b.id?.toString() === defaultBuildingId || b.building_id?.toString() === defaultBuildingId)) {
           setSelectedBuildingId(defaultBuildingId);
@@ -133,10 +148,10 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0.5 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 h-full w-full max-w-xl bg-[#F8F9FA] z-[101] shadow-[-20px_0_50px_rgba(0,0,0,0.05)] flex flex-col"
+            className="fixed right-0 top-0 h-full w-full max-w-xl bg-[#F8F9FA] dark:bg-[#09090b] z-[101] shadow-[-20px_0_50px_rgba(0,0,0,0.05)] flex flex-col"
           >
             {/* Header - Fixed */}
-            <div className="p-10 pb-6 bg-[#F8F9FA] border-b border-gray-100">
+            <div className="p-10 pb-6 bg-[#F8F9FA] dark:bg-[#09090b] border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <h2 className="text-[32px] font-black text-[#1A1C1E] tracking-tight leading-none">
@@ -148,7 +163,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                 </div>
                 <button
                   onClick={onClose}
-                  className="w-12 h-12 flex items-center justify-center bg-white border border-[#E2E8F0] rounded-2xl shadow-sm hover:shadow-md hover:bg-gray-50 transition-all active:scale-95"
+                  className="w-12 h-12 flex items-center justify-center bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-2xl shadow-sm hover:shadow-md hover:bg-gray-50 dark:bg-[#27272a] transition-all active:scale-95"
                 >
                   <X className="w-5 h-5 text-[#64748B]" />
                 </button>
@@ -159,8 +174,8 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
             <div className="flex-1 overflow-y-auto p-10 space-y-8 custom-scrollbar">
               <form id="add-tenant-form" onSubmit={handleSubmit} className="space-y-6">
                 {/* Section 1: Basic Information */}
-                <div className="bg-white border border-[#E2E8F0] rounded-[24px] overflow-hidden shadow-sm">
-                  <div className="px-6 py-4 bg-[#F8F9FA] border-b border-[#E2E8F0] flex items-center space-x-3">
+                <div className="bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-[24px] overflow-hidden shadow-sm">
+                  <div className="px-6 py-4 bg-[#F8F9FA] dark:bg-[#09090b] border-b border-[#E2E8F0] dark:border-gray-800 flex items-center space-x-3">
                     <User className="w-4 h-4 text-[#3B82F6]" />
                     <span className="text-xs font-black text-[#1A1C1E] uppercase tracking-wider">Identity & Contact</span>
                   </div>
@@ -173,7 +188,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                           name="name"
                           required
                           placeholder="e.g. Johnathan Smith"
-                          className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all"
+                          className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all"
                           value={formData.name}
                           onChange={handleChange}
                         />
@@ -190,7 +205,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                             type="email"
                             required
                             placeholder="john@example.com"
-                            className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all"
+                            className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all"
                             value={formData.email}
                             onChange={handleChange}
                           />
@@ -204,7 +219,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                             name="phone_number"
                             required
                             placeholder="+1 (555) 000-0000"
-                            className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all"
+                            className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/5 transition-all"
                             value={formData.phone_number}
                             onChange={handleChange}
                           />
@@ -215,8 +230,8 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                 </div>
 
                 {/* Section 2: Occupancy & Unit */}
-                <div className="bg-white border border-[#E2E8F0] rounded-[24px] overflow-hidden shadow-sm">
-                  <div className="px-6 py-4 bg-[#F8F9FA] border-b border-[#E2E8F0] flex items-center space-x-3">
+                <div className="bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-[24px] overflow-hidden shadow-sm">
+                  <div className="px-6 py-4 bg-[#F8F9FA] dark:bg-[#09090b] border-b border-[#E2E8F0] dark:border-gray-800 flex items-center space-x-3">
                     <Home className="w-4 h-4 text-[#F59E0B]" />
                     <span className="text-xs font-black text-[#1A1C1E] uppercase tracking-wider">Unit Allocation</span>
                   </div>
@@ -230,7 +245,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                             setSelectedBuildingId(e.target.value);
                             setFormData(prev => ({ ...prev, unit_code: '' }));
                           }}
-                          className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
+                          className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
                           required
                         >
                           <option value="" disabled>Select a building</option>
@@ -248,17 +263,17 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                       <div className="relative">
                         <select
                           name="unit_code"
-                          className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
+                          className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all disabled:opacity-70 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed disabled:text-gray-500"
                           value={formData.unit_code}
                           onChange={handleChange}
                           required
-                          disabled={!selectedBuildingId || units.length === 0}
+                          disabled={!selectedBuildingId || units.length === 0 || !!prefilledUnitId}
                         >
                           <option value="" disabled>
                             {!selectedBuildingId ? 'Select building first' : units.length === 0 ? 'No units available' : 'Choose a unit'}
                           </option>
                           {units.map((u: any) => (
-                            <option key={u.unit_id || u.id} value={u.unit_code || u.unit_id || u.id}>
+                            <option key={String(u.unit_code || u.unit_id || u.id)} value={String(u.unit_code || u.unit_id || u.id)}>
                               {u.unit_number} ({u.unit_type}) {u.is_occupied ? '- Occupied' : ''}
                             </option>
                           ))}
@@ -271,7 +286,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                       <div className="relative">
                         <select
                           name="occupancy_type"
-                          className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
+                          className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
                           value={formData.occupancy_type}
                           onChange={handleChange}
                         >
@@ -283,12 +298,28 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                         <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none" />
                       </div>
                     </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Deposit Amount (₹)</label>
+                      <div className="relative group/input">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8] font-semibold">₹</span>
+                        <input
+                          name="deposit_amount"
+                          type="number"
+                          placeholder="e.g. 50000"
+                          className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 pl-9 pr-4 text-sm font-semibold text-[#1A1C1E] dark:text-white outline-none focus:border-[#F59E0B] focus:ring-4 focus:ring-[#F59E0B]/5 transition-all"
+                          value={formData.deposit_amount || ''}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-1.5">
                       <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Tenant Profile</label>
                       <div className="relative">
                         <select
                           name="tenant_type"
-                          className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
+                          className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none focus:border-[#F59E0B] transition-all"
                           value={formData.tenant_type}
                           onChange={handleChange}
                         >
@@ -302,11 +333,61 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                   </div>
                 </div>
 
+                {/* Section 2.5: Lease & Rent Timeline */}
+                <div className="bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-[24px] overflow-hidden shadow-sm">
+                  <div className="px-6 py-4 bg-[#F8F9FA] dark:bg-[#09090b] border-b border-[#E2E8F0] dark:border-gray-800 flex items-center space-x-3">
+                    <FileText className="w-4 h-4 text-[#8B5CF6]" />
+                    <span className="text-xs font-black text-[#1A1C1E] uppercase tracking-wider">Lease & Rent Timeline</span>
+                  </div>
+                  <div className="p-6 grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Rent Start Date</label>
+                      <input
+                        name="rent_start_date"
+                        type="date"
+                        className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] dark:text-white outline-none focus:border-[#8B5CF6] transition-all"
+                        value={formData.rent_start_date || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Rent End Date</label>
+                      <input
+                        name="rent_end_date"
+                        type="date"
+                        className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] dark:text-white outline-none focus:border-[#8B5CF6] transition-all"
+                        value={formData.rent_end_date || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Agreement Start Date</label>
+                      <input
+                        name="agreement_start_date"
+                        type="date"
+                        className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] dark:text-white outline-none focus:border-[#8B5CF6] transition-all"
+                        value={formData.agreement_start_date || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-tight ml-1">Agreement End Date</label>
+                      <input
+                        name="agreement_end_date"
+                        type="date"
+                        className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] dark:text-white outline-none focus:border-[#8B5CF6] transition-all"
+                        value={formData.agreement_end_date || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Section 3: Demographic & Preferences */}
                 <div className="grid grid-cols-1 gap-6">
                   {/* Household counts */}
-                  <div className="bg-white border border-[#E2E8F0] rounded-[24px] overflow-hidden shadow-sm">
-                    <div className="px-6 py-4 bg-[#F8F9FA] border-b border-[#E2E8F0] flex items-center space-x-3">
+                  <div className="bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-[24px] overflow-hidden shadow-sm">
+                    <div className="px-6 py-4 bg-[#F8F9FA] dark:bg-[#09090b] border-b border-[#E2E8F0] dark:border-gray-800 flex items-center space-x-3">
                       <Users className="w-4 h-4 text-[#8B5CF6]" />
                       <span className="text-xs font-black text-[#1A1C1E] uppercase tracking-wider">Household Composition</span>
                     </div>
@@ -323,7 +404,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                             name={f.name}
                             type="text"
                             inputMode="numeric"
-                            className="w-full bg-[#F8F9FA] border border-[#E2E8F0] rounded-xl py-2 px-2 text-sm font-bold text-[#1A1C1E] text-center outline-none focus:bg-white focus:border-[#8B5CF6] transition-all"
+                            className="w-full bg-[#F8F9FA] dark:bg-[#09090b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-2 px-2 text-sm font-bold text-[#1A1C1E] text-center outline-none focus:bg-white dark:bg-[#18181b] focus:border-[#8B5CF6] transition-all"
                             value={formData[f.name as keyof RegisterTenantPayload]}
                             onChange={(e) => {
                               const val = e.target.value.replace(/[^0-9]/g, '');
@@ -339,8 +420,8 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                   </div>
 
                   {/* Other details */}
-                  <div className="bg-white border border-[#E2E8F0] rounded-[24px] overflow-hidden shadow-sm">
-                    <div className="px-6 py-4 bg-[#F8F9FA] border-b border-[#E2E8F0] flex items-center space-x-3">
+                  <div className="bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-[24px] overflow-hidden shadow-sm">
+                    <div className="px-6 py-4 bg-[#F8F9FA] dark:bg-[#09090b] border-b border-[#E2E8F0] dark:border-gray-800 flex items-center space-x-3">
                       <Utensils className="w-4 h-4 text-[#10B981]" />
                       <span className="text-xs font-black text-[#1A1C1E] uppercase tracking-wider">Preferences & Pets</span>
                     </div>
@@ -350,7 +431,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                         <div className="relative">
                           <select
                             name="dietary_preference"
-                            className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none transition-all"
+                            className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 px-4 text-sm font-semibold text-[#1A1C1E] outline-none appearance-none transition-all"
                             value={formData.dietary_preference}
                             onChange={handleChange}
                           >
@@ -368,7 +449,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
                           <input
                             name="pet_details"
                             placeholder="e.g. 1 Small Dog"
-                            className="w-full bg-white border border-[#E2E8F0] rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#10B981] transition-all"
+                            className="w-full bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-[#1A1C1E] outline-none focus:border-[#10B981] transition-all"
                             value={formData.pet_details}
                             onChange={handleChange}
                           />
@@ -381,7 +462,7 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
             </div>
 
             {/* Footer - Fixed at Bottom */}
-            <div className="p-10 bg-white border-t border-gray-100 flex items-center justify-between">
+            <div className="p-10 bg-white dark:bg-[#18181b] border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <button
                 onClick={onClose}
                 className="px-8 py-4 rounded-2xl text-sm font-bold text-[#64748B] hover:bg-[#F1F5F9] transition-all active:scale-95"

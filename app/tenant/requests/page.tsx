@@ -15,11 +15,17 @@ export default function TenantRequestsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [profile, setProfile] = useState<any>(null);
+
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const data = await apiRequest("/users/tenants/maintenance/");
-      setRequests(data);
+      const [data, profileData] = await Promise.all([
+        apiRequest("/users/tenants/maintenance/"),
+        apiRequest('/users/tenants/me/').catch(() => null)
+      ]);
+      setRequests(data.results || data);
+      if (profileData) setProfile(profileData);
     } catch (err) {
       console.error("Failed to fetch requests", err);
     } finally {
@@ -30,6 +36,33 @@ export default function TenantRequestsPage() {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  const handleConfirmVacate = async () => {
+    if (!profile) return;
+    const tenantId = profile.tenant_id || profile.id;
+    try {
+      await apiRequest(`/users/tenants/${tenantId}/confirm-vacate/`, { method: 'POST' });
+      alert("Vacate confirmed successfully. Deposit received.");
+      setProfile({ ...profile, vacate_status: 'Vacated' });
+    } catch (error) {
+      alert("Failed to confirm vacate.");
+      console.error(error);
+    }
+  };
+
+  const handleRejectVacate = async () => {
+    if (!profile) return;
+    const tenantId = profile.tenant_id || profile.id;
+    try {
+      await apiRequest(`/users/tenants/${tenantId}/reject-vacate/`, { method: 'POST' });
+      alert("You have rejected the vacate request. The owner will be notified.");
+      // Assuming rejection sets status back to 'Active' or similar in backend
+      setProfile({ ...profile, vacate_status: 'Active' });
+    } catch (error) {
+      alert("Failed to reject vacate request.");
+      console.error(error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +94,7 @@ export default function TenantRequestsPage() {
   const getStatusIcon = (status: string) => {
     switch(status) {
       case 'Resolved': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'In Progress': return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+      case 'In Progress': return <Loader2 className="w-4 h-4 text-blue-500 dark:text-white animate-spin" />;
       default: return <Clock className="w-4 h-4 text-orange-500" />;
     }
   };
@@ -76,9 +109,34 @@ export default function TenantRequestsPage() {
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
+      {profile?.vacate_status === 'Pending Confirmation' && (
+        <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between shadow-sm mb-8">
+          <div>
+            <h3 className="text-amber-800 dark:text-amber-200 font-bold text-lg">Action Required: Vacate Request Initiated</h3>
+            <p className="text-amber-700 dark:text-amber-300 mt-1">
+              Your landlord has initiated a vacate request. Please confirm you have received your deposit return of <span className="font-black">₹{Number(profile.deposit_amount || 0).toLocaleString('en-IN')}</span>.
+            </p>
+          </div>
+          <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-3">
+            <button 
+              onClick={handleRejectVacate}
+              className="whitespace-nowrap px-6 py-3 bg-white text-amber-700 font-bold rounded-xl shadow-sm border border-amber-200 hover:bg-amber-50 transition-all active:scale-95"
+            >
+              Reject (Deposit Not Received)
+            </button>
+            <button 
+              onClick={handleConfirmVacate}
+              className="whitespace-nowrap px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95"
+            >
+              Confirm Deposit Received & Vacate
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Maintenance Requests</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Maintenance Requests</h1>
           <p className="text-gray-500 mt-1">Report and track issues in your unit.</p>
         </div>
         <button
@@ -91,7 +149,7 @@ export default function TenantRequestsPage() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8 animate-in slide-in-from-top-4 fade-in duration-300">
+        <div className="bg-white dark:bg-[#121212] rounded-xl shadow-sm border border-gray-100 dark:border-[#363636] p-6 mb-8 animate-in slide-in-from-top-4 fade-in duration-300">
           <h2 className="text-xl font-semibold mb-4">Raise an Issue</h2>
           {error && (
             <div className="p-3 mb-4 text-sm bg-red-50 text-red-600 border border-red-100 rounded-lg">
@@ -100,25 +158,25 @@ export default function TenantRequestsPage() {
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Issue Title</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Issue Title</label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Broken AC in Bedroom"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-[#363636] rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Description</label>
               <textarea
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Please describe the issue in detail..."
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors resize-none"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-[#363636] rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors resize-none"
               />
             </div>
             <div className="flex justify-end pt-2">
@@ -141,11 +199,11 @@ export default function TenantRequestsPage() {
           <p>Loading your requests...</p>
         </div>
       ) : requests.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="text-center py-16 bg-white dark:bg-[#121212] rounded-xl border border-gray-100 dark:border-[#363636] shadow-sm">
+          <div className="w-16 h-16 bg-gray-50 dark:bg-[#262626] rounded-full flex items-center justify-center mx-auto mb-4">
             <MessageSquare className="w-8 h-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No requests found</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No requests found</h3>
           <p className="text-gray-500 mb-6">You haven't submitted any maintenance requests yet.</p>
           <button
             onClick={() => setShowForm(true)}
@@ -157,10 +215,10 @@ export default function TenantRequestsPage() {
       ) : (
         <div className="space-y-4">
           {requests.map((req) => (
-            <div key={req.request_id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 overflow-hidden relative">
+            <div key={req.request_id} className="bg-white dark:bg-[#121212] rounded-xl shadow-sm border border-gray-100 dark:border-[#363636] p-6 overflow-hidden relative">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">{req.issue_title}</h3>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{req.issue_title}</h3>
                   <p className="text-xs text-gray-500 mt-1">
                     Submitted on {new Date(req.created_at).toLocaleDateString()}
                   </p>
@@ -171,7 +229,7 @@ export default function TenantRequestsPage() {
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-lg p-4 mb-4 text-sm text-gray-700">
+              <div className="bg-gray-50 dark:bg-[#262626] rounded-lg p-4 mb-4 text-sm text-gray-700 dark:text-gray-200">
                 {req.description}
               </div>
 

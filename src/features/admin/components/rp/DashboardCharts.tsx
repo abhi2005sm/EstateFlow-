@@ -48,8 +48,12 @@ export default function DashboardCharts({ buildings, tenants, delay = 0 }: Dashb
     // Filter tenants for this building
     const bTenants = tenants.filter(t => t.property === b.id || t.building_id === b.id || t.property === b.name);
     
-    const paid = bTenants.reduce((sum, t) => t.rentStatus === 'Paid' ? sum + (t.rentAmount || 0) : sum, 0);
-    const due = bTenants.reduce((sum, t) => t.rentStatus === 'Unpaid' ? sum + (t.rentAmount || 0) : sum, 0);
+    const paid = bTenants.reduce((sum, t) => {
+      if (t.rent_status === 'Paid') return sum + (Number(t.rent_amount) || 0);
+      if (t.rent_status === 'Partial') return sum + ((Number(t.rent_amount) || 0) - (Number(t.due_amount) || 0));
+      return sum;
+    }, 0);
+    const due = bTenants.reduce((sum, t) => sum + (Number(t.due_amount) || 0), 0);
 
     return {
       name: b.name?.split(' ')[0] || 'Property', // Short name for axis
@@ -66,11 +70,11 @@ export default function DashboardCharts({ buildings, tenants, delay = 0 }: Dashb
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay }}
-        className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-8"
+        className="bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-8"
       >
         <div className="mb-6">
-          <h3 className="text-lg font-black text-[#121110] tracking-tight">Portfolio Occupancy</h3>
-          <p className="text-xs font-bold text-[#61605D] uppercase tracking-widest mt-1">Live Resident Distribution</p>
+          <h3 className="text-lg font-black text-[#121110] dark:text-white tracking-tight">Portfolio Occupancy</h3>
+          <p className="text-xs font-bold text-[#61605D] dark:text-gray-400 uppercase tracking-widest mt-1">Live Resident Distribution</p>
         </div>
         <div className="flex items-center justify-between">
           <div className="w-1/2 h-52">
@@ -102,7 +106,7 @@ export default function DashboardCharts({ buildings, tenants, delay = 0 }: Dashb
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 rounded-full" style={{ background: d.color }} />
-                    <span className="text-xs font-black text-[#121110] uppercase tracking-wider">{d.name}</span>
+                    <span className="text-xs font-black text-[#121110] dark:text-white uppercase tracking-wider">{d.name}</span>
                   </div>
                   <span className="text-sm font-black" style={{ color: d.color }}>{d.value}%</span>
                 </div>
@@ -119,12 +123,12 @@ export default function DashboardCharts({ buildings, tenants, delay = 0 }: Dashb
             ))}
             <div className="pt-4 border-t border-[#F5F3F1] space-y-2">
               <div className="flex justify-between">
-                <span className="text-xs font-bold text-[#61605D]">Total Units</span>
-                <span className="text-xs font-black text-[#121110]">{totalUnits}</span>
+                <span className="text-xs font-bold text-[#61605D] dark:text-gray-400">Total Units</span>
+                <span className="text-xs font-black text-[#121110] dark:text-white">{totalUnits}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-xs font-bold text-[#61605D]">Active Tenants</span>
-                <span className="text-xs font-black text-[#121110]">{occupiedCount}</span>
+                <span className="text-xs font-bold text-[#61605D] dark:text-gray-400">Active Tenants</span>
+                <span className="text-xs font-black text-[#121110] dark:text-white">{occupiedCount}</span>
               </div>
             </div>
           </div>
@@ -136,12 +140,12 @@ export default function DashboardCharts({ buildings, tenants, delay = 0 }: Dashb
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: delay + 0.15 }}
-        className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-8"
+        className="bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-8"
       >
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-black text-[#121110] tracking-tight">Revenue by Property</h3>
-            <p className="text-xs font-bold text-[#61605D] uppercase tracking-widest mt-1">Financial Performance Snapshot</p>
+            <h3 className="text-lg font-black text-[#121110] dark:text-white tracking-tight">Revenue by Property</h3>
+            <p className="text-xs font-bold text-[#61605D] dark:text-gray-400 uppercase tracking-widest mt-1">Financial Performance Snapshot</p>
           </div>
         </div>
         <div className="h-56 w-full">
@@ -174,11 +178,11 @@ export default function DashboardCharts({ buildings, tenants, delay = 0 }: Dashb
         <div className="flex items-center space-x-6 mt-6">
           <div className="flex items-center space-x-3">
             <div className="w-4 h-4 rounded-full bg-[#22C55E]" />
-            <span className="text-[11px] font-black text-[#121110] uppercase tracking-widest">Collected</span>
+            <span className="text-[11px] font-black text-[#121110] dark:text-white uppercase tracking-widest">Collected</span>
           </div>
           <div className="flex items-center space-x-3">
             <div className="w-4 h-4 rounded-full bg-[#EF4444]" />
-            <span className="text-[11px] font-black text-[#121110] uppercase tracking-widest">Outstanding</span>
+            <span className="text-[11px] font-black text-[#121110] dark:text-white uppercase tracking-widest">Outstanding</span>
           </div>
         </div>
       </motion.div>

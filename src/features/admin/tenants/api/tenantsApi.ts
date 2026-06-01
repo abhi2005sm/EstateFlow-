@@ -13,6 +13,11 @@ export interface RegisterTenantPayload {
   dietary_preference: string;
   pet_details: string;
   occupancy_type: string;
+  deposit_amount?: number;
+  rent_start_date?: string;
+  rent_end_date?: string;
+  agreement_start_date?: string;
+  agreement_end_date?: string;
 }
 
 export const tenantsApi = {
@@ -28,6 +33,7 @@ export const tenantsApi = {
   getTenantByUnitCode: (unitCode: string) => apiRequest(`/users/units/${unitCode}/tenant/`),
   getTenantById: (tenantId: number) => apiRequest(`/users/tenants/${tenantId}/`),
   getTenantPaymentHistory: (tenantId: number) => apiRequest(`/users/tenants/${tenantId}/payments/`),
+  getTenantTimeline: (tenantId: string | number) => apiRequest(`/users/tenants/${tenantId}/timeline/`),
   updateTenant: (tenantId: number, data: any) =>
     apiRequest(`/users/tenants/${tenantId}/`, {
       method: 'PATCH',

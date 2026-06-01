@@ -42,11 +42,11 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
             >
               <td className="px-8 py-6">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
-                    <CreditCard className="w-5 h-5 text-gray-500" />
+                  <div className="w-10 h-10 bg-gray-100 dark:bg-[#27272a] rounded-xl flex items-center justify-center shrink-0">
+                    <CreditCard className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">
                       {payment.fee_type || (payment as any).feeType} - {payment.rent_month} {payment.rent_year}
                     </p>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
@@ -57,7 +57,7 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
               </td>
               <td className="px-8 py-6">
                 <div>
-                  <p className="text-sm font-bold text-gray-900">{payment.tenant_name}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{payment.tenant_name}</p>
                   <p className="text-[11px] font-medium text-gray-400">
                     {payment.unit_code}
                   </p>
@@ -65,7 +65,7 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
               </td>
               <td className="px-8 py-6">
                 <div className="flex flex-col">
-                  <p className="text-sm font-black text-gray-900">₹{(Number(payment.amount) || 0).toLocaleString('en-IN')}</p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white">₹{(Number(payment.amount) || 0).toLocaleString('en-IN')}</p>
                   {(payment.due_amount || (payment as any).dueAmount) && Number(payment.due_amount || (payment as any).dueAmount) > 0 && (
                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-tighter mt-0.5">
                       Remaining: ₹{(Number(payment.due_amount || (payment as any).dueAmount)).toLocaleString('en-IN')}
@@ -74,7 +74,7 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
                 </div>
               </td>
               <td className="px-8 py-6">
-                <div className="flex items-center text-sm font-bold text-gray-500">
+                <div className="flex items-center text-sm font-bold text-gray-500 dark:text-gray-400">
                   <Calendar className="w-4 h-4 mr-2 opacity-50" />
                   {payment.payment_date 
                     ? new Date(payment.payment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -104,7 +104,7 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
               <td className="px-8 py-6 text-right">
                 <button 
                   disabled={payment.approval_status !== 'Approved'}
-                  className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                  className="p-2.5 text-gray-400 hover:text-blue-600 dark:text-white hover:bg-blue-50 rounded-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                 >
                   <Download className="w-5 h-5" />
                 </button>
@@ -116,10 +116,10 @@ export default function PaymentsTable({ data }: PaymentsTableProps) {
 
       {data.length === 0 && (
         <div className="py-20 text-center">
-          <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 bg-gray-50 dark:bg-[#27272a] rounded-[32px] flex items-center justify-center mx-auto mb-6">
             <Clock className="w-10 h-10 text-gray-300" />
           </div>
-          <h3 className="text-lg font-black text-gray-900">No payment history</h3>
+          <h3 className="text-lg font-black text-gray-900 dark:text-white">No payment history</h3>
           <p className="text-gray-400 text-sm font-medium mt-1">Submit a payment to see it here</p>
         </div>
       )}

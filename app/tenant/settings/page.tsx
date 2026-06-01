@@ -58,13 +58,13 @@ export default function TenantSettingsPage() {
   return (
     <div className="max-w-3xl mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
         <p className="text-gray-500 mt-1">Manage your account security and preferences.</p>
       </div>
 
       {/* Change Password Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Change Password</h2>
+      <div className="bg-white dark:bg-[#121212] rounded-xl shadow-sm border border-gray-100 dark:border-[#363636] p-8">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Change Password</h2>
 
         <form onSubmit={handleChangePassword} className="space-y-5 max-w-md">
           
@@ -77,39 +77,39 @@ export default function TenantSettingsPage() {
 
           {/* Current Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Current Password</label>
             <input
               type="password"
               required
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-[#363636] rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors"
               placeholder="Enter current password"
             />
           </div>
 
           {/* New Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">New Password</label>
             <input
               type="password"
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-[#363636] rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors"
               placeholder="Enter new password"
             />
           </div>
 
           {/* Confirm New Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Confirm New Password</label>
             <input
               type="password"
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-[#363636] rounded-lg focus:ring-2 focus:ring-[#f26722] focus:border-[#f26722] outline-none transition-colors"
               placeholder="Confirm new password"
             />
           </div>

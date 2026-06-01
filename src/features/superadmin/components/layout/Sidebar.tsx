@@ -29,7 +29,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-72 bg-white flex flex-col h-screen sticky top-0 z-50">
+    <aside className="w-72 bg-white dark:bg-[#18181b] flex flex-col h-screen sticky top-0 z-50">
       
       {/* ── Logo Section ──────────────────────────────────────── */}
       <div className="p-8 pb-12 flex items-center gap-4">
@@ -38,7 +38,7 @@ export default function Sidebar() {
           <Building2 className="w-8 h-8 text-white relative z-10" />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-[#121110] leading-none tracking-tight">EstateFlow</h2>
+          <h2 className="text-[#121110] dark:text-whitexl font-black text-[#121110] dark:text-white leading-none tracking-tight">EstateFlow</h2>
           <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.15em] mt-1">SUPER ADMIN PORTAL</p>
         </div>
       </div>
@@ -56,17 +56,17 @@ export default function Sidebar() {
                   href={link.href}
                   className={`group relative flex items-center justify-between px-5 py-4 rounded-[22px] transition-all duration-300 ${isActive
                       ? 'bg-[#FF6B2C] text-white shadow-xl shadow-[#FF6B2C]/20'
-                      : 'text-[#121110] hover:bg-gray-50'
+                      : 'text-[#121110] dark:text-white hover:bg-gray-50 dark:bg-[#27272a]'
                     }`}
                 >
                   <div className="flex items-center gap-4">
-                    <link.icon className={`w-6 h-6 transition-colors ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-[#121110]'}`} />
-                    <span className={`text-[15px] font-black ${isActive ? 'text-white' : 'text-[#121110]'}`}>{link.name}</span>
+                    <link.icon className={`w-6 h-6 transition-colors ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-[#121110] dark:text-white'}`} />
+                    <span className={`text-[15px] font-black ${isActive ? 'text-white' : 'text-[#121110] dark:text-white'}`}>{link.name}</span>
                   </div>
                   {isActive && (
                     <motion.div 
                       layoutId="activeDot"
-                      className="w-1.5 h-1.5 bg-white rounded-full mr-1"
+                      className="w-1.5 h-1.5 bg-white dark:bg-[#18181b] rounded-full mr-1"
                     />
                   )}
                 </Link>
@@ -89,10 +89,10 @@ export default function Sidebar() {
               />
             </div>
             <div>
-              <p className="text-sm font-black text-[#121110]">Super Admin</p>
+              <p className="text-sm font-black text-[#121110] dark:text-white">Super Admin</p>
             </div>
           </div>
-          <ChevronDown className="w-4 h-4 text-gray-300 group-hover:text-gray-600 transition-colors" />
+          <ChevronDown className="w-4 h-4 text-gray-300 group-hover:text-gray-600 dark:text-gray-300 transition-colors" />
         </div>
 
         {/* Logout */}

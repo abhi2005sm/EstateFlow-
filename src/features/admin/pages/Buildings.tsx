@@ -60,7 +60,7 @@ export default function Buildings() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto min-h-screen bg-[#F8F9FA]">
+    <div className="p-8 max-w-7xl mx-auto min-h-screen bg-[#F8F9FA] dark:bg-[#09090b]">
       <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <div className="space-y-1">
           <h1 className="text-4xl font-black text-[#1A1C1E] tracking-tight">My Properties</h1>
@@ -75,7 +75,7 @@ export default function Buildings() {
         </button>
       </div>
 
-      <div className="bg-white border border-[#E2E8F0] rounded-[32px] p-2 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#18181b] border border-[#E2E8F0] dark:border-gray-800 rounded-[32px] p-2 shadow-sm overflow-hidden">
         <div className="p-6">
           <Filters onSearch={setSearch} onFilter={setFilterType} onSort={setSortOrder} />
         </div>

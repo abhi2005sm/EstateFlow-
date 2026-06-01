@@ -2,15 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, CreditCard, LogOut, Building2, ChevronDown, Wrench, Settings } from 'lucide-react';
+import { Home, CreditCard, LogOut, Building2, ChevronDown, Wrench, Settings, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../api/api';
+import { ThemeToggle } from '../../../components/ThemeToggle';
 
 export default function TenantSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [securityStaff, setSecurityStaff] = useState<any[]>([]);
 
   useEffect(() => {
     try {
@@ -34,6 +36,10 @@ export default function TenantSidebar() {
       } catch (err) {
         console.error("Failed to fetch tenant profile", err);
       }
+      try {
+        const staffData = await apiRequest('/users/security/staff/');
+        setSecurityStaff(Array.isArray(staffData) ? staffData : (staffData as any).results || []);
+      } catch (err) {}
     };
     fetchTenantProfile();
   }, []);
@@ -42,6 +48,7 @@ export default function TenantSidebar() {
     { name: 'Dashboard', href: '/tenant', icon: Home },
     { name: 'Payments', href: '/tenant/payments', icon: CreditCard },
     { name: 'Requests', href: '/tenant/requests', icon: Wrench },
+    { name: 'Visitors', href: '/tenant/visitors', icon: User },
     { name: 'Settings', href: '/tenant/settings', icon: Settings },
   ];
 
@@ -50,9 +57,9 @@ export default function TenantSidebar() {
 
 
   return (
-    <div className="w-72 bg-white border-r border-gray-100 flex flex-col h-screen sticky top-0 overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.03)]">
+    <div className="w-72 bg-white dark:bg-[#121110] border-r border-gray-100 dark:border-white/10 flex flex-col h-screen sticky top-0 overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.03)]">
       {/* Logo */}
-      <div className="h-20 flex items-center px-8 shrink-0 border-b border-gray-100">
+      <div className="h-20 flex items-center justify-between px-8 shrink-0 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center space-x-3">
           <motion.div
             whileHover={{ rotate: 10, scale: 1.05 }}
@@ -62,15 +69,16 @@ export default function TenantSidebar() {
             <Building2 className="w-5 h-5 text-white" strokeWidth={2.5} />
           </motion.div>
           <div>
-            <span className="text-[#121110] text-lg font-black tracking-tight">EstateFlow</span>
-            <p className="text-[9px] font-bold text-[#61605D]/50 uppercase tracking-[0.2em]">Tenant Portal</p>
+            <span className="text-[#121110] dark:text-white text-lg font-black tracking-tight">EstateFlow</span>
+            <p className="text-[9px] font-bold text-[#61605D] dark:text-gray-400/50 dark:text-gray-400 uppercase tracking-[0.2em]">Tenant Portal</p>
           </div>
         </div>
+        <ThemeToggle />
       </div>
 
       {/* Nav */}
       <nav className="flex-1 py-8 px-5 overflow-y-auto">
-        <p className="text-[9px] font-black text-[#61605D]/30 uppercase tracking-[0.3em] px-3 mb-4">Main Menu</p>
+        <p className="text-[9px] font-black text-[#61605D] dark:text-gray-400/30 uppercase tracking-[0.3em] px-3 mb-4">Main Menu</p>
 
         <div className="space-y-1">
           {navLinks.map((link, i) => {
@@ -107,7 +115,7 @@ export default function TenantSidebar() {
                   {isActive && (
                     <motion.div
                       layoutId="active-dot-tenant"
-                      className="relative z-10 ml-auto w-1.5 h-1.5 rounded-full bg-white/80"
+                      className="relative z-10 ml-auto w-1.5 h-1.5 rounded-full bg-white/80 dark:bg-[#18181b]/80"
                       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                     />
                   )}
@@ -119,8 +127,8 @@ export default function TenantSidebar() {
       </nav>
 
       {/* Tenant profile + logout */}
-      <div className="p-5 border-t border-gray-100 shrink-0 space-y-2">
-        <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-200 mt-auto">
+      <div className="p-5 border-t border-gray-100 dark:border-white/10 shrink-0 space-y-2">
+        <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-200 dark:border-white/5 mt-auto">
           {/* Avatar/Icon */}
           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shrink-0">
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Tenant" alt="User" className="w-full h-full" />
@@ -128,10 +136,10 @@ export default function TenantSidebar() {
           
           {/* Name & Email Column */}
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-semibold text-gray-900 truncate capitalize">
+            <span className="text-sm font-semibold text-gray-900 dark:text-white truncate capitalize">
               {displayName}
             </span>
-            <span className="text-xs text-gray-500 truncate">
+            <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
               {user?.email || "tenant@estatia.com"} 
             </span>
           </div>

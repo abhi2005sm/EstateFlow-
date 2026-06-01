@@ -34,7 +34,8 @@ const INSIGHTS = [
 const MOCK_CREDENTIALS = {
   superadmin: { email: 'superadmin@example.com', password: 'password123' },
   admin: { email: 'admin@example.com', password: 'password123' },
-  user: { email: 'user@example.com', password: 'password123' }
+  user: { email: 'user@example.com', password: 'password123' },
+  security: { email: 'security@example.com', password: 'password123' }
 };
 
 type RoleType = keyof typeof MOCK_CREDENTIALS;
@@ -65,7 +66,12 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      const response = await authApi.login({ email, password });
+      let loginEmail = email;
+      if (role === 'security' && !email.includes('@')) {
+        loginEmail = `${email}@security.estatia.local`;
+      }
+      
+      const response = await authApi.login({ email: loginEmail, password });
       
       // Store tokens for cross-domain access
       // Store tokens for cross-domain access - checking multiple common keys
@@ -99,6 +105,8 @@ export default function LoginPage() {
         router.push('/super-admin');
       } else if (userRole === 'admin' || userRole === 'owner') {
         router.push('/admin'); 
+      } else if (userRole === 'security') {
+        router.push('/security/dashboard');
       } else {
         router.push('/tenant'); 
       }
@@ -110,7 +118,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen w-full relative grid lg:grid-cols-2 selection:bg-white selection:text-black font-sans bg-[#050505] overflow-hidden">
+    <div className="h-screen w-full relative grid lg:grid-cols-2 selection:bg-white dark:bg-[#121212] selection:text-black font-sans bg-[#050505] overflow-hidden">
       {/* Background Image - Full Screen with Dark Overlay */}
       <div className="absolute inset-0 z-0">
         <Image 
@@ -139,7 +147,7 @@ export default function LoginPage() {
         >
           <div className="text-left mb-4">
             <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
-              <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center text-black group-hover:scale-110 transition-transform">
+              <div className="w-6 h-6 rounded-lg bg-white dark:bg-[#121212] flex items-center justify-center text-black group-hover:scale-110 transition-transform">
                 <Building2 className="w-4 h-4" />
               </div>
               <span className="text-lg font-bold tracking-tight text-white">EstateFlow</span>
@@ -154,17 +162,17 @@ export default function LoginPage() {
           </div>
 
           <div className="flex p-1 bg-white/5 rounded-xl mb-6 border border-white/5">
-            {(['superadmin', 'admin', 'user'] as RoleType[]).map((r) => (
+            {(['superadmin', 'admin', 'user', 'security'] as RoleType[]).map((r) => (
               <button
                 key={r}
                 onClick={() => handleRoleChange(r)}
                 className={`flex-1 py-2 text-[8px] font-bold uppercase tracking-widest rounded-lg transition-all ${
                   role === r 
-                    ? 'bg-white text-black shadow-lg' 
+                    ? 'bg-white dark:bg-[#121212] text-black shadow-lg' 
                     : 'text-gray-500 hover:text-white'
                 }`}
               >
-                {r === 'user' ? 'Tenant' : r.replace('admin', ' Admin')}
+                {r === 'user' ? 'Tenant' : r === 'security' ? 'Security' : r.replace('admin', ' Admin')}
               </button>
             ))}
           </div>
@@ -186,13 +194,13 @@ export default function LoginPage() {
 
             <div className="space-y-3">
               <div className="group border-b border-white/10 focus-within:border-white transition-colors">
-                <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-gray-500 group-focus-within:text-white transition-colors block mb-0.5">Email Address</label>
+                <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-gray-500 group-focus-within:text-white transition-colors block mb-0.5">Email or Username</label>
                 <input
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-transparent py-1.5 text-white placeholder-white/5 focus:outline-none font-light text-sm"
-                  placeholder="email@example.com"
+                  placeholder="email@example.com or username"
                   required
                 />
               </div>
@@ -211,7 +219,7 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center gap-3 pt-1">
-              <input type="checkbox" id="remember" className="w-3 h-3 rounded border-white/10 bg-white/5 checked:bg-white checked:border-white transition-all appearance-none cursor-pointer" />
+              <input type="checkbox" id="remember" className="w-3 h-3 rounded border-white/10 bg-white/5 checked:bg-white dark:bg-[#121212] checked:border-white transition-all appearance-none cursor-pointer" />
               <label htmlFor="remember" className="text-[10px] text-gray-500 cursor-pointer hover:text-gray-300 transition-colors leading-snug">
                 Secure monitored access session.
               </label>
@@ -221,7 +229,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group h-12 bg-white text-black rounded-full px-8 flex items-center gap-3 hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-50"
+                className="group h-12 bg-white dark:bg-[#121212] text-black rounded-full px-8 flex items-center gap-3 hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-50"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
@@ -246,7 +254,7 @@ export default function LoginPage() {
                 <Building2 className="w-3 h-3 text-white" />
                 <span className="text-[8px] font-bold tracking-widest uppercase text-white">Secure Node</span>
              </div>
-             <p className="text-[8px] font-bold text-gray-700 uppercase tracking-[0.3em]">v4.0.2</p>
+             <p className="text-[8px] font-bold text-gray-700 dark:text-gray-200 uppercase tracking-[0.3em]">v4.0.2</p>
           </div>
         </motion.div>
       </div>

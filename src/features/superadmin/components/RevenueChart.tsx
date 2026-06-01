@@ -4,8 +4,8 @@ import { dashboardData } from '../../../mock/dashboardData';
 
 export default function RevenueChart() {
   return (
-    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Revenue Trend</h3>
+    <div className="bg-white dark:bg-[#18181b] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Revenue Trend</h3>
       <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={dashboardData.revenueHistory}>

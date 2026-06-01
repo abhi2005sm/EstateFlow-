@@ -24,15 +24,15 @@ export default function DashboardCards({ payments = [], profile }: DashboardCard
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <Card title="Total Rent" value={`₹${totalRent.toLocaleString('en-IN')}`} />
       <Card title="Paid Amount" value={`₹${paidAmount.toLocaleString('en-IN')}`} color="text-emerald-600" />
-      <Card title="Due Amount" value={`₹${dueAmount.toLocaleString('en-IN')}`} color={dueAmount > 0 ? "text-red-600" : "text-gray-900"} />
+      <Card title="Due Amount" value={`₹${dueAmount.toLocaleString('en-IN')}`} color={dueAmount > 0 ? "text-red-600" : "text-gray-900 dark:text-white"} />
       <Card title="Next Due Date" value={nextDueDate} color="text-[#F26922]" />
     </div>
   );
 }
 
-const Card = ({ title, value, color = "text-gray-900" }: any) => (
-  <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col justify-center">
-    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">{title}</p>
+const Card = ({ title, value, color = "text-gray-900 dark:text-white" }: any) => (
+  <div className="bg-white dark:bg-[#18181b] p-5 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col justify-center">
+    <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{title}</p>
     <h3 className={`text-3xl font-bold ${color}`}>{value}</h3>
   </div>
 );

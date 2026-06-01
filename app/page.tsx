@@ -8,7 +8,7 @@ import { ChevronRight, Home, Search, MapPin, Star, ArrowUpRight, Menu, LogIn } f
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white font-sans selection:bg-white selection:text-black overflow-x-hidden">
+    <div className="min-h-screen bg-[#0D0D0D] text-white font-sans selection:bg-white dark:bg-[#121212] selection:text-black overflow-x-hidden">
       {/* Background Orbs & Grid */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px] animate-pulse" />
@@ -20,7 +20,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-[#0D0D0D]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-white dark:bg-[#121212] rounded-lg flex items-center justify-center">
               <Home className="text-black w-5 h-5" />
             </div>
             <span className="text-xl font-bold tracking-tight">EstateFlow</span>
@@ -29,7 +29,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <Link 
               href="/login" 
-              className="px-6 py-2.5 rounded-full bg-white text-black text-sm font-semibold hover:bg-gray-200 transition-all flex items-center gap-2 group"
+              className="px-6 py-2.5 rounded-full bg-white dark:bg-[#121212] text-black text-sm font-semibold hover:bg-gray-200 transition-all flex items-center gap-2 group"
             >
               Sign In
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -74,7 +74,7 @@ export default function LandingPage() {
                 Manage your <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/20">Assets Smarter.</span>
               </h1>
-              <p className="text-lg md:text-2xl text-gray-400 mb-4 max-w-2xl leading-relaxed font-light">
+              <p className="text-lg md:text-[#121110] dark:text-whitexl text-gray-400 mb-4 max-w-2xl leading-relaxed font-light">
                 A unified command center for Super Admins, Property Managers, and Tenants. Streamline your real estate operations with industrial precision.
               </p>
               <motion.div 
@@ -104,7 +104,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-                <Link href="/login" className="w-full md:w-auto bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
+                <Link href="/login" className="w-full md:w-auto bg-white dark:bg-[#121212] text-black px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors">
                   <LogIn className="w-5 h-5" />
                   Access Dashboard
                 </Link>
@@ -147,7 +147,7 @@ export default function LandingPage() {
                   Tailored experiences designed for administrators, portfolio owners, and residents alike.
                 </p>
               </div>
-              <button className="px-10 py-5 rounded-full border border-white/10 hover:bg-white hover:text-black transition-all flex items-center gap-2 group font-bold">
+              <button className="px-10 py-5 rounded-full border border-white/10 hover:bg-white dark:bg-[#121212] hover:text-black transition-all flex items-center gap-2 group font-bold">
                 Explore Modules
                 <ArrowUpRight className="w-5 h-5 group-hover:rotate-45 transition-transform" />
               </button>
@@ -169,7 +169,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="text-2xl font-bold tracking-tight">Global Governance</h4>
+                  <h4 className="text-[#121110] dark:text-whitexl font-bold tracking-tight">Global Governance</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
                     Full-scale ecosystem management for multi-property portfolios. Oversee administrator permissions, cross-building analytics, and system-wide configurations.
                   </p>
@@ -196,7 +196,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="text-2xl font-bold tracking-tight">Executive Command</h4>
+                  <h4 className="text-[#121110] dark:text-whitexl font-bold tracking-tight">Executive Command</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
                     A dedicated command center for day-to-day operations. Track unit occupancy, automate maintenance workflows, and generate comprehensive financial reports.
                   </p>
@@ -223,7 +223,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="text-2xl font-bold tracking-tight">Seamless Living</h4>
+                  <h4 className="text-[#121110] dark:text-whitexl font-bold tracking-tight">Seamless Living</h4>
                   <p className="text-gray-400 text-sm leading-relaxed">
                     A modern mobile-first hub for tenants. Process rent payments instantly, sign digital lease agreements, and request concierge services with one click.
                   </p>
@@ -244,7 +244,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
               <div className="col-span-2">
                 <div className="flex items-center gap-2 mb-8">
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-white dark:bg-[#121212] rounded-lg flex items-center justify-center">
                     <Home className="text-black w-5 h-5" />
                   </div>
                   <span className="text-xl font-bold tracking-tight">EstateFlow</span>
@@ -253,10 +253,10 @@ export default function LandingPage() {
                   Ready to optimize <br /> your operations?
                 </h3>
                 <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-black cursor-pointer transition-all">
+                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white dark:bg-[#121212] hover:text-black cursor-pointer transition-all">
                     <Search className="w-4 h-4" />
                   </div>
-                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-black cursor-pointer transition-all">
+                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white dark:bg-[#121212] hover:text-black cursor-pointer transition-all">
                     <Menu className="w-4 h-4" />
                   </div>
                 </div>
@@ -273,7 +273,7 @@ export default function LandingPage() {
                     placeholder="Email Address" 
                     className="w-full bg-white/5 border border-white/10 rounded-full px-6 py-4 text-sm focus:outline-none focus:border-white transition-all focus:ring-4 focus:ring-white/5"
                   />
-                  <button className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition-transform">
+                  <button className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white dark:bg-[#121212] rounded-full flex items-center justify-center text-black hover:scale-105 transition-transform">
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>

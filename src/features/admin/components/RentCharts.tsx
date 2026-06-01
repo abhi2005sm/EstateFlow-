@@ -48,8 +48,8 @@ export default function RentCharts({ data }: { data?: any }) {
 }
 
 const ChartCard = ({ title, children }: any) => (
-  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-    <h3 className="text-lg font-bold text-gray-800 mb-6">{title}</h3>
+  <div className="bg-white dark:bg-[#18181b] p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+    <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6">{title}</h3>
     <div className="h-[250px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         {children}

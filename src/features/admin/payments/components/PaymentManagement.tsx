@@ -110,7 +110,7 @@ export default function PaymentManagement() {
     return (
       <div className="py-20 flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 text-[#F26922] animate-spin mb-4" />
-        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Synchronizing Payments...</p>
+        <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest text-xs">Synchronizing Payments...</p>
       </div>
     );
   }
@@ -142,20 +142,20 @@ export default function PaymentManagement() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center space-x-4"
+            className="bg-white dark:bg-[#18181b] p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm flex items-center space-x-4"
           >
             <div className={`w-12 h-12 ${stat.bg} rounded-2xl flex items-center justify-center`}>
               <stat.icon className={`w-6 h-6 ${stat.color}`} />
             </div>
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
-              <h3 className="text-2xl font-black text-gray-900">{stat.value}</h3>
+              <h3 className="text-[#121110] dark:text-whitexl font-black text-gray-900 dark:text-white">{stat.value}</h3>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#18181b] rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
         {/* Table Controls */}
         <div className="p-8 border-b border-gray-50 space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -164,8 +164,8 @@ export default function PaymentManagement() {
                 onClick={() => setActiveTab('pending')}
                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
                   activeTab === 'pending' 
-                    ? 'bg-white text-[#F26922] shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white dark:bg-[#18181b] text-[#F26922] shadow-sm' 
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
                 }`}
               >
                 Pending Requests
@@ -174,8 +174,8 @@ export default function PaymentManagement() {
                 onClick={() => setActiveTab('history')}
                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${
                   activeTab === 'history' 
-                    ? 'bg-white text-[#F26922] shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white dark:bg-[#18181b] text-[#F26922] shadow-sm' 
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-200'
                 }`}
               >
                 Payment History
@@ -193,7 +193,7 @@ export default function PaymentManagement() {
                   className="pl-11 pr-4 py-3 bg-gray-50/50 border-none rounded-2xl text-sm font-medium w-full md:w-72 focus:ring-2 focus:ring-[#F26922]/10 transition-all outline-none"
                 />
               </div>
-              <button onClick={fetchPayments} className="p-3 bg-gray-50/50 rounded-2xl text-gray-500 hover:bg-gray-100 transition-all">
+              <button onClick={fetchPayments} className="p-3 bg-gray-50/50 rounded-2xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-[#27272a] transition-all">
                 <Filter className="w-5 h-5" />
               </button>
             </div>
@@ -226,11 +226,11 @@ export default function PaymentManagement() {
                   >
                     <td className="px-8 py-6">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
-                          <CreditCard className="w-5 h-5 text-gray-500" />
+                        <div className="w-10 h-10 bg-gray-100 dark:bg-[#27272a] rounded-xl flex items-center justify-center shrink-0">
+                          <CreditCard className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-gray-900">{payment.fee_type} - {payment.rent_month} {payment.rent_year}</p>
+                          <p className="text-sm font-bold text-gray-900 dark:text-white">{payment.fee_type} - {payment.rent_month} {payment.rent_year}</p>
                           <p className="text-[11px] font-medium text-gray-400">{payment.transaction_id || `ID: ${payment.payment_id || payment.id}`}</p>
                         </div>
                       </div>
@@ -238,8 +238,8 @@ export default function PaymentManagement() {
                     <td className="px-8 py-6">
                       <div>
                         <div className="flex items-center space-x-2">
-                          <p className="text-sm font-bold text-gray-900">{payment.tenant_name}</p>
-                          <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">ID: {payment.tenant}</span>
+                          <p className="text-sm font-bold text-gray-900 dark:text-white">{payment.tenant_name}</p>
+                          <span className="text-[10px] font-black bg-gray-100 dark:bg-[#27272a] text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">ID: {payment.tenant}</span>
                         </div>
                         <div className="flex items-center text-[11px] font-medium text-gray-400 mt-0.5">
                           <Building2 className="w-3 h-3 mr-1" />
@@ -249,7 +249,7 @@ export default function PaymentManagement() {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
-                        <p className="text-sm font-black text-gray-900">₹{(Number(payment.amount) || 0).toLocaleString('en-IN')}</p>
+                        <p className="text-sm font-black text-gray-900 dark:text-white">₹{(Number(payment.amount) || 0).toLocaleString('en-IN')}</p>
                         {payment.due_amount && Number(payment.due_amount) > 0 && (
                           <p className="text-[10px] font-black text-rose-500 uppercase tracking-tighter mt-0.5">
                             Due: ₹{(Number(payment.due_amount)).toLocaleString('en-IN')}
@@ -259,7 +259,7 @@ export default function PaymentManagement() {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <div className="flex items-center text-sm font-bold text-gray-500">
+                      <div className="flex items-center text-sm font-bold text-gray-500 dark:text-gray-400">
                         <Calendar className="w-4 h-4 mr-2 opacity-50" />
                         {new Date(payment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
@@ -326,10 +326,10 @@ export default function PaymentManagement() {
 
           {filteredPayments.length === 0 && !loading && (
             <div className="py-20 text-center">
-              <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-gray-50 dark:bg-[#27272a] rounded-[32px] flex items-center justify-center mx-auto mb-6">
                 <History className="w-10 h-10 text-gray-300" />
               </div>
-              <h3 className="text-lg font-black text-gray-900">No payments found</h3>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white">No payments found</h3>
               <p className="text-gray-400 text-sm font-medium mt-1">Try adjusting your filters or search terms</p>
             </div>
           )}

@@ -1,5 +1,5 @@
-import Payments from '@/src/features/tenant/pages/Payments';
+import Dashboard from '@/src/features/tenant/pages/Dashboard';
 
-export default function TenantPaymentsPage() {
-  return <Payments />;
+export default function TenantDashboardPage() {
+  return <Dashboard />;
 }
