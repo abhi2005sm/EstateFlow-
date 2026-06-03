@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Mail, Lock, LogIn, AlertCircle, ArrowRight, Layout, Globe, Sparkles } from 'lucide-react';
+import { Building2, Mail, Lock, LogIn, AlertCircle, ArrowRight, Layout, Globe, Sparkles, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { authApi } from '@/src/features/api/api';
 
@@ -48,6 +48,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [insightIndex, setInsightIndex] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     setInsightIndex(Math.floor(Math.random() * INSIGHTS.length));
@@ -118,7 +119,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen w-full relative grid lg:grid-cols-2 selection:bg-white dark:bg-[#121212] selection:text-black font-sans bg-[#050505] overflow-hidden">
+    <div className="min-h-[100dvh] lg:h-screen w-full relative grid lg:grid-cols-2 selection:bg-white dark:bg-[#121212] selection:text-black font-sans bg-[#050505] overflow-y-auto lg:overflow-hidden">
       {/* Background Image - Full Screen with Dark Overlay */}
       <div className="absolute inset-0 z-0">
         <Image 
@@ -143,7 +144,7 @@ export default function LoginPage() {
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full max-w-[420px] bg-[#0D0D0D]/80 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/10 shadow-2xl"
+          className="w-full max-w-[420px] bg-[#0D0D0D]/80 backdrop-blur-3xl rounded-[2.5rem] p-6 lg:p-8 border border-white/10 shadow-2xl my-8 lg:my-0"
         >
           <div className="text-left mb-4">
             <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
@@ -205,16 +206,25 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="group border-b border-white/10 focus-within:border-white transition-colors">
+              <div className="group border-b border-white/10 focus-within:border-white transition-colors relative">
                 <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-gray-500 group-focus-within:text-white transition-colors block mb-0.5">Security Key</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent py-1.5 text-white placeholder-white/5 focus:outline-none font-light text-sm"
-                  placeholder="••••••••"
-                  required
-                />
+                <div className="flex items-center">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-transparent py-1.5 text-white placeholder-white/5 focus:outline-none font-light text-sm"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 text-gray-500 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -235,7 +245,7 @@ export default function LoginPage() {
                   <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span className="font-bold text-[10px] uppercase tracking-widest">Authorize</span>
+                    <span className="font-bold text-[10px] uppercase tracking-widest">Login</span>
                     <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white group-hover:translate-x-1 transition-transform">
                       <ArrowRight className="w-4 h-4" />
                     </div>

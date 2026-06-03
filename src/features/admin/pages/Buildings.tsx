@@ -68,7 +68,7 @@ export default function Buildings() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center space-x-3 bg-[#F26922] hover:bg-[#d95d1d] text-white px-8 py-4 rounded-[20px] font-bold transition-all shadow-xl shadow-[#F26922]/20 active:scale-95 w-fit"
+          className="flex items-center justify-center space-x-3 bg-[#F26922] hover:bg-[#d95d1d] text-white px-8 py-4 rounded-[20px] font-bold transition-all shadow-xl shadow-[#F26922]/20 active:scale-95 w-full sm:w-fit"
         >
           <Plus className="w-5 h-5" />
           <span>Add New Property</span>

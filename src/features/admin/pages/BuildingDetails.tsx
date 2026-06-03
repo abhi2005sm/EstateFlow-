@@ -253,25 +253,57 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
 
       <main className="max-w-[1400px] mx-auto px-8 mt-6">
         {/* Property Banner Section */}
-        <section className="bg-white dark:bg-[#18181b] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-8 flex items-start justify-between">
-          <div className="flex items-start space-x-6">
-            <div className="w-24 h-24 bg-gray-100 dark:bg-[#27272a] rounded-xl overflow-hidden shadow-inner">
+        <section className="bg-white dark:bg-[#18181b] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 mb-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
+          <div className="flex items-start space-x-6 w-full md:w-auto">
+            <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 bg-gray-100 dark:bg-[#27272a] rounded-xl overflow-hidden shadow-inner">
                <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=200" alt="Property" className="w-full h-full object-cover" />
             </div>
-            <div>
-              <div className="flex items-center space-x-3 mb-2">
-                <h1 className="text-[#121110] dark:text-whitexl font-bold text-gray-900 dark:text-white">{building.name}</h1>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${(building.rentDue ?? 0) === 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                   Active Property
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-3 mb-1.5">
+                <h1 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white truncate">{building.name}</h1>
+                <span className="hidden md:inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600">
+                   Active
                 </span>
               </div>
-              <div className="flex items-center text-sm text-gray-400 space-x-4 mb-2">
+              
+              {/* Desktop Metrics */}
+              <div className="hidden md:flex items-center text-sm text-gray-500 font-medium space-x-4 mb-2">
                 <div className="flex items-center">
-                  <MapPin className="w-4 h-4 mr-1" />
+                  <MapPin className="w-4 h-4 mr-1 text-gray-400" />
                   {building.area_name || 'Location details pending'}
                 </div>
               </div>
-              <p className="text-xs text-gray-400 font-medium">Managed Property Portfolio</p>
+              
+              {/* Mobile Metrics (MyGate Style) */}
+              <div className="flex md:hidden flex-wrap gap-2 mt-3">
+                {(() => {
+                  const tUnits = building.total_units || (hasFetchedUnits ? units.length : (building.units?.length || 0));
+                  const occUnits = hasFetchedUnits ? units.filter(u => u.is_occupied).length : (building.units?.filter(u => u.is_occupied).length || 0);
+                  const vacUnits = tUnits - occUnits;
+                  const occPercent = tUnits > 0 ? Math.round((occUnits / tUnits) * 100) : 0;
+                  
+                  return (
+                    <>
+                      <div className="bg-gray-50 dark:bg-[#27272a] px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                        <span className="text-[10px] font-bold uppercase text-gray-500 block">Total Units</span>
+                        <span className="text-sm font-black text-gray-900 dark:text-white">{tUnits}</span>
+                      </div>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                        <span className="text-[10px] font-bold uppercase text-blue-600 block">Occupied</span>
+                        <span className="text-sm font-black text-blue-700 dark:text-blue-400">{occUnits}</span>
+                      </div>
+                      <div className="bg-orange-50 dark:bg-orange-900/20 px-3 py-1.5 rounded-lg border border-orange-100 dark:border-orange-900/30">
+                        <span className="text-[10px] font-bold uppercase text-orange-600 block">Vacant</span>
+                        <span className="text-sm font-black text-orange-700 dark:text-orange-400">{vacUnits}</span>
+                      </div>
+                      <div className="bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                        <span className="text-[10px] font-bold uppercase text-emerald-600 block">Occupancy</span>
+                        <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">{occPercent}%</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           </div>
           
@@ -316,12 +348,12 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
                 </button>
               )}
             </div>
-            <div className="flex bg-gray-100 dark:bg-[#27272a] p-1 rounded-xl">
-              {['Units', 'Tenant'].map(tab => (
+            <div className="flex bg-gray-100 dark:bg-[#27272a] p-1 rounded-xl overflow-x-auto no-scrollbar max-w-full">
+              {['Overview', 'Units', 'Tenants', 'Payments', 'Security'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === tab ? 'bg-white dark:bg-[#18181b] text-blue-600 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white'}`}
+                  className={`px-4 md:px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white dark:bg-[#18181b] text-blue-600 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white'}`}
                 >
                   {tab}
                 </button>
@@ -364,7 +396,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
 
         {/* Dynamic Table Content based on Tab */}
         <div className="bg-white dark:bg-[#18181b] border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
-          {activeTab === 'Tenant' ? (
+          {activeTab === 'Tenants' || activeTab === 'Tenant' ? (
             <TenantListTable 
               tenants={filteredTenants} 
               buildingName={building.name} 
@@ -375,7 +407,7 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
               onEditTenant={handleEditTenant}
               onDeleteTenant={handleDeleteTenant}
             />
-          ) : (
+          ) : activeTab === 'Units' ? (
             <BuildingDetailsTable 
               units={hasFetchedUnits ? units : (building.units || [])} 
               onAddTenant={(unitId) => {
@@ -394,6 +426,14 @@ export default function BuildingDetails({ buildingId }: { buildingId: string }) 
               onEditUnit={handleEditUnit}
               onDeleteUnit={handleDeleteUnit}
             />
+          ) : (
+            <div className="p-20 text-center flex flex-col items-center justify-center">
+              <div className="w-16 h-16 bg-gray-50 dark:bg-[#27272a] rounded-2xl flex items-center justify-center mb-4 text-blue-500">
+                <Bell className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">{activeTab} Module</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">This module is currently under development.</p>
+            </div>
           )}
         </div>
 

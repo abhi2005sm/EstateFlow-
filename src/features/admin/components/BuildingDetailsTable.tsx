@@ -103,7 +103,7 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
                 className="overflow-hidden"
               >
                 <div className="overflow-x-visible">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse hidden md:table">
                     <thead>
                       <tr className="border-b border-[#F5F5F5]">
                         <th className="px-8 py-5 text-[11px] font-bold text-[#9CA3AF] uppercase tracking-wider">S.NO</th>
@@ -198,6 +198,63 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
                       })}
                     </tbody>
                   </table>
+
+                  {/* Mobile Cards View */}
+                  <div className="md:hidden flex flex-col p-4 gap-3 bg-gray-50/50 dark:bg-[#1f1f22]/50">
+                    {floorUnits.map((unit, index) => {
+                      const styles = getStatusStyles(unit.is_occupied);
+                      return (
+                        <div key={unit.id || unit.unit_id || index} className="bg-white dark:bg-[#18181b] p-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col gap-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Unit {unit.unit_number}</p>
+                              <h4 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
+                                {unit.unit_type}
+                              </h4>
+                            </div>
+                            <div className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${styles.bg} ${styles.text}`}>
+                              {styles.label}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-1">
+                            <div className="bg-gray-50 dark:bg-[#27272a] p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                              <p className="text-[10px] uppercase font-bold text-gray-500 mb-0.5">Rent</p>
+                              <p className="text-sm font-bold text-gray-900 dark:text-white">₹{Number(unit.price).toLocaleString('en-IN')}</p>
+                            </div>
+                            <div className="bg-gray-50 dark:bg-[#27272a] p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                              <p className="text-[10px] uppercase font-bold text-gray-500 mb-0.5">Status</p>
+                              <p className="text-sm font-bold text-gray-900 dark:text-white">{unit.is_occupied ? 'Occupied' : 'Vacant'}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2 mt-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                            {unit.is_occupied ? (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); onViewTenant?.(unit.unit_id); }}
+                                className="flex-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 py-2.5 rounded-lg text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 border border-emerald-100"
+                              >
+                                <UsersIcon className="w-3.5 h-3.5" /> View Tenant
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); onAddTenant?.(String(unit.unit_id || unit.id)); }}
+                                className="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-100 py-2.5 rounded-lg text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 border border-blue-100"
+                              >
+                                <UsersIcon className="w-3.5 h-3.5" /> Add Tenant
+                              </button>
+                            )}
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); onEditUnit?.(unit); }}
+                              className="px-3.5 bg-gray-50 text-gray-600 hover:bg-gray-100 py-2.5 rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </motion.div>
             )}

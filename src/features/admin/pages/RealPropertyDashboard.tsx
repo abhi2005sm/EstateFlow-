@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import MetricCard from '../components/rp/MetricCard';
 import DashboardCharts from '../components/rp/DashboardCharts';
-import { Building2, Home, Briefcase, LayoutGrid, CheckCircle2, XCircle, IndianRupee, AlertCircle, BadgeCheck, BadgeX, Bell, Search, TrendingUp, ArrowUpRight, Loader2, Activity, Wrench, Clock } from 'lucide-react';
+import { Building2, Home, Briefcase, LayoutGrid, CheckCircle2, XCircle, IndianRupee, AlertCircle, BadgeCheck, BadgeX, Bell, Search, TrendingUp, ArrowUpRight, Loader2, Activity, Wrench, Clock, Plus, ShieldCheck, ChevronRight, Receipt } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
 import { buildingsApi } from '../buildings/api/buildingsApi';
 import { tenantsApi } from '../tenants/api/tenantsApi';
@@ -222,8 +222,212 @@ export default function RealPropertyDashboard() {
     );
   }
 
+  const fmt = (n: number) => '₹' + Number(n).toLocaleString('en-IN');
+  
+  // Real Occupancy Data by Property instead of dummy monthly data
+  const mobileOccupancyBars = data.buildings.slice(0, 6).map((b: any) => {
+    const units = b.total_units || 1;
+    const occupied = Array.isArray(b.units) 
+      ? b.units.filter((u:any) => u.is_occupied).length 
+      : (stats.occupiedUnits > 0 ? Math.floor(stats.occupiedUnits / data.buildings.length) : 0);
+    return {
+      label: (b.name || 'Prop').substring(0, 3).toUpperCase(),
+      pct: Math.min(100, Math.round((occupied / units) * 100))
+    };
+  });
+  while (mobileOccupancyBars.length < 6) {
+    mobileOccupancyBars.push({ label: '-', pct: 0 });
+  }
+
+  const mobile = (
+    <div className="md:hidden bg-[#F5F4F2] dark:bg-[#111315] min-h-screen pb-24">
+      <div className="flex items-center justify-between px-5 pt-7 pb-5">
+        <div className="flex items-center gap-3">
+          <img src={`https://ui-avatars.com/api/?name=${displayName}&background=F26922&color=fff&bold=true&size=80`} alt="Avatar" className="w-11 h-11 rounded-full" />
+          <div>
+            <p className="text-[16px] font-extrabold text-gray-900 dark:text-white leading-tight">{displayName.split(' ')[0]}</p>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">Property manager</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/buildings" className="w-9 h-9 rounded-full bg-white dark:bg-[#1e1e1e] shadow-sm flex items-center justify-center">
+            <Plus className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+          </Link>
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-[#1e1e1e] shadow-sm flex items-center justify-center">
+            <Bell className="w-4 h-4 text-gray-700 dark:text-gray-200" />
+          </button>
+        </div>
+      </div>
+      <div className="px-5 space-y-5">
+        <div>
+          <h2 className="text-[17px] font-extrabold text-gray-900 dark:text-white mb-3">Property Summary</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-4 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Properties</p>
+                <div className="w-7 h-7 bg-[#F26922]/10 rounded-xl flex items-center justify-center"><Building2 className="w-4 h-4 text-[#F26922]" strokeWidth={2} /></div>
+              </div>
+              <p className="text-[28px] font-black text-gray-900 dark:text-white leading-none">{String(stats.totalBuildings).padStart(2, '0')}</p>
+            </div>
+            <div className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-4 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Occupied</p>
+                <div className="w-7 h-7 bg-[#F26922]/10 rounded-xl flex items-center justify-center"><ShieldCheck className="w-4 h-4 text-[#F26922]" strokeWidth={2} /></div>
+              </div>
+              <p className="text-[28px] font-black text-gray-900 dark:text-white leading-none">{stats.occupiedUnits}<span className="text-[15px] font-bold text-gray-400">/{stats.totalUnits}</span></p>
+            </div>
+            <div className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-4 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Rent Collected</p>
+                <div className="w-7 h-7 bg-[#F26922]/10 rounded-xl flex items-center justify-center"><Receipt className="w-4 h-4 text-[#F26922]" strokeWidth={2} /></div>
+              </div>
+              <p className="text-[20px] font-black text-gray-900 dark:text-white leading-none">{fmt(dashboardData?.rent_summary?.total_collected || 0)}<span className="text-[12px] font-bold text-gray-400">/{fmt(dashboardData?.rent_summary?.total_due || 0)}</span></p>
+            </div>
+            <div className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-4 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Maint. Request</p>
+                <div className="w-7 h-7 bg-[#F26922]/10 rounded-xl flex items-center justify-center"><Wrench className="w-4 h-4 text-[#F26922]" strokeWidth={2} /></div>
+              </div>
+              <p className="text-[28px] font-black text-gray-900 dark:text-white leading-none">{String(dashboardData?.lease_alerts?.length || 0).padStart(2, '0')}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-[#1e1e1e] rounded-[24px] p-5 shadow-sm">
+          <div className="flex justify-between items-center mb-5">
+            <h2 className="text-[16px] font-extrabold text-gray-900 dark:text-white">Occupancy Rates</h2>
+            <button className="flex items-center gap-0.5 text-[12px] font-semibold text-gray-500">By Property</button>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex flex-col justify-between text-[9px] font-semibold text-gray-400 pb-5 shrink-0 select-none">
+              <span>100%</span><span>70%</span><span>50%</span><span>10%</span>
+            </div>
+            <div className="flex-1 flex items-end gap-[7px] h-28">
+              {mobileOccupancyBars.map(({ label, pct }, i) => (
+                <div key={i} className="flex flex-col items-center flex-1 gap-1 h-full justify-end">
+                  <div className="w-full flex items-end" style={{ height: '100%' }}>
+                    <div className="w-full rounded-t-lg overflow-hidden" style={{ height: `${pct}%` }}>
+                      <div className="w-full h-full bg-[#F26922]/15 relative">
+                        <div className="absolute bottom-0 left-0 right-0 bg-[#F26922] rounded-t-lg" style={{ height: '60%' }} />
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-semibold text-gray-500">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-[16px] font-extrabold text-gray-900 dark:text-white">Recent Activity</h2>
+            <button className="text-[12px] font-semibold text-gray-500 flex items-center gap-0.5">View all <ChevronRight className="w-3 h-3" /></button>
+          </div>
+          <div className="space-y-3">
+            {feedEvents.slice(0, 3).map((event: any, idx: number) => {
+              let Icon = CheckCircle2;
+              let iconColor = 'text-emerald-500 bg-emerald-50';
+              if (event.type === 'PAYMENT') { Icon = Receipt; iconColor = 'text-[#F26922] bg-[#F26922]/10'; }
+              if (event.type === 'MAINTENANCE') { Icon = Wrench; iconColor = 'text-amber-500 bg-amber-50'; }
+              if (event.type === 'ALERT') { Icon = Bell; iconColor = 'text-purple-500 bg-purple-50'; }
+
+              return (
+                <div key={idx} className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full ${iconColor} flex items-center justify-center shrink-0`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">{event.title}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">{event.description} · {event.time}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+                  </div>
+                </div>
+              );
+            })}
+            {feedEvents.length === 0 && (
+              <div className="text-center p-4 text-gray-500 text-sm">No recent activity</div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Missing Financial Overview ── */}
+        <div>
+          <h2 className="text-[16px] font-extrabold text-gray-900 dark:text-white mb-3">Financial Overview</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-4 shadow-sm">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Due</p>
+              <p className="text-[18px] font-black text-red-500">₹{data.tenants.reduce((sum: number, t: any) => sum + (Number(t.due_amount) || 0), 0).toLocaleString('en-IN')}</p>
+            </div>
+            <div className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-4 shadow-sm">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Coll. Effic.</p>
+              <p className="text-[18px] font-black text-amber-500">{dashboardData?.rent_summary?.collection_efficiency || 0}%</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Active Properties Cards ── */}
+        <div>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-[16px] font-extrabold text-gray-900 dark:text-white">Your Properties</h2>
+            <Link href="/admin/buildings" className="text-[12px] font-semibold text-gray-500 flex items-center gap-0.5">View all <ChevronRight className="w-3 h-3" /></Link>
+          </div>
+          <div className="space-y-4">
+            {data.buildings.slice(0, 5).map((b: any) => {
+              const bTenants = data.tenants.filter((t: any) => t.property === b.id || t.building_id === b.id || t.property === b.name);
+              const bRevenue = bTenants.reduce((sum: number, t: any) => {
+                if (t.rent_status === 'Paid') return sum + (Number(t.rent_amount) || 0);
+                if (t.rent_status === 'Partial') return sum + ((Number(t.rent_amount) || 0) - (Number(t.due_amount) || 0));
+                return sum;
+              }, 0);
+              const bUnits = b.total_units || 0;
+              const bOccupied = Array.isArray(b.units) ? b.units.filter((u:any) => u.is_occupied).length : 0;
+
+              return (
+                <div key={b.id || b.building_id} className="bg-white dark:bg-[#1e1e1e] rounded-[24px] p-5 shadow-sm">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-[14px] bg-[#F26922]/10 flex items-center justify-center shrink-0">
+                        <Building2 className="w-6 h-6 text-[#F26922]" />
+                      </div>
+                      <div>
+                        <h3 className="text-[15px] font-black text-gray-900 dark:text-white">{b.name}</h3>
+                        <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">{b.area_name || 'Location Pending'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="bg-[#F5F4F2] dark:bg-[#111315] rounded-xl p-3 text-center">
+                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Units</p>
+                      <p className="text-[14px] font-black text-gray-900 dark:text-white">{bUnits}</p>
+                    </div>
+                    <div className="bg-[#F5F4F2] dark:bg-[#111315] rounded-xl p-3 text-center">
+                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Occupied</p>
+                      <p className="text-[14px] font-black text-[#F26922]">{bOccupied}</p>
+                    </div>
+                    <div className="bg-[#F5F4F2] dark:bg-[#111315] rounded-xl p-3 text-center">
+                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Revenue</p>
+                      <p className="text-[14px] font-black text-emerald-600">{bRevenue >= 1000 ? `₹${(bRevenue/1000).toFixed(1)}k` : `₹${bRevenue}`}</p>
+                    </div>
+                  </div>
+
+                  <Link href={`/admin/buildings/${b.id || b.building_id}`} className="w-full bg-[#111315] dark:bg-white text-white dark:text-[#111315] text-[11px] font-black uppercase tracking-widest py-3 rounded-xl flex items-center justify-center">
+                    View Stats
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-[#F5F3F0] dark:bg-[#09090b] relative overflow-x-hidden">
+    <>
+      {mobile}
+      <div className="hidden md:block min-h-screen bg-[#F5F3F0] dark:bg-[#09090b] relative overflow-x-hidden">
       
       <div className="absolute top-0 left-0 h-[700px] w-[56%] overflow-hidden pointer-events-none">
         <img
@@ -588,5 +792,6 @@ export default function RealPropertyDashboard() {
         </main>
       </div>
     </div>
+    </>
   );
 }
