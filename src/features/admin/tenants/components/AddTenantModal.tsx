@@ -115,9 +115,10 @@ export default function AddTenantModal({ isOpen, onClose, onSuccess, buildings =
       }
       onSuccess();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to register tenant:', error);
-      alert('Failed to register tenant. Please check your inputs.');
+      const msg = error?.message || 'Failed to register tenant. Please check your inputs.';
+      alert(msg);
     } finally {
       setLoading(false);
     }

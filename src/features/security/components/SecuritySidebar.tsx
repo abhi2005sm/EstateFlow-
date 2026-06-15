@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Shield, LogOut, Building2 } from 'lucide-react';
+import { Shield, LogOut, Building2, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ThemeToggle } from '../../../components/ThemeToggle';
@@ -26,28 +26,31 @@ export default function SecuritySidebar() {
   const displayName = user?.name || "Security Gate";
 
   return (
-    <div className="w-72 bg-white dark:bg-[#121110] border-r border-gray-100 dark:border-white/10 flex flex-col h-screen sticky top-0 overflow-hidden shadow-[4px_0_24px_rgba(0,0,0,0.03)]">
+    <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 z-50 w-[220px] bg-white dark:bg-[#09090b] border-r border-zinc-200/80 dark:border-zinc-900/50 transition-colors duration-300">
       {/* Logo */}
-      <div className="h-20 flex items-center justify-between px-8 shrink-0 border-b border-gray-100 dark:border-white/10">
+      <div className="h-16 flex items-center justify-between px-6 shrink-0 border-b border-zinc-100 dark:border-zinc-900/50">
         <div className="flex items-center space-x-3">
           <motion.div
             whileHover={{ rotate: 10, scale: 1.05 }}
             transition={{ type: 'spring', stiffness: 400 }}
-            className="w-10 h-10 bg-[#F26922] rounded-2xl flex items-center justify-center shadow-md shadow-[#F26922]/20"
+            className="w-8 h-8 bg-gradient-to-tr from-[#F26922] to-[#ff8a50] rounded-xl flex items-center justify-center shadow-md shadow-[#F26922]/20 relative overflow-hidden"
           >
-            <Building2 className="w-5 h-5 text-white" strokeWidth={2.5} />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+            <Building2 className="w-4 h-4 text-white" strokeWidth={2.5} />
           </motion.div>
           <div>
-            <span className="text-[#121110] dark:text-white text-lg font-black tracking-tight">EstateFlow</span>
-            <p className="text-[9px] font-bold text-[#61605D] dark:text-gray-400/50 dark:text-gray-400 uppercase tracking-[0.2em]">Security Portal</p>
+            <span className="text-zinc-950 dark:text-white text-sm font-bold tracking-tight">EstateFlow</span>
+            <p className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Security Portal</p>
           </div>
         </div>
-        <ThemeToggle />
+        <div className="opacity-70 hover:opacity-100 transition-opacity">
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-8 px-5 overflow-y-auto">
-        <p className="text-[9px] font-black text-[#61605D] dark:text-gray-400/30 uppercase tracking-[0.3em] px-3 mb-4">Main Menu</p>
+      <nav className="flex-1 py-6 px-4 overflow-y-auto">
+        <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.15em] px-3 mb-4">Main Menu</p>
 
         <div className="space-y-1">
           {navLinks.map((link, i) => {
@@ -56,37 +59,32 @@ export default function SecuritySidebar() {
               <Link key={link.name} href={link.href}>
                 <motion.div
                   whileTap={{ scale: 0.97 }}
-                  className="relative flex items-center space-x-4 px-4 py-3.5 rounded-2xl cursor-pointer group"
+                  className="relative flex items-center space-x-4 px-4 py-3 rounded-xl cursor-pointer group transition-all duration-200"
                 >
                   {/* Sliding background pill */}
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-pill-security"
-                      className="absolute inset-0 bg-[#F26922] rounded-2xl shadow-lg shadow-[#F26922]/20 z-0"
+                      className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-orange-500/[0.02] dark:from-orange-500/15 dark:to-orange-500/[0.02] rounded-xl z-0"
                       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                     />
                   )}
 
-                  <motion.div
-                    animate={{ color: isActive ? '#ffffff' : '#61605D' }}
-                    className="relative z-10"
-                  >
-                    <link.icon className="w-5 h-5 shrink-0" strokeWidth={2} />
-                  </motion.div>
+                  {/* Active left border indicator */}
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#F26922] rounded-r-full z-10" />
+                  )}
 
-                  <motion.span
-                    animate={{ color: isActive ? '#ffffff' : '#61605D' }}
-                    className="relative z-10 font-bold text-sm"
-                  >
+                  <div className={`relative z-10 ${isActive ? 'text-orange-600 dark:text-orange-500' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-950 dark:group-hover:text-zinc-100'} transition-colors duration-200`}>
+                    <link.icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2.2 : 1.8} />
+                  </div>
+
+                  <span className={`relative z-10 font-bold text-sm ${isActive ? 'text-orange-600 dark:text-orange-500' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-950 dark:group-hover:text-zinc-100'} transition-colors duration-200`}>
                     {link.name}
-                  </motion.span>
+                  </span>
 
                   {isActive && (
-                    <motion.div
-                      layoutId="active-dot-security"
-                      className="relative z-10 ml-auto w-1.5 h-1.5 rounded-full bg-white/80 dark:bg-[#18181b]/80"
-                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                    />
+                    <ChevronRight className="ml-auto w-3 h-3 text-orange-500/60 z-10" />
                   )}
                 </motion.div>
               </Link>
@@ -96,37 +94,37 @@ export default function SecuritySidebar() {
       </nav>
 
       {/* Security profile + logout */}
-      <div className="p-5 border-t border-gray-100 dark:border-white/10 shrink-0 space-y-2">
-        <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-200 dark:border-white/5 mt-auto">
+      <div className="p-4 border-t border-zinc-100 dark:border-zinc-900/50 shrink-0 space-y-3 bg-zinc-50/50 dark:bg-zinc-900/10">
+        <div className="flex items-center gap-3 px-2 py-2 border-b border-zinc-100/50 dark:border-zinc-900/30 pb-3">
           {/* Avatar/Icon */}
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shrink-0">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Security" alt="User" className="w-full h-full" />
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500/10 to-orange-500/20 border border-orange-500/20 flex items-center justify-center overflow-hidden shrink-0">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Security" alt="User" className="w-full h-full object-cover" />
           </div>
           
           {/* Name & Email Column */}
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-semibold text-gray-900 dark:text-white truncate capitalize">
+            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate capitalize leading-none">
               {displayName}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate mt-1">
               {user?.email || "gate@estatia.com"} 
             </span>
           </div>
         </div>
 
         <motion.button
-          whileHover={{ backgroundColor: '#FEF2F2' }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => {
             localStorage.clear();
             router.push('/login');
           }}
-          className="flex items-center space-x-3 w-full px-4 py-3 text-red-500 rounded-2xl transition-colors"
+          className="flex items-center space-x-3 w-full px-3 py-2.5 text-zinc-500 dark:text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors font-bold text-xs"
         >
-          <LogOut className="w-5 h-5 shrink-0" />
-          <span className="font-bold text-sm">Logout</span>
+          <LogOut className="w-4 h-4 shrink-0" />
+          <span>Logout</span>
         </motion.button>
       </div>
-    </div>
+    </aside>
   );
 }

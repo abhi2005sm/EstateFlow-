@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   reactStrictMode: false,
+  trailingSlash: true,
   images: {
     remotePatterns: [
       {

@@ -154,7 +154,7 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
                                   <button 
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      onViewTenant?.(unit.unit_id);
+                                      onViewTenant?.(unit.unit_code || unit.unit_id);
                                     }}
                                     className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
                                     title="View Tenant"
@@ -165,7 +165,7 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
                                   <button 
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      onAddTenant?.(String(unit.unit_id || unit.id));
+                                      onAddTenant?.(String(unit.unit_code || unit.unit_id || unit.id));
                                     }}
                                     className="p-2 text-blue-500 dark:text-white hover:bg-blue-50 rounded-lg transition-all"
                                     title="Add Tenant"
@@ -231,14 +231,14 @@ export default function BuildingDetailsTable({ units, onAddTenant, onViewTenant,
                           <div className="flex gap-2 mt-2 pt-3 border-t border-gray-100 dark:border-gray-800">
                             {unit.is_occupied ? (
                               <button 
-                                onClick={(e) => { e.stopPropagation(); onViewTenant?.(unit.unit_id); }}
+                                onClick={(e) => { e.stopPropagation(); onViewTenant?.(unit.unit_code || unit.unit_id); }}
                                 className="flex-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 py-2.5 rounded-lg text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 border border-emerald-100"
                               >
                                 <UsersIcon className="w-3.5 h-3.5" /> View Tenant
                               </button>
                             ) : (
                               <button 
-                                onClick={(e) => { e.stopPropagation(); onAddTenant?.(String(unit.unit_id || unit.id)); }}
+                                onClick={(e) => { e.stopPropagation(); onAddTenant?.(String(unit.unit_code || unit.unit_id || unit.id)); }}
                                 className="flex-1 bg-blue-50 text-blue-600 hover:bg-blue-100 py-2.5 rounded-lg text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 border border-blue-100"
                               >
                                 <UsersIcon className="w-3.5 h-3.5" /> Add Tenant

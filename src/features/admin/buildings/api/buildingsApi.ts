@@ -3,6 +3,7 @@ import { apiRequest } from '@/src/features/api/api';
 export interface Unit {
   id: number;
   unit_id: string;
+  unit_code?: string;
   floor_number: number;
   unit_number: string;
   unit_type: string;

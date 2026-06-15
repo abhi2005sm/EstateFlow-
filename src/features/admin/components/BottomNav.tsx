@@ -2,26 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Building2, Users, ReceiptText, Wrench, User } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, Receipt, Wrench, Settings } from 'lucide-react';
 
 const navItems = [
-  { name: 'Home',      href: '/admin/dashboard', icon: Home },
+  { name: 'Home',      href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Buildings', href: '/admin/buildings',  icon: Building2 },
   { name: 'Tenants',   href: '/admin/tenants',    icon: Users },
-  { name: 'Payments',  href: '/admin/payments',   icon: ReceiptText },
+  { name: 'Payments',  href: '/admin/payments',   icon: Receipt },
   { name: 'Requests',  href: '/admin/requests',   icon: Wrench },
-  { name: 'Profile',   href: '/admin/settings',   icon: User },
+  { name: 'Settings',  href: '/admin/settings',   icon: Settings },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    /* MyGate-style: plain flat white bar anchored to bottom */
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#18181b] border-t border-gray-100 dark:border-gray-800 safe-area-bottom">
-      <div className="flex justify-around items-center h-[62px] px-1">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f0f0f] border-t border-white/[0.07]">
+      <div className="flex justify-around items-center h-[60px] px-1">
         {navItems.map((item) => {
-          const isActive =
+          const active =
             pathname === item.href ||
             (item.href !== '/admin/dashboard' && pathname.startsWith(item.href));
 
@@ -29,27 +28,22 @@ export default function BottomNav() {
             <Link
               key={item.name}
               href={item.href}
-              className="flex flex-col items-center justify-center flex-1 h-full gap-[3px] relative"
+              className="flex flex-col items-center justify-center flex-1 h-full gap-1 relative"
             >
-              {/* Active indicator dot at the very top — MyGate style */}
-              {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-[3px] rounded-b-full bg-[#F26922]" />
+              {active && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-b-full bg-[#F26922]" />
               )}
 
               <item.icon
-                className={`w-[22px] h-[22px] transition-colors duration-200 ${
-                  isActive
-                    ? 'text-[#F26922]'
-                    : 'text-gray-400 dark:text-gray-500'
+                className={`w-5 h-5 transition-colors duration-150 ${
+                  active ? 'text-[#F26922]' : 'text-white/30'
                 }`}
-                strokeWidth={isActive ? 2.5 : 1.8}
-                fill={isActive ? 'rgba(242,105,34,0.12)' : 'none'}
+                strokeWidth={active ? 2.5 : 1.8}
               />
+
               <span
-                className={`text-[10px] font-semibold leading-none transition-colors duration-200 ${
-                  isActive
-                    ? 'text-[#F26922]'
-                    : 'text-gray-400 dark:text-gray-500'
+                className={`text-[9px] font-semibold leading-none tracking-wide transition-colors duration-150 ${
+                  active ? 'text-[#F26922]' : 'text-white/25'
                 }`}
               >
                 {item.name}

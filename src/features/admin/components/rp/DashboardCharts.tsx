@@ -100,35 +100,35 @@ export default function DashboardCharts({ buildings, tenants, delay = 0 }: Dashb
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="w-1/2 pl-6 space-y-5">
+          <div className="w-1/2 pl-6 flex flex-col space-y-5">
             {occupancyChartData.map((d, i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex items-center justify-between">
+              <div key={i} className="flex flex-col space-y-2 w-full">
+                <div className="flex items-center justify-between w-full">
                   <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full" style={{ background: d.color }} />
-                    <span className="text-xs font-black text-[#121110] dark:text-white uppercase tracking-wider">{d.name}</span>
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                    <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{d.name}</span>
                   </div>
-                  <span className="text-sm font-black" style={{ color: d.color }}>{d.value}%</span>
+                  <span className="text-xs font-black" style={{ color: d.color }}>{d.value}%</span>
                 </div>
-                <div className="h-2 bg-[#F5F3F1] rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden relative block">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${d.value}%` }}
                     transition={{ duration: 1.5, delay: delay + 0.5, ease: "circOut" }}
-                    className="h-full rounded-full"
+                    className="h-full rounded-full absolute left-0 top-0"
                     style={{ background: d.color }}
                   />
                 </div>
               </div>
             ))}
-            <div className="pt-4 border-t border-[#F5F3F1] space-y-2">
-              <div className="flex justify-between">
-                <span className="text-xs font-bold text-[#61605D] dark:text-gray-400">Total Units</span>
-                <span className="text-xs font-black text-[#121110] dark:text-white">{totalUnits}</span>
+            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex flex-col space-y-2 w-full">
+              <div className="flex justify-between w-full">
+                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Total Units</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">{totalUnits}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-xs font-bold text-[#61605D] dark:text-gray-400">Active Tenants</span>
-                <span className="text-xs font-black text-[#121110] dark:text-white">{occupiedCount}</span>
+              <div className="flex justify-between w-full">
+                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Active Tenants</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">{occupiedCount}</span>
               </div>
             </div>
           </div>

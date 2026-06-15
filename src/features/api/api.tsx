@@ -63,6 +63,80 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     tokenPreview: token ? `${token.substring(0, 10)}...` : 'none'
   });
 
+  // MOCK BACKEND INTERCEPTOR
+  // Set to true to use mock data locally without a running backend.
+  // Set to false to connect to the real Django API Gateway.
+  const USE_MOCK = false;
+  if (USE_MOCK) {
+    console.log('[MOCK API] Intercepted request to:', url);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    if (url.includes('/auth/login/')) {
+      const body = options.body ? JSON.parse(options.body as string) : {};
+      let role = 'superadmin';
+      if (body.email?.includes('superadmin')) {
+        role = 'superadmin';
+      } else if (body.email?.includes('admin')) {
+        role = 'admin';
+      } else if (body.email?.includes('user') || body.email?.includes('tenant')) {
+        role = 'tenant';
+      } else if (body.email?.includes('security')) {
+        role = 'security';
+      }
+      
+      return {
+        access_token: 'mock_token_123',
+        email: body.email || 'mock@example.com',
+        name: 'Mock User',
+        role: role
+      };
+    }
+    
+    if (url.includes('/users/owner/dashboard/')) {
+      return {
+        property_overview: { total_buildings: 12, occupied_units: 135, total_units: 150 },
+        rent_summary: { total_collected: 125000, total_due: 15000 },
+        lease_alerts: [
+          { tenant_name: "John Doe", unit: "101", days_left: 15, renewal_likelihood: "High" },
+          { tenant_name: "Jane Smith", unit: "204", days_left: 5, renewal_likelihood: "Low" }
+        ],
+        monthly_rent_trends: [
+          {month: "Jan", collected: 10000, due: 2000},
+          {month: "Feb", collected: 12000, due: 1000}
+        ]
+      };
+    }
+
+    if (url.includes('/users/buildings/') && (!options.method || options.method === 'GET')) {
+       return {
+         summary: { total_buildings: 12, residential_count: 8, commercial_count: 4, building_names: ["Sunset Apartments"] },
+         buildings: [
+           { id: 1, name: "Sunset Apartments", building_type: "Residential", total_units: 50, units: [] }
+         ]
+       };
+    }
+
+    if (url.includes('/users/owners/maintenance/')) {
+      return [
+        { request_id: 'REQ-001', tenant_name: 'Alex Johnson', building_name: 'Sunset Apartments', unit_code: '101', issue_title: 'Leaking Faucet', description: 'The kitchen sink faucet is dripping constantly.', status: 'Pending' },
+        { request_id: 'REQ-002', tenant_name: 'Maria Garcia', building_name: 'Ocean View', unit_code: '305', issue_title: 'Broken AC', description: 'Air conditioner is making a loud noise and not cooling.', status: 'In Progress' }
+      ];
+    }
+
+    if (url.includes('/users/tenants/')) {
+      return [
+        { id: 1, name: 'Alex Johnson', unit_code: '101', vacate_status: 'Active' },
+        { id: 2, name: 'David Lee', unit_code: '204', deposit_amount: 1500, vacate_status: 'Pending Confirmation' }
+      ];
+    }
+
+    // Generic fallback to prevent UI crashes for other endpoints
+    // Returning an array by default to prevent .map() errors on unhandled endpoints
+    return [];
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
