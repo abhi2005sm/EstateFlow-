@@ -1,13 +1,41 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Building2, Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Building2, Mail, Lock, LogIn, AlertCircle, ArrowRight, Layout, Globe, Sparkles, Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
+import { authApi } from '@/src/features/api/api';
+
+const INSIGHTS = [
+  {
+    tag: "Market Trend",
+    title: "The Rise of Smart Assets",
+    content: "Integrated IoT systems are now increasing luxury property valuations by up to 12% globally."
+  },
+  {
+    tag: "Efficiency",
+    title: "Predictive Operations",
+    content: "Automated maintenance scheduling reduces emergency repair costs by 30% through early detection."
+  },
+  {
+    tag: "Retention",
+    title: "Digital Living Experiences",
+    content: "Resident satisfaction scores jump by 40% when moving from manual to digital portal workflows."
+  },
+  {
+    tag: "Global Data",
+    title: "The $2B Managed Club",
+    content: "EstateFlow nodes now orchestrate over $2 billion in prime real estate assets across 4 continents."
+  }
+];
 
 const MOCK_CREDENTIALS = {
-  superadmin: { email: 'superadmin@example.com', password: 'password123' },
+  superadmin: { email: 'superadmin@estateflow.com', password: 'Admin@123' },
   admin: { email: 'admin@example.com', password: 'password123' },
-  user: { email: 'user@example.com', password: 'password123' }
+  user: { email: 'user@example.com', password: 'password123' },
+  security: { email: 'security@example.com', password: 'password123' }
 };
 
 type RoleType = keyof typeof MOCK_CREDENTIALS;
@@ -19,157 +47,257 @@ export default function LoginPage() {
   const [password, setPassword] = useState(MOCK_CREDENTIALS.superadmin.password);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [insightIndex, setInsightIndex] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newRole = e.target.value as RoleType;
-    setRole(newRole);
-    setEmail(MOCK_CREDENTIALS[newRole].email);
-    setPassword(MOCK_CREDENTIALS[newRole].password);
+  useEffect(() => {
+    setInsightIndex(Math.floor(Math.random() * INSIGHTS.length));
+  }, []);
+
+  const handleRoleChange = (selectedRole: RoleType) => {
+    setRole(selectedRole);
+    setEmail(MOCK_CREDENTIALS[selectedRole].email);
+    setPassword(MOCK_CREDENTIALS[selectedRole].password);
     setError('');
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    if (email !== MOCK_CREDENTIALS[role].email || password !== MOCK_CREDENTIALS[role].password) {
-      setError('Invalid email or password for selected role.');
-      return;
-    }
-
     setIsLoading(true);
     
-    setTimeout(() => {
-      if (role === 'superadmin') {
+    try {
+      let loginEmail = email;
+      if (role === 'security' && !email.includes('@')) {
+        loginEmail = `${email}@security.estatia.local`;
+      }
+      
+      const response = await authApi.login({ email: loginEmail, password });
+      
+      // Store tokens for cross-domain access
+      // Store tokens for cross-domain access - checking multiple common keys
+      const token = response.access_token || response.access || response.token || response.data?.token || response.accessToken;
+      const refreshToken = response.refresh_token || response.refresh || response.data?.refresh;
+
+      if (token) {
+        localStorage.setItem('access_token', token);
+        console.log('[Login] Token stored successfully');
+      }
+      if (refreshToken) {
+        localStorage.setItem('refresh_token', refreshToken);
+      }
+      
+      console.log('[Login] API Response:', response);
+      
+      // Store user info for UI display
+      localStorage.setItem('user', JSON.stringify({
+        email: response.email || response.user?.email || email,
+        name: response.name || response.first_name || response.user?.name || (role === 'admin' ? 'Admin Owner' : role),
+      }));
+      
+      // Determine role from various possible fields in API response
+      let detectedRole = response.role || response.user_type || role;
+      if (response.is_superuser) detectedRole = 'superadmin';
+      else if (response.is_staff) detectedRole = 'admin';
+      
+      const userRole = String(detectedRole).toLowerCase(); 
+
+      if (userRole === 'superadmin') {
         router.push('/super-admin');
-      } else if (role === 'admin') {
+      } else if (userRole === 'admin' || userRole === 'owner') {
         router.push('/admin'); 
+      } else if (userRole === 'security') {
+        router.push('/security/dashboard');
       } else {
         router.push('/tenant'); 
       }
-    }, 800);
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gray-900">
-      {/* Background Image & Gradient Overlay */}
+    <div className="min-h-[100dvh] lg:h-screen w-full relative grid lg:grid-cols-2 selection:bg-white dark:bg-[#121212] selection:text-black font-sans bg-[#050505] overflow-y-auto lg:overflow-hidden">
+      {/* Background Image - Full Screen with Dark Overlay */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-gray-900 to-black opacity-90" />
-        <div 
-          className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay"
+        <Image 
+          src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop" 
+          alt="Luxury Villa Background" 
+          fill 
+          className="object-cover opacity-60 grayscale-[0.3]"
+          priority
         />
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[4px]" />
+        <div className="absolute inset-0 bg-[#050505]/60" />
       </div>
 
-      {/* Floating Ambient Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl animate-pulse delay-700" />
+      {/* Background Ambient Glows */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-1">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px]" />
+      </div>
 
-      {/* Glassmorphism Login Card */}
-      <div className="relative z-10 w-full max-w-md px-6 py-12 transition-all duration-500">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 mb-4 border border-blue-500/30 shadow-inner">
-              <Building2 className="w-8 h-8" />
-            </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Super<span className="text-blue-400">Admin</span></h1>
-            <p className="text-gray-300 mt-2 text-sm">Property Management Dashboard</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-3 flex items-center gap-3 text-red-200 text-sm animate-pulse">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
+      {/* Left Section: Login Form */}
+      <div className="relative z-10 flex items-center justify-center p-4 lg:p-8 order-2 lg:order-1 h-full">
+        <motion.div 
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="w-full max-w-[420px] bg-[#0D0D0D]/80 backdrop-blur-3xl rounded-[2.5rem] p-6 lg:p-8 border border-white/10 shadow-2xl my-8 lg:my-0"
+        >
+          <div className="text-left mb-4">
+            <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
+              <div className="w-6 h-6 rounded-lg bg-white dark:bg-[#121212] flex items-center justify-center text-black group-hover:scale-110 transition-transform">
+                <Building2 className="w-4 h-4" />
               </div>
-            )}
-
-            <div className="space-y-4">
-              {/* Role Selection */}
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/40 group-focus-within:text-blue-400 transition-colors">
-                  <Building2 className="w-5 h-5" />
-                </div>
-                <select
-                  id="role"
-                  value={role}
-                  onChange={handleRoleChange}
-                  className="appearance-none block w-full pl-12 pr-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all [&>option]:text-gray-900 cursor-pointer"
-                >
-                  <option value="superadmin">Login as: Super Admin</option>
-                  <option value="admin">Login as: Admin</option>
-                  <option value="user">Login as: User</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-white/40">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/40 group-focus-within:text-blue-400 transition-colors">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Password */}
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/40 group-focus-within:text-blue-400 transition-colors">
-                  <Lock className="w-5 h-5" />
-                </div>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <a href="#" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-                Forgot Password?
-              </a>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold rounded-2xl shadow-lg shadow-blue-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transform active:scale-95"
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Authenticating...
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-5 h-5 mr-1" />
-                  SIGN IN
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-8 pt-8 border-t border-white/10 text-center">
-            <p className="text-gray-400 text-sm">
-              Secure Property Management Access
+              <span className="text-lg font-bold tracking-tight text-white">EstateFlow</span>
+            </Link>
+            
+            <h1 className="text-3xl font-bold tracking-tight text-white mb-1 leading-tight">
+              Experience <br /> EstateFlow.
+            </h1>
+            <p className="text-gray-400 text-[11px] font-light leading-relaxed max-w-sm">
+              Secure access to your dashboard.
             </p>
           </div>
-        </div>
+
+          <div className="flex p-1 bg-white/5 rounded-xl mb-6 border border-white/5">
+            {(['superadmin', 'admin', 'user', 'security'] as RoleType[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => handleRoleChange(r)}
+                className={`flex-1 py-2 text-[8px] font-bold uppercase tracking-widest rounded-lg transition-all ${
+                  role === r 
+                    ? 'bg-white dark:bg-[#121212] text-black shadow-lg' 
+                    : 'text-gray-500 hover:text-white'
+                }`}
+              >
+                {r === 'user' ? 'Tenant' : r === 'security' ? 'Security' : r.replace('admin', ' Admin')}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex items-center gap-2 text-red-400 text-[9px] font-bold uppercase tracking-widest"
+                >
+                  <AlertCircle className="w-3 h-3" />
+                  <span>{error}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="space-y-3">
+              <div className="group border-b border-white/10 focus-within:border-white transition-colors">
+                <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-gray-500 group-focus-within:text-white transition-colors block mb-0.5">Email or Username</label>
+                <input
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-transparent py-1.5 text-white placeholder-white/5 focus:outline-none font-light text-sm"
+                  placeholder="email@example.com or username"
+                  required
+                />
+              </div>
+
+              <div className="group border-b border-white/10 focus-within:border-white transition-colors relative">
+                <label className="text-[8px] font-bold uppercase tracking-[0.2em] text-gray-500 group-focus-within:text-white transition-colors block mb-0.5">Security Key</label>
+                <div className="flex items-center">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-transparent py-1.5 text-white placeholder-white/5 focus:outline-none font-light text-sm"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 text-gray-500 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <input type="checkbox" id="remember" className="w-3 h-3 rounded border-white/10 bg-white/5 checked:bg-white dark:bg-[#121212] checked:border-white transition-all appearance-none cursor-pointer" />
+              <label htmlFor="remember" className="text-[10px] text-gray-500 cursor-pointer hover:text-gray-300 transition-colors leading-snug">
+                Secure monitored access session.
+              </label>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group h-12 bg-white dark:bg-[#121212] text-black rounded-full px-8 flex items-center gap-3 hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span className="font-bold text-[10px] uppercase tracking-widest">Login</span>
+                    <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white group-hover:translate-x-1 transition-transform">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </>
+                )}
+              </button>
+              
+              <Link href="/" className="text-[9px] font-bold uppercase tracking-widest text-gray-600 hover:text-white transition-colors">
+                Abort
+              </Link>
+            </div>
+          </form>
+
+          <div className="mt-6 flex items-center justify-between pt-4 border-t border-white/5">
+             <div className="flex items-center gap-2 grayscale opacity-40">
+                <Building2 className="w-3 h-3 text-white" />
+                <span className="text-[8px] font-bold tracking-widest uppercase text-white">Secure Node</span>
+             </div>
+             <p className="text-[8px] font-bold text-gray-700 dark:text-gray-200 uppercase tracking-[0.3em]">v4.0.2</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Right Section: Dynamic Insights */}
+      <div className="relative z-10 hidden lg:flex items-center justify-center p-8 lg:p-20 order-1 lg:order-2 h-full">
+        <motion.div 
+          key={insightIndex}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="w-full max-w-xl"
+        >
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-3 mb-6"
+          >
+            <div className="w-1.5 h-8 bg-white/30 rounded-full" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-500">
+              Insight {insightIndex + 1} // {INSIGHTS[insightIndex].tag}
+            </span>
+          </motion.div>
+          
+          <h2 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-[0.95] tracking-tighter">
+            {INSIGHTS[insightIndex].title}
+          </h2>
+          
+          <p className="text-gray-400 text-lg font-light leading-relaxed max-w-lg">
+            {INSIGHTS[insightIndex].content}
+          </p>
+        </motion.div>
       </div>
     </div>
   );

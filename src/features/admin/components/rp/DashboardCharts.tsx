@@ -1,0 +1,191 @@
+"use client";
+
+import { motion } from 'framer-motion';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+
+const RADIAN = Math.PI / 180;
+const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+  if (!percent || percent < 0.01) return null; // Don't render 0% labels
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={800}>
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+interface DashboardChartsProps {
+  buildings: any[];
+  tenants: any[];
+  delay?: number;
+}
+
+export default function DashboardCharts({ buildings, tenants, delay = 0 }: DashboardChartsProps) {
+  // 1. Calculate Occupancy Data
+  const totalUnits = buildings.reduce((acc, b) => acc + (b.total_units || 0), 0);
+  
+  // Calculate physically occupied units from buildings data
+  const physicallyOccupied = buildings.reduce((acc, b) => {
+    return acc + (b.units?.filter((u: any) => u.is_occupied).length || 0);
+  }, 0);
+
+  // Use physically occupied count if available, otherwise fallback to tenant count
+  const occupiedCount = physicallyOccupied > 0 ? physicallyOccupied : (tenants?.length || 0);
+  const vacantCount = Math.max(0, totalUnits - occupiedCount);
+  
+  const occupancyRate = totalUnits > 0 ? Math.round((occupiedCount / totalUnits) * 100) : 0;
+  const vacancyRate = Math.max(0, 100 - occupancyRate);
+
+  const occupancyChartData = [
+    { name: 'Occupied', value: occupancyRate, color: '#F26922' },
+    { name: 'Vacant', value: vacancyRate, color: '#E8E6E0' },
+  ];
+
+  // 2. Dynamic Property Performance (Bar Graph)
+  const propertyPerformance = buildings.map(b => {
+    // Filter tenants for this building
+    const bTenants = tenants.filter(t => t.property === b.id || t.building_id === b.id || t.property === b.name);
+    
+    const paid = bTenants.reduce((sum, t) => {
+      if (t.rent_status === 'Paid') return sum + (Number(t.rent_amount) || 0);
+      if (t.rent_status === 'Partial') return sum + ((Number(t.rent_amount) || 0) - (Number(t.due_amount) || 0));
+      return sum;
+    }, 0);
+    const due = bTenants.reduce((sum, t) => sum + (Number(t.due_amount) || 0), 0);
+
+    return {
+      name: b.name?.split(' ')[0] || 'Property', // Short name for axis
+      fullName: b.name,
+      paid: paid, // Removed random fallback
+      due: due, // Removed random fallback
+    };
+  }).slice(0, 6); // Show top 6 properties
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Occupancy Pie Chart */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay }}
+        className="bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-8"
+      >
+        <div className="mb-6">
+          <h3 className="text-lg font-black text-[#121110] dark:text-white tracking-tight">Portfolio Occupancy</h3>
+          <p className="text-xs font-bold text-[#61605D] dark:text-gray-400 uppercase tracking-widest mt-1">Live Resident Distribution</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="w-1/2 h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={occupancyChartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={85}
+                  paddingAngle={4}
+                  dataKey="value"
+                  labelLine={false}
+                  label={renderCustomLabel}
+                  animationDuration={1800}
+                >
+                  {occupancyChartData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v) => `${v}%`} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="w-1/2 pl-6 flex flex-col space-y-5">
+            {occupancyChartData.map((d, i) => (
+              <div key={i} className="flex flex-col space-y-2 w-full">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+                    <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{d.name}</span>
+                  </div>
+                  <span className="text-xs font-black" style={{ color: d.color }}>{d.value}%</span>
+                </div>
+                <div className="h-2 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden relative block">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${d.value}%` }}
+                    transition={{ duration: 1.5, delay: delay + 0.5, ease: "circOut" }}
+                    className="h-full rounded-full absolute left-0 top-0"
+                    style={{ background: d.color }}
+                  />
+                </div>
+              </div>
+            ))}
+            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex flex-col space-y-2 w-full">
+              <div className="flex justify-between w-full">
+                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Total Units</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">{totalUnits}</span>
+              </div>
+              <div className="flex justify-between w-full">
+                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Active Tenants</span>
+                <span className="text-xs font-black text-zinc-900 dark:text-white">{occupiedCount}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Property Performance Bar Chart */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, delay: delay + 0.15 }}
+        className="bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-xl rounded-[2.5rem] border border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-8"
+      >
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-black text-[#121110] dark:text-white tracking-tight">Revenue by Property</h3>
+            <p className="text-xs font-bold text-[#61605D] dark:text-gray-400 uppercase tracking-widest mt-1">Financial Performance Snapshot</p>
+          </div>
+        </div>
+        <div className="h-56 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={propertyPerformance} barGap={8}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F5F3F1" />
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#61605D', fontSize: 10, fontWeight: 800 }} 
+                dy={10} 
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#61605D', fontSize: 10, fontWeight: 700 }} 
+                tickFormatter={(v) => `₹${v >= 1000 ? (v/1000).toFixed(0) + 'k' : v}`} 
+              />
+              <Tooltip
+                cursor={{ fill: '#F5F3F1' }}
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', padding: '12px' }}
+                formatter={(v: any) => [`₹${Number(v).toLocaleString()}`, '']}
+              />
+              <Bar dataKey="paid" fill="#22C55E" radius={[8, 8, 4, 4]} barSize={32} name="Collected" />
+              <Bar dataKey="due" fill="#EF4444" radius={[8, 8, 4, 4]} barSize={32} name="Due" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex items-center space-x-6 mt-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 rounded-full bg-[#22C55E]" />
+            <span className="text-[11px] font-black text-[#121110] dark:text-white uppercase tracking-widest">Collected</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 rounded-full bg-[#EF4444]" />
+            <span className="text-[11px] font-black text-[#121110] dark:text-white uppercase tracking-widest">Outstanding</span>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
