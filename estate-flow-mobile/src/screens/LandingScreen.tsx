@@ -5,12 +5,11 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  ImageBackground,
   Dimensions,
   Platform,
 } from 'react-native';
-import { ChevronRight, Home, ArrowUpRight, LogIn, Shield, Users, Compass } from 'lucide-react-native';
-import { COLORS, SPACING, BORDER_RADIUS } from '../styles/theme';
+import { ChevronRight, Home, ArrowUpRight, LogIn, Shield, Users, Compass, Activity } from 'lucide-react-native';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, TYPOGRAPHY } from '../styles/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -21,214 +20,201 @@ interface LandingScreenProps {
 export default function LandingScreen({ onNavigateToLogin }: LandingScreenProps) {
   return (
     <View style={styles.container}>
-      {/* Navigation Bar Header */}
-      <View style={styles.navBar}>
-        <View style={styles.logoContainer}>
-          <View style={styles.logoIconBg}>
-            <Home size={16} color={COLORS.black} />
+      {/* 2025 Premium Glass-style Top Header */}
+      <View style={styles.header}>
+        <View style={styles.logoSection}>
+          <View style={styles.logoIconContainer}>
+            <Home size={16} color={COLORS.white} />
           </View>
           <Text style={styles.logoText}>EstateFlow</Text>
         </View>
         <TouchableOpacity 
-          style={styles.signInButton}
+          style={styles.headerActionButton}
           onPress={onNavigateToLogin}
+          activeOpacity={0.8}
         >
-          <Text style={styles.signInButtonText}>Sign In</Text>
-          <ChevronRight size={14} color={COLORS.black} />
+          <Text style={styles.headerActionText}>Sign In</Text>
+          <View style={styles.headerActionIconBox}>
+            <ChevronRight size={12} color={COLORS.primary} />
+          </View>
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Hero Banner Section */}
-        <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop' }}
-          style={styles.heroBackground}
-          imageStyle={styles.heroImage}
-        >
-          {/* Overlay Gradients */}
-          <View style={styles.heroOverlay} />
-
-          <View style={styles.heroContent}>
-            <View style={styles.badgeContainer}>
-              <Text style={styles.badgeText}>Next-Gen Property Management</Text>
-            </View>
-
-            <Text style={styles.heroTitle}>
-              Manage your{'\n'}
-              <Text style={styles.heroTitleHighlight}>Assets Smarter.</Text>
-            </Text>
-
-            <Text style={styles.heroSubtitle}>
-              A unified command center for Super Admins, Property Managers, and Tenants. Streamline your real estate operations with industrial precision.
-            </Text>
-
-            {/* Platform Status Card */}
-            <View style={styles.statusCard}>
-              <View style={styles.statusRow}>
-                <View style={styles.statusCol}>
-                  <Text style={styles.statusLabel}>System Role</Text>
-                  <View style={styles.activeDotRow}>
-                    <View style={styles.activeDot} />
-                    <Text style={styles.statusValue}>Super Admin</Text>
-                  </View>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.statusCol}>
-                  <Text style={styles.statusLabel}>Active Modules</Text>
-                  <Text style={styles.statusValue}>12 Integrated</Text>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.statusCol}>
-                  <Text style={styles.statusLabel}>Platform</Text>
-                  <Text style={styles.statusValue}>99.9% Up</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity 
-                style={styles.accessBtn}
-                onPress={onNavigateToLogin}
-              >
-                <LogIn size={16} color={COLORS.black} style={styles.btnIcon} />
-                <Text style={styles.accessBtnText}>Access Dashboard</Text>
-              </TouchableOpacity>
-            </View>
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <View style={styles.badgeContainer}>
+            <Activity size={10} color={COLORS.primary} style={{ marginRight: 4 }} />
+            <Text style={styles.badgeText}>Smart Resident Ecosystem</Text>
           </View>
-        </ImageBackground>
 
-        {/* Stats Grid Section */}
-        <View style={styles.statsSection}>
-          <View style={styles.statsRowGrid}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValueBig}>15,000+</Text>
-              <Text style={styles.statLabelMuted}>Units Managed</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValueBig}>99.9%</Text>
-              <Text style={styles.statLabelMuted}>Uptime SLA</Text>
-            </View>
-          </View>
-          <View style={styles.statsRowGrid}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValueBig}>92%</Text>
-              <Text style={styles.statLabelMuted}>Tenant Retention</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValueBig}>10+</Text>
-              <Text style={styles.statLabelMuted}>Years of Trust</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Role Modules Section */}
-        <View style={styles.rolesSection}>
-          <Text style={styles.rolesSubtitle}>PLATFORM ROLES</Text>
-          <Text style={styles.rolesTitle}>Built for every Role.</Text>
-          <Text style={styles.rolesDescription}>
-            Tailored experiences designed for administrators, portfolio owners, and residents alike.
+          <Text style={styles.heroTitle}>
+            Premium Living,{'\n'}
+            <Text style={styles.heroTitleHighlight}>Seamless Control.</Text>
           </Text>
 
-          {/* Super Admin Card */}
-          <View style={styles.roleCard}>
-            <ImageBackground
-              source={{ uri: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop' }}
-              style={styles.roleCardImage}
-              imageStyle={styles.roleCardImgStyle}
-            >
-              <View style={styles.roleCardOverlay} />
-              <View style={styles.roleCardBadge}>
-                <Text style={styles.roleCardBadgeText}>Super Admin</Text>
+          <Text style={styles.heroSubtitle}>
+            A production-grade platform connecting tenants, gates, property managers, and administrators in real-time.
+          </Text>
+
+          {/* Operational Status Card - CRED Style */}
+          <View style={styles.statusCard}>
+            <View style={styles.statusHeaderRow}>
+              <View style={styles.statusTitleGroup}>
+                <View style={styles.livePulseOuter}>
+                  <View style={styles.livePulseInner} />
+                </View>
+                <Text style={styles.statusHeaderTitle}>Platform Gateway</Text>
               </View>
-            </ImageBackground>
-            <View style={styles.roleCardInfo}>
-              <View style={styles.roleHeaderRow}>
-                <Shield size={20} color={COLORS.primary} />
-                <Text style={styles.roleCardTitle}>Global Governance</Text>
-              </View>
-              <Text style={styles.roleCardDesc}>
-                Full-scale ecosystem management for multi-property portfolios. Oversee administrator permissions, cross-building analytics, and system-wide configurations.
-              </Text>
-              <View style={styles.tagsContainer}>
-                {['Analytics', 'Roles', 'Audit Logs'].map(t => (
-                  <View key={t} style={styles.tag}><Text style={styles.tagText}>{t}</Text></View>
-                ))}
+              <View style={styles.liveIndicatorBadge}>
+                <Text style={styles.liveIndicatorText}>ACTIVE NODE</Text>
               </View>
             </View>
-          </View>
 
-          {/* Property Manager Card */}
-          <View style={styles.roleCard}>
-            <ImageBackground
-              source={{ uri: 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?q=80&w=600&auto=format&fit=crop' }}
-              style={styles.roleCardImage}
-              imageStyle={styles.roleCardImgStyle}
-            >
-              <View style={styles.roleCardOverlay} />
-              <View style={styles.roleCardBadge}>
-                <Text style={styles.roleCardBadgeText}>Property Manager</Text>
+            <View style={styles.statusMetricsGrid}>
+              <View style={styles.statusCol}>
+                <Text style={styles.statusLabel}>Uptime</Text>
+                <Text style={styles.statusValue}>99.98%</Text>
               </View>
-            </ImageBackground>
-            <View style={styles.roleCardInfo}>
-              <View style={styles.roleHeaderRow}>
-                <Compass size={20} color={COLORS.warning} />
-                <Text style={styles.roleCardTitle}>Executive Command</Text>
+              <View style={styles.verticalDivider} />
+              <View style={styles.statusCol}>
+                <Text style={styles.statusLabel}>Active Ports</Text>
+                <Text style={styles.statusValue}>12 Integrated</Text>
               </View>
-              <Text style={styles.roleCardDesc}>
-                A dedicated command center for day-to-day operations. Track unit occupancy, automate maintenance workflows, and generate comprehensive financial reports.
-              </Text>
-              <View style={styles.tagsContainer}>
-                {['Occupancy', 'CRM Support', 'Ledger'].map(t => (
-                  <View key={t} style={styles.tag}><Text style={styles.tagText}>{t}</Text></View>
-                ))}
+              <View style={styles.verticalDivider} />
+              <View style={styles.statusCol}>
+                <Text style={styles.statusLabel}>Response</Text>
+                <Text style={styles.statusValue}>8ms Latency</Text>
               </View>
             </View>
-          </View>
 
-          {/* Resident Card */}
-          <View style={styles.roleCard}>
-            <ImageBackground
-              source={{ uri: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=600&auto=format&fit=crop' }}
-              style={styles.roleCardImage}
-              imageStyle={styles.roleCardImgStyle}
+            <TouchableOpacity 
+              style={styles.primaryAccessBtn}
+              onPress={onNavigateToLogin}
+              activeOpacity={0.9}
             >
-              <View style={styles.roleCardOverlay} />
-              <View style={styles.roleCardBadge}>
-                <Text style={[styles.roleCardBadgeText, { color: COLORS.accent }]}>Resident Portal</Text>
+              <Text style={styles.primaryAccessBtnText}>Access Secured Portal</Text>
+              <View style={styles.btnIconArrow}>
+                <LogIn size={14} color={COLORS.white} />
               </View>
-            </ImageBackground>
-            <View style={styles.roleCardInfo}>
-              <View style={styles.roleHeaderRow}>
-                <Users size={20} color={COLORS.accent} />
-                <Text style={styles.roleCardTitle}>Seamless Living</Text>
-              </View>
-              <Text style={styles.roleCardDesc}>
-                A modern mobile-first hub for tenants. Process rent payments instantly, sign digital lease agreements, and request concierge services with one click.
-              </Text>
-              <View style={styles.tagsContainer}>
-                {['Payments', 'Mobile Keys', 'Tickets'].map(t => (
-                  <View key={t} style={styles.tag}><Text style={styles.tagText}>{t}</Text></View>
-                ))}
-              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Dynamic Metric Grid */}
+        <View style={styles.statsSection}>
+          <View style={styles.statsGridRow}>
+            <View style={styles.statMetricCard}>
+              <Text style={styles.statMetricNumber}>15K+</Text>
+              <Text style={styles.statMetricLabel}>Units Managed</Text>
+            </View>
+            <View style={styles.statMetricCard}>
+              <Text style={styles.statMetricNumber}>2.4M</Text>
+              <Text style={styles.statMetricLabel}>Clearances Logged</Text>
+            </View>
+          </View>
+          <View style={styles.statsGridRow}>
+            <View style={styles.statMetricCard}>
+              <Text style={styles.statMetricNumber}>99.4%</Text>
+              <Text style={styles.statMetricLabel}>Rent Compliance</Text>
+            </View>
+            <View style={styles.statMetricCard}>
+              <Text style={styles.statMetricNumber}>200K+</Text>
+              <Text style={styles.statMetricLabel}>Verified Guard Shifts</Text>
             </View>
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <View style={styles.footerLogoRow}>
-            <View style={[styles.logoIconBg, { backgroundColor: COLORS.white }]}>
-              <Home size={14} color={COLORS.black} />
+        {/* Roles Segment - MyGate Inspired */}
+        <View style={styles.rolesSection}>
+          <Text style={styles.rolesSectionTag}>ECOSYSTEM SUITE</Text>
+          <Text style={styles.rolesSectionTitle}>Designed for All Roles</Text>
+          <Text style={styles.rolesSectionDesc}>
+            Tailored dashboard structures built dynamically to serve each segment of the community workspace.
+          </Text>
+
+          {/* Superadmin Card */}
+          <View style={[styles.roleServiceCard, styles.roleSuperadminBorder]}>
+            <View style={styles.roleCardTop}>
+              <View style={[styles.roleIconWrapper, { backgroundColor: COLORS.infoLight }]}>
+                <Shield size={20} color={COLORS.info} />
+              </View>
+              <View style={styles.roleTitleGroup}>
+                <Text style={styles.roleCardTitle}>Portfolio Registry</Text>
+                <Text style={styles.roleCardSubtitle}>Super Admin Control</Text>
+              </View>
             </View>
-            <Text style={[styles.logoText, { color: COLORS.white }]}>EstateFlow</Text>
+            <Text style={styles.roleCardText}>
+              Oversee the complete database. Administer property manager privileges, global SLAs, and core server configurations.
+            </Text>
+            <View style={styles.rolesPillContainer}>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>Global Analytics</Text></View>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>IAM Roles</Text></View>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>SLA Audits</Text></View>
+            </View>
           </View>
-          <Text style={styles.footerHeading}>Ready to optimize your operations?</Text>
+
+          {/* Admin Card */}
+          <View style={[styles.roleServiceCard, styles.roleAdminBorder]}>
+            <View style={styles.roleCardTop}>
+              <View style={[styles.roleIconWrapper, { backgroundColor: COLORS.primaryLight }]}>
+                <Compass size={20} color={COLORS.primary} />
+              </View>
+              <View style={styles.roleTitleGroup}>
+                <Text style={styles.roleCardTitle}>Property Command</Text>
+                <Text style={styles.roleCardSubtitle}>Manager / Owner Portal</Text>
+              </View>
+            </View>
+            <Text style={styles.roleCardText}>
+              Deploy unit floor-plans, monitor collections efficiency, assign tenant leases, and track maintenance operations.
+            </Text>
+            <View style={styles.rolesPillContainer}>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>Lease Assign</Text></View>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>Meters & Dues</Text></View>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>Tickets</Text></View>
+            </View>
+          </View>
+
+          {/* Resident / Security Portal */}
+          <View style={[styles.roleServiceCard, styles.roleResidentBorder]}>
+            <View style={styles.roleCardTop}>
+              <View style={[styles.roleIconWrapper, { backgroundColor: COLORS.successLight }]}>
+                <Users size={20} color={COLORS.success} />
+              </View>
+              <View style={styles.roleTitleGroup}>
+                <Text style={styles.roleCardTitle}>Resident & Security</Text>
+                <Text style={styles.roleCardSubtitle}>Tenant & Gate Command</Text>
+              </View>
+            </View>
+            <Text style={styles.roleCardText}>
+              Pre-approve guest codes, process rent ledger payments, register visitors, and manage real-time entry approvals.
+            </Text>
+            <View style={styles.rolesPillContainer}>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>Visitor Codes</Text></View>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>Rent Pay</Text></View>
+              <View style={styles.tagPill}><Text style={styles.tagPillText}>Gate Checkins</Text></View>
+            </View>
+          </View>
+        </View>
+
+        {/* Premium Bottom Footer */}
+        <View style={styles.footer}>
+          <View style={styles.footerLogoContainer}>
+            <View style={styles.footerLogoIconBg}>
+              <Home size={11} color={COLORS.white} />
+            </View>
+            <Text style={styles.footerLogoText}>EstateFlow</Text>
+          </View>
+          <Text style={styles.footerHeader}>Ready to upgrade your residential management?</Text>
           <TouchableOpacity 
-            style={styles.footerBtn}
+            style={styles.footerCTAButton}
             onPress={onNavigateToLogin}
+            activeOpacity={0.8}
           >
-            <Text style={styles.footerBtnText}>Get Started Now</Text>
-            <ArrowUpRight size={16} color={COLORS.black} />
+            <Text style={styles.footerCTAText}>Launch App Dashboard</Text>
+            <ArrowUpRight size={14} color={COLORS.white} style={{ marginLeft: 6 }} />
           </TouchableOpacity>
-          <Text style={styles.copyrightText}>© 2026 EstateFlow Real Estate. All rights reserved.</Text>
+          <Text style={styles.footerVersionText}>EstateFlow Cloud Core v4.0.2 • © 2026 All rights reserved</Text>
         </View>
       </ScrollView>
     </View>
@@ -240,355 +226,377 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  navBar: {
-    height: Platform.OS === 'ios' ? 90 : 70,
-    paddingTop: Platform.OS === 'ios' ? 40 : 15,
+  header: {
+    height: Platform.OS === 'ios' ? 95 : 75,
+    paddingTop: Platform.OS === 'ios' ? 45 : 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg,
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.cardBorder,
-    backgroundColor: 'rgba(245, 243, 240, 0.85)',
-    zIndex: 10,
+    ...SHADOWS.sm,
+    zIndex: 100,
   },
-  logoContainer: {
+  logoSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoIconBg: {
-    width: 28,
-    height: 28,
+  logoIconContainer: {
+    width: 26,
+    height: 26,
     borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS.black,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SPACING.sm,
   },
   logoText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.titleSmall,
+    fontWeight: '800',
     color: COLORS.textPrimary,
     letterSpacing: -0.5,
   },
-  signInButton: {
+  headerActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.black,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 6,
+    backgroundColor: COLORS.primaryLight,
+    paddingLeft: 12,
+    paddingRight: 6,
+    paddingVertical: 5,
     borderRadius: BORDER_RADIUS.full,
   },
-  signInButtonText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: COLORS.white,
-    marginRight: 2,
+  headerActionText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.primary,
+    fontWeight: '700',
+    marginRight: 6,
+  },
+  headerActionIconBox: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
     paddingBottom: SPACING.xxl,
   },
-  heroBackground: {
-    width: '100%',
-    paddingVertical: SPACING.xl,
+  heroSection: {
     paddingHorizontal: SPACING.lg,
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  heroImage: {
-    opacity: 0.55,
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(13, 13, 13, 0.75)',
-  },
-  heroContent: {
-    marginTop: SPACING.md,
+    paddingTop: SPACING.xl,
+    paddingBottom: SPACING.md,
   },
   badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: SPACING.md,
+    backgroundColor: COLORS.primaryLight,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: BORDER_RADIUS.full,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
   },
   badgeText: {
     fontSize: 9,
-    fontWeight: 'bold',
-    color: COLORS.white,
-    letterSpacing: 1.5,
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   heroTitle: {
-    fontSize: 34,
-    fontWeight: '900',
-    color: COLORS.white,
-    lineHeight: 40,
-    letterSpacing: -1,
+    ...TYPOGRAPHY.display,
+    color: COLORS.textPrimary,
     marginBottom: SPACING.md,
   },
   heroTitleHighlight: {
     color: COLORS.primary,
   },
   heroSubtitle: {
-    fontSize: 13,
-    color: '#D1D5DB',
-    fontWeight: '300',
-    lineHeight: 18,
+    ...TYPOGRAPHY.bodyLarge,
+    color: COLORS.textSecondary,
+    fontWeight: '400',
     marginBottom: SPACING.xl,
   },
   statusCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.md,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl, // Premium 24px Rounded corners
+    padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+    ...SHADOWS.md, // Soft layered depth shadows
   },
-  statusRow: {
+  statusHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.cardBorder,
+    paddingBottom: SPACING.md,
     marginBottom: SPACING.md,
+  },
+  statusTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  livePulseOuter: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: COLORS.successLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.sm,
+  },
+  livePulseInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.success,
+  },
+  statusHeaderTitle: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  liveIndicatorBadge: {
+    backgroundColor: COLORS.successLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BORDER_RADIUS.xs,
+  },
+  liveIndicatorText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.success,
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  statusMetricsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
   },
   statusCol: {
     flex: 1,
     alignItems: 'center',
   },
   statusLabel: {
+    ...TYPOGRAPHY.labelUpper,
     fontSize: 8,
-    fontWeight: 'bold',
-    color: COLORS.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
     marginBottom: 4,
   },
-  activeDotRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.accent,
-    marginRight: 4,
-  },
   statusValue: {
-    fontSize: 11,
-    fontWeight: '600',
+    ...TYPOGRAPHY.bodyMedium,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  divider: {
+  verticalDivider: {
     width: 1,
     height: 24,
     backgroundColor: COLORS.cardBorder,
   },
-  accessBtn: {
+  primaryAccessBtn: {
     flexDirection: 'row',
-    backgroundColor: COLORS.primary,
-    borderRadius: BORDER_RADIUS.md,
-    paddingVertical: SPACING.md,
+    backgroundColor: COLORS.textPrimary,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    ...SHADOWS.sm,
   },
-  btnIcon: {
-    marginRight: SPACING.sm,
-  },
-  accessBtnText: {
-    fontSize: 13,
-    fontWeight: 'bold',
+  primaryAccessBtnText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.white,
+  },
+  btnIconArrow: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: SPACING.md,
   },
   statsSection: {
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.xl,
+    paddingVertical: SPACING.md,
   },
-  statsRowGrid: {
+  statsGridRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
-  statBox: {
+  statMetricCard: {
     flex: 1,
-    backgroundColor: COLORS.cardBg,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.md,
     marginHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    ...SHADOWS.sm,
   },
-  statValueBig: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+  statMetricNumber: {
+    ...TYPOGRAPHY.titleMedium,
+    color: COLORS.primary,
+    fontWeight: '800',
   },
-  statLabelMuted: {
-    fontSize: 10,
-    fontWeight: 'bold',
+  statMetricLabel: {
+    ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginTop: 4,
+    fontWeight: '500',
+    marginTop: 2,
   },
   rolesSection: {
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.lg,
+    paddingVertical: SPACING.xl,
   },
-  rolesSubtitle: {
-    fontSize: 10,
-    fontWeight: 'bold',
+  rolesSectionTag: {
+    ...TYPOGRAPHY.labelUpper,
     color: COLORS.primary,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
     marginBottom: SPACING.xs,
   },
-  rolesTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+  rolesSectionTitle: {
+    ...TYPOGRAPHY.titleMedium,
+    fontSize: 22,
     color: COLORS.textPrimary,
-    letterSpacing: -0.5,
     marginBottom: SPACING.sm,
   },
-  rolesDescription: {
-    fontSize: 13,
+  rolesSectionDesc: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
-    fontWeight: '300',
-    lineHeight: 18,
-    marginBottom: SPACING.xl,
-  },
-  roleCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    overflow: 'hidden',
     marginBottom: SPACING.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
   },
-  roleCardImage: {
-    width: '100%',
-    height: 180,
-    justifyContent: 'flex-end',
-  },
-  roleCardImgStyle: {
-    opacity: 0.75,
-  },
-  roleCardOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(13, 13, 13, 0.4)',
-  },
-  roleCardBadge: {
-    position: 'absolute',
-    top: SPACING.md,
-    right: SPACING.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  roleServiceCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.full,
-  },
-  roleCardBadgeText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  roleCardInfo: {
     padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    ...SHADOWS.md,
   },
-  roleHeaderRow: {
+  roleSuperadminBorder: {
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.info,
+  },
+  roleAdminBorder: {
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
+  },
+  roleResidentBorder: {
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.success,
+  },
+  roleCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  roleIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  roleTitleGroup: {
+    flex: 1,
   },
   roleCardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.textPrimary,
-    marginLeft: SPACING.sm,
   },
-  roleCardDesc: {
-    fontSize: 12,
+  roleCardSubtitle: {
+    ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
-    lineHeight: 17,
-    fontWeight: '300',
+    fontWeight: '500',
+    marginTop: 1,
   },
-  tagsContainer: {
+  roleCardText: {
+    ...TYPOGRAPHY.bodyMedium,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+  },
+  rolesPillContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: SPACING.md,
   },
-  tag: {
+  tagPill: {
     backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: BORDER_RADIUS.sm,
     marginRight: 6,
-    marginBottom: 6,
+    marginBottom: 4,
   },
-  tagText: {
+  tagPillText: {
+    ...TYPOGRAPHY.caption,
     fontSize: 9,
-    fontWeight: 'bold',
     color: COLORS.textSecondary,
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   footer: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.cardBorder,
+    backgroundColor: COLORS.textPrimary,
+    borderRadius: BORDER_RADIUS.xxl,
+    marginHorizontal: SPACING.lg,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.xl,
-    marginTop: SPACING.xl,
+    marginTop: SPACING.md,
+    ...SHADOWS.lg,
   },
-  footerLogoRow: {
+  footerLogoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
-  footerHeading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-    lineHeight: 28,
+  footerLogoIconBg: {
+    width: 22,
+    height: 22,
+    borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.sm,
+  },
+  footerLogoText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
+    color: COLORS.white,
+  },
+  footerHeader: {
+    ...TYPOGRAPHY.titleMedium,
+    color: COLORS.white,
+    lineHeight: 24,
     marginBottom: SPACING.lg,
   },
-  footerBtn: {
+  footerCTAButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.black,
-    borderRadius: BORDER_RADIUS.full,
-    paddingVertical: SPACING.md,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: 14,
     marginBottom: SPACING.xl,
   },
-  footerBtnText: {
-    fontSize: 13,
-    fontWeight: 'bold',
+  footerCTAText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.white,
-    marginRight: SPACING.sm,
   },
-  copyrightText: {
-    fontSize: 10,
+  footerVersionText: {
+    ...TYPOGRAPHY.caption,
     color: COLORS.textMuted,
+    fontSize: 9,
   },
 });

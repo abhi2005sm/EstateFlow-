@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
-import { Shield, Mail, Lock, Eye, EyeOff, Building2, ArrowRight } from 'lucide-react-native';
-import { COLORS, SPACING, BORDER_RADIUS } from '../styles/theme';
+import { Shield, Mail, Lock, Eye, EyeOff, Building2, ArrowRight, UserCheck, ShieldAlert, Key } from 'lucide-react-native';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, TYPOGRAPHY } from '../styles/theme';
 import { apiRequest, setAuthToken, setLoggedInUser } from '../api/api';
 
 const MOCK_CREDENTIALS = {
@@ -36,7 +36,9 @@ export default function LoginScreen({ onLogin, onAbort }: LoginScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Autofill credentials when switching tabs
+  // Track field focus for dynamic styling
+  const [focusedField, setFocusedField] = useState<'email' | 'password' | null>(null);
+
   const handleRoleChange = (selectedRole: RoleType) => {
     setRole(selectedRole);
     setEmail(MOCK_CREDENTIALS[selectedRole].email);
@@ -54,13 +56,11 @@ export default function LoginScreen({ onLogin, onAbort }: LoginScreenProps) {
     }
 
     try {
-      // Connect to the local Django Gateway using our central API helper
       const data = await apiRequest('/auth/login/', {
         method: 'POST',
         body: JSON.stringify({ email: loginEmail, password }),
       });
 
-      // Successful API Login
       const token = data.access_token || data.access || data.token;
       if (token) {
         setAuthToken(token);
@@ -82,7 +82,6 @@ export default function LoginScreen({ onLogin, onAbort }: LoginScreenProps) {
         }));
       }
 
-      // Determine user screen routing based on detected role
       let detectedRole = data.role || data.user_type || role;
       if (data.is_superuser) detectedRole = 'superadmin';
       else if (data.is_staff) detectedRole = 'admin';
@@ -103,10 +102,8 @@ export default function LoginScreen({ onLogin, onAbort }: LoginScreenProps) {
     } catch (err: any) {
       console.warn('[API Login Failed, checking offline fallback]', err);
 
-      // Offline Dev Session fallback
       const credentialsMatch = MOCK_CREDENTIALS[role];
       if (email.toLowerCase() === credentialsMatch.email.toLowerCase() && password === credentialsMatch.password) {
-        // Mock session login success
         setTimeout(() => {
           setIsLoading(false);
           const routeRole = role === 'superadmin' ? 'superadmin' : role === 'admin' ? 'admin' : role === 'security' ? 'security' : 'tenant';
@@ -124,140 +121,160 @@ export default function LoginScreen({ onLogin, onAbort }: LoginScreenProps) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      {/* Glow Orbs */}
-      <View style={styles.glowOrb1} />
-      <View style={styles.glowOrb2} />
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Header Branding - Airbnb Style */}
+          <View style={styles.brandingSection}>
+            <TouchableOpacity style={styles.brandingBadge} onPress={onAbort} activeOpacity={0.8}>
+              <Building2 size={24} color={COLORS.white} />
+            </TouchableOpacity>
+            <Text style={styles.brandTitle}>EstateFlow</Text>
+            <Text style={styles.brandSubtitle}>Secure Gateway Node</Text>
+          </View>
 
-      <View style={styles.loginContent}>
-        {/* Header Branding */}
-        <View style={styles.logoSection}>
-          <TouchableOpacity style={styles.logoBadge} onPress={onAbort}>
-            <Building2 size={24} color={COLORS.white} />
-          </TouchableOpacity>
-          <Text style={styles.logoText}>EstateFlow</Text>
-          <Text style={styles.logoSubtitle}>Smart Real Estate Ecosystem</Text>
-        </View>
+          {/* Form Surface */}
+          <View style={styles.formCard}>
+            <Text style={styles.cardHeaderTitle}>Authorized Login</Text>
+            <Text style={styles.cardHeaderSubtitle}>Select your account category and provide credentials.</Text>
 
-        {/* Login Form Card */}
-        <View style={styles.loginCard}>
-          <Text style={styles.cardTitle}>Experience{'\n'}EstateFlow.</Text>
-          <Text style={styles.cardSub}>Secure access to your dashboard.</Text>
+            {/* Custom Horizontal Role Selection Grid */}
+            <View style={styles.roleGrid}>
+              {([
+                { id: 'superadmin', label: 'S. Admin', Icon: Shield },
+                { id: 'admin', label: 'Owner', Icon: UserCheck },
+                { id: 'tenant', label: 'Resident', Icon: Building2 },
+                { id: 'security', label: 'Guard', Icon: ShieldAlert },
+              ] as const).map((item) => {
+                const isSelected = role === item.id;
+                const RoleIcon = item.Icon;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.roleButton,
+                      isSelected && styles.roleButtonActive
+                    ]}
+                    onPress={() => handleRoleChange(item.id)}
+                    activeOpacity={0.85}
+                  >
+                    <View style={[
+                      styles.roleIconBox,
+                      isSelected ? { backgroundColor: COLORS.primaryLight } : { backgroundColor: COLORS.background }
+                    ]}>
+                      <RoleIcon size={18} color={isSelected ? COLORS.primary : COLORS.textSecondary} />
+                    </View>
+                    <Text style={[
+                      styles.roleButtonText,
+                      isSelected && styles.roleButtonTextActive
+                    ]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-          {/* Role Tabs Switcher */}
-          <View style={styles.tabsContainer}>
-            {(['superadmin', 'admin', 'tenant', 'security'] as const).map((r) => (
+            {/* Error Area */}
+            {errorMessage ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorBoxText}>{errorMessage}</Text>
+              </View>
+            ) : null}
+
+            {/* Form Fields */}
+            <View style={styles.inputsSection}>
+              {/* Email Input Wrapper */}
+              <View style={[
+                styles.fieldWrapper,
+                focusedField === 'email' && styles.fieldWrapperFocused
+              ]}>
+                <Text style={styles.fieldLabel}>Registered Email / ID</Text>
+                <View style={styles.fieldRow}>
+                  <Mail size={16} color={focusedField === 'email' ? COLORS.primary : COLORS.textMuted} style={styles.fieldIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="name@domain.com"
+                    placeholderTextColor={COLORS.textPlaceholder}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                </View>
+              </View>
+
+              {/* Password Input Wrapper */}
+              <View style={[
+                styles.fieldWrapper,
+                focusedField === 'password' && styles.fieldWrapperFocused
+              ]}>
+                <Text style={styles.fieldLabel}>Security Passkey</Text>
+                <View style={styles.fieldRow}>
+                  <Lock size={16} color={focusedField === 'password' ? COLORS.primary : COLORS.textMuted} style={styles.fieldIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="••••••••"
+                    placeholderTextColor={COLORS.textPlaceholder}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeButton}
+                    activeOpacity={0.7}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={16} color={COLORS.textSecondary} />
+                    ) : (
+                      <Eye size={16} color={COLORS.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Bottom Actions */}
+            <View style={styles.actionsBlock}>
               <TouchableOpacity
-                key={r}
-                style={[
-                  styles.tabButton,
-                  role === r && styles.tabButtonActive
-                ]}
-                onPress={() => handleRoleChange(r)}
+                style={[styles.primaryLoginBtn, isLoading && styles.primaryLoginBtnDisabled]}
+                onPress={handleLoginSubmit}
+                disabled={isLoading}
+                activeOpacity={0.9}
               >
-                <Text style={[
-                  styles.tabButtonText,
-                  role === r && styles.tabButtonTextActive
-                ]}>
-                  {r === 'superadmin' ? 'S. Admin' : r.charAt(0).toUpperCase() + r.slice(1)}
-                </Text>
+                {isLoading ? (
+                  <ActivityIndicator color={COLORS.white} size="small" />
+                ) : (
+                  <>
+                    <Text style={styles.primaryLoginBtnText}>Authenticate</Text>
+                    <View style={styles.arrowIconContainer}>
+                      <ArrowRight size={13} color={COLORS.white} />
+                    </View>
+                  </>
+                )}
               </TouchableOpacity>
-            ))}
-          </View>
 
-          {/* Error Message */}
-          {errorMessage ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{errorMessage.toUpperCase()}</Text>
-            </View>
-          ) : null}
-
-          {/* Input Fields */}
-          <View style={styles.inputsGroup}>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Email or Username</Text>
-              <View style={styles.inputRow}>
-                <Mail size={16} color={COLORS.textSecondary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="email@example.com"
-                  placeholderTextColor={COLORS.textMuted}
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Security Key</Text>
-              <View style={styles.inputRow}>
-                <Lock size={16} color={COLORS.textSecondary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="••••••••"
-                  placeholderTextColor={COLORS.textMuted}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeBtn}
-                >
-                  {showPassword ? (
-                    <EyeOff size={16} color={COLORS.textSecondary} />
-                  ) : (
-                    <Eye size={16} color={COLORS.textSecondary} />
-                  )}
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.abortButton} onPress={onAbort} activeOpacity={0.7}>
+                <Text style={styles.abortButtonText}>Cancel</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
-          {/* Checkbox Notice */}
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkboxMock}>
-              <View style={styles.checkboxInner} />
+          {/* Footer Security Badging */}
+          <View style={styles.footerRow}>
+            <View style={styles.securityBadge}>
+              <Key size={11} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+              <Text style={styles.securityBadgeText}>TLS v1.3 Secured</Text>
             </View>
-            <Text style={styles.checkboxLabel}>Secure monitored access session.</Text>
-          </View>
-
-          {/* Actions */}
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={[styles.loginBtn, isLoading && styles.loginBtnDisabled]}
-              onPress={handleLoginSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color={COLORS.white} size="small" />
-              ) : (
-                <>
-                  <Text style={styles.loginBtnText}>Login</Text>
-                  <View style={styles.arrowIconContainer}>
-                    <ArrowRight size={14} color={COLORS.white} />
-                  </View>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.abortBtn} onPress={onAbort}>
-              <Text style={styles.abortBtnText}>Abort</Text>
-            </TouchableOpacity>
+            <Text style={styles.versionText}>System Node 4.0.2</Text>
           </View>
         </View>
-
-        {/* Footer info */}
-        <View style={styles.footerInfoRow}>
-          <View style={styles.footerBadge}>
-            <Building2 size={12} color={COLORS.textSecondary} />
-            <Text style={styles.footerBadgeText}>Secure Node</Text>
-          </View>
-          <Text style={styles.footerVersion}>V4.0.2</Text>
-        </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -266,248 +283,216 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.lg,
   },
-  glowOrb1: {
-    position: 'absolute',
-    top: '-5%',
-    left: '-10%',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: 'rgba(242, 105, 34, 0.08)',
-  },
-  glowOrb2: {
-    position: 'absolute',
-    bottom: '-5%',
-    right: '-10%',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: 'rgba(16, 185, 129, 0.06)',
-  },
-  loginContent: {
+  content: {
     width: '100%',
-    maxWidth: 420,
+    maxWidth: 400,
     alignItems: 'center',
   },
-  logoSection: {
+  brandingSection: {
     alignItems: 'center',
     marginBottom: SPACING.xl,
   },
-  logoBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.black,
+  brandingBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.sm,
+    ...SHADOWS.md,
   },
-  logoText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  brandTitle: {
+    ...TYPOGRAPHY.titleLarge,
+    fontWeight: '800',
     color: COLORS.textPrimary,
+    letterSpacing: -0.5,
   },
-  logoSubtitle: {
-    fontSize: 12,
+  brandSubtitle: {
+    ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
-    fontWeight: '300',
+    fontWeight: '500',
+    marginTop: 2,
   },
-  loginCard: {
+  formCard: {
     width: '100%',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: BORDER_RADIUS.xl,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl, // Premium 24px rounded corners
     padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
-    elevation: 4,
+    ...SHADOWS.lg, // Soft layered depth shadows
   },
-  cardTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
+  cardHeaderTitle: {
+    ...TYPOGRAPHY.titleMedium,
     color: COLORS.textPrimary,
-    lineHeight: 32,
-    marginBottom: 6,
+    marginBottom: 4,
   },
-  cardSub: {
-    fontSize: 12,
+  cardHeaderSubtitle: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
-    fontWeight: '300',
     marginBottom: SPACING.lg,
   },
-  tabsContainer: {
+  roleGrid: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: BORDER_RADIUS.md,
-    padding: 3,
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: 6,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     marginBottom: SPACING.lg,
   },
-  tabButton: {
+  roleButton: {
     flex: 1,
-    paddingVertical: 8,
     alignItems: 'center',
-    borderRadius: BORDER_RADIUS.sm,
+    paddingVertical: 10,
+    borderRadius: BORDER_RADIUS.lg,
   },
-  tabButtonActive: {
-    backgroundColor: COLORS.black,
+  roleButtonActive: {
+    backgroundColor: COLORS.white,
+    ...SHADOWS.sm,
   },
-  tabButtonText: {
-    fontSize: 10,
-    fontWeight: 'bold',
+  roleIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  roleButtonText: {
+    fontSize: 9,
+    fontWeight: '700',
     color: COLORS.textSecondary,
-    textTransform: 'uppercase',
   },
-  tabButtonTextActive: {
-    color: COLORS.white,
+  roleButtonTextActive: {
+    color: COLORS.primary,
   },
-  errorContainer: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderRadius: BORDER_RADIUS.sm,
+  errorBox: {
+    backgroundColor: COLORS.errorLight,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.15)',
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.sm,
     marginBottom: SPACING.md,
   },
-  errorText: {
-    color: COLORS.accentUnpaid,
-    fontSize: 9,
-    fontWeight: 'bold',
-    letterSpacing: 1,
+  errorBoxText: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.error,
+    fontWeight: '700',
   },
-  inputsGroup: {
+  inputsSection: {
     marginBottom: SPACING.md,
   },
-  inputWrapper: {
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
+  fieldWrapper: {
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    borderRadius: BORDER_RADIUS.xl, // Premium 20px corners
+    paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     marginBottom: SPACING.md,
   },
-  inputLabel: {
-    fontSize: 8,
-    fontWeight: 'bold',
-    color: COLORS.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    marginBottom: 2,
+  fieldWrapperFocused: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.white,
+    ...SHADOWS.sm,
   },
-  inputRow: {
+  fieldLabel: {
+    ...TYPOGRAPHY.labelUpper,
+    fontSize: 8,
+    marginTop: 2,
+  },
+  fieldRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  inputIcon: {
+  fieldIcon: {
     marginRight: SPACING.sm,
   },
   textInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: '300',
+    fontSize: 13,
+    fontWeight: '600',
     paddingVertical: 6,
   },
-  eyeBtn: {
+  eyeButton: {
     padding: SPACING.xs,
   },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.lg,
-  },
-  checkboxMock: {
-    width: 12,
-    height: 12,
-    borderRadius: 3,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    marginRight: SPACING.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxInner: {
-    width: 6,
-    height: 6,
-    borderRadius: 1.5,
-    backgroundColor: COLORS.black,
-  },
-  checkboxLabel: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
-  },
-  actionsRow: {
+  actionsBlock: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: SPACING.sm,
   },
-  loginBtn: {
+  primaryLoginBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primary,
-    paddingVertical: SPACING.md,
+    backgroundColor: COLORS.textPrimary,
+    paddingVertical: 14,
     paddingHorizontal: SPACING.xl,
     borderRadius: BORDER_RADIUS.full,
+    ...SHADOWS.sm,
   },
-  loginBtnDisabled: {
+  primaryLoginBtnDisabled: {
     opacity: 0.5,
   },
-  loginBtnText: {
-    fontSize: 11,
-    fontWeight: 'bold',
+  primaryLoginBtnText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.white,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.2,
   },
   arrowIconContainer: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: COLORS.primaryDark,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: SPACING.sm,
   },
-  abortBtn: {
+  abortButton: {
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
   },
-  abortBtnText: {
-    fontSize: 10,
-    fontWeight: 'bold',
+  abortButtonText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
-  footerInfoRow: {
+  footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginTop: SPACING.lg,
+    marginTop: SPACING.xl,
     borderTopWidth: 1,
     borderTopColor: COLORS.cardBorder,
     paddingTop: SPACING.md,
   },
-  footerBadge: {
+  securityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    opacity: 0.7,
   },
-  footerBadgeText: {
-    fontSize: 8,
-    fontWeight: 'bold',
+  securityBadgeText: {
+    ...TYPOGRAPHY.caption,
+    fontSize: 9,
+    fontWeight: '700',
     color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginLeft: 4,
   },
-  footerVersion: {
-    fontSize: 8,
-    fontWeight: 'bold',
+  versionText: {
+    ...TYPOGRAPHY.caption,
+    fontSize: 9,
+    fontWeight: '700',
     color: COLORS.textMuted,
   },
 });

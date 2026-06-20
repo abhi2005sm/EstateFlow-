@@ -10,6 +10,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import {
   Home as HomeIcon,
@@ -24,8 +25,16 @@ import {
   Clock,
   XCircle,
   Plus,
+  ArrowRight,
+  Shield,
+  FileText,
+  Building,
+  Calendar,
+  AlertCircle,
+  Search,
+  Lock,
 } from 'lucide-react-native';
-import { COLORS, SPACING, BORDER_RADIUS } from '../styles/theme';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, TYPOGRAPHY } from '../styles/theme';
 import { Tenant as TenantType, PaymentHistory as PaymentType, MaintenanceRequest as RequestType, Visitor as VisitorType } from '../mock/data';
 
 interface TenantScreenProps {
@@ -69,11 +78,14 @@ export default function TenantScreen({
   const [newVisPurpose, setNewVisPurpose] = useState('');
   const [newVisTime, setNewVisTime] = useState('');
 
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
   const currentTenant = tenants.find(t => t.id === 't2') || tenants[1]; // Default John Smith
 
   const handlePayRentConfirm = () => {
     onPayRent();
     setIsPayRentModalOpen(false);
+    Alert.alert('Payment Success', 'Rent payment processed successfully.');
   };
 
   const handleCreateRequest = () => {
@@ -87,6 +99,7 @@ export default function TenantScreen({
     setNewReqDesc('');
     setNewReqCategory('Other');
     setNewReqPriority('Medium');
+    Alert.alert('Ticket Created', 'Support ticket logged with management.');
   };
 
   const handleCreateVisitor = () => {
@@ -100,60 +113,67 @@ export default function TenantScreen({
     setNewVisPhone('');
     setNewVisPurpose('');
     setNewVisTime('');
+    Alert.alert('Guest Pre-Approved', 'Gate system notified. QR code sent.');
   };
 
-  // Filter pending visitor notifications that belong to this tenant
   const myPendingVisitors = visitors.filter(v => v.tenant_id === currentTenant.id && v.status === 'PENDING');
 
   return (
     <View style={styles.container}>
-      {/* Top Header */}
+      {/* Premium Top Navigation */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerSubtitle}>RESIDENT HUB</Text>
+          <Text style={styles.headerTagline}>{currentTenant.buildingName.toUpperCase()} • UNIT {currentTenant.unit.replace('Unit ', '')}</Text>
           <Text style={styles.headerTitle}>Welcome, {currentTenant.name.split(' ')[0]}</Text>
         </View>
-        <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>
-          <LogOut size={18} color={COLORS.textSecondary} />
+        <TouchableOpacity onPress={onLogout} style={styles.logoutCircleBtn} activeOpacity={0.8}>
+          <LogOut size={16} color={COLORS.textSecondary} />
         </TouchableOpacity>
       </View>
 
-      {/* Body */}
+      {/* Main Body Surface */}
       <View style={styles.body}>
         {activeTab === 'dashboard' && (
-          <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             
-            {/* Real-time visitor authorization request notification */}
+            {/* High-priority Pending Visitor Clearance Panel */}
             {myPendingVisitors.length > 0 && (
-              <View style={styles.authNoticeCard}>
-                <View style={styles.authHeader}>
-                  <AlertTriangle size={18} color="#F26922" />
-                  <Text style={styles.authTitle}>Gate Entrance Request</Text>
+              <View style={styles.pendingVisContainer}>
+                <View style={styles.pendingVisHeader}>
+                  <View style={styles.shieldPulseContainer}>
+                    <Shield size={16} color={COLORS.primary} />
+                  </View>
+                  <Text style={styles.pendingVisTitle}>Security Authorization</Text>
                 </View>
+                
                 {myPendingVisitors.map(v => (
-                  <View key={v.id} style={styles.authDetailRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.authDetailName}>{v.visitor_name}</Text>
-                      <Text style={styles.authDetailPurpose}>{v.purpose} • {v.visitor_phone}</Text>
+                  <View key={v.id} style={styles.pendingVisCard}>
+                    <View style={styles.pendingVisInfo}>
+                      <Text style={styles.pendingVisName}>{v.visitor_name}</Text>
+                      <Text style={styles.pendingVisDetails}>
+                        {v.purpose.toUpperCase()} • {v.visitor_phone}
+                      </Text>
                     </View>
-                    <View style={styles.authActionRow}>
+                    <View style={styles.pendingVisActions}>
                       <TouchableOpacity 
-                        style={[styles.authBtn, styles.authRejectBtn]}
+                        style={[styles.pendingVisBtn, styles.pendingVisDenyBtn]}
                         onPress={() => {
                           onAuthorizeVisitor(v.id, 'REJECTED');
-                          Alert.alert('Visitor Rejected', 'Gate entry request denied.');
+                          Alert.alert('Visitor Blocked', 'Access denied. Security desk notified.');
                         }}
+                        activeOpacity={0.8}
                       >
-                        <Text style={styles.authBtnText}>Deny</Text>
+                        <Text style={styles.pendingVisDenyText}>Block</Text>
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        style={[styles.authBtn, styles.authApproveBtn]}
+                        style={[styles.pendingVisBtn, styles.pendingVisApproveBtn]}
                         onPress={() => {
                           onAuthorizeVisitor(v.id, 'APPROVED');
-                          Alert.alert('Visitor Approved', 'Access granted. Security informed.');
+                          Alert.alert('Access Cleared', 'Access granted. Gate notified.');
                         }}
+                        activeOpacity={0.8}
                       >
-                        <Text style={[styles.authBtnText, { color: COLORS.black }]}>Approve</Text>
+                        <Text style={styles.pendingVisApproveText}>Approve</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -161,60 +181,116 @@ export default function TenantScreen({
               </View>
             )}
 
-            {/* Rent Status Card */}
-            <View style={styles.dashboardCard}>
-              <Text style={styles.dashboardCardSub}>Rent Ledger Status</Text>
+            {/* Premium Rent Ledger Widget */}
+            <View style={styles.ledgerCard}>
+              <View style={styles.ledgerHeader}>
+                <Text style={styles.ledgerHeaderLabel}>Rent Ledger</Text>
+                <View style={[
+                  styles.statusBadge, 
+                  currentTenant.rentStatus === 'Paid' ? { backgroundColor: COLORS.successLight } : { backgroundColor: COLORS.errorLight }
+                ]}>
+                  <Text style={[
+                    styles.statusBadgeText, 
+                    currentTenant.rentStatus === 'Paid' ? { color: COLORS.success } : { color: COLORS.error }
+                  ]}>
+                    {currentTenant.rentStatus.toUpperCase()}
+                  </Text>
+                </View>
+              </View>
               
               {currentTenant.rentStatus === 'Paid' ? (
-                <View>
-                  <Text style={[styles.largeTotalAmount, { color: COLORS.accent }]}>PAID</Text>
-                  <Text style={styles.collectionEfficiency}>Rent paid for the month. Thank you!</Text>
+                <View style={styles.ledgerBody}>
+                  <Text style={[styles.largeAmountText, { color: COLORS.success }]}>$0.00 Due</Text>
+                  <Text style={styles.ledgerFooterLabel}>Your ledger is completely settled. Thank you!</Text>
                 </View>
               ) : (
-                <View>
-                  <Text style={[styles.largeTotalAmount, { color: COLORS.accentUnpaid }]}>${currentTenant.dueAmount} Due</Text>
-                  <Text style={styles.collectionEfficiency}>Due Date: June 15, 2026</Text>
+                <View style={styles.ledgerBody}>
+                  <Text style={[styles.largeAmountText, { color: COLORS.error }]}>${currentTenant.dueAmount} Due</Text>
+                  <Text style={styles.ledgerFooterLabel}>Due Date: June 15, 2026</Text>
                   
                   <TouchableOpacity 
-                    style={styles.payNowBtn}
+                    style={styles.payRentBtn}
                     onPress={() => setIsPayRentModalOpen(true)}
+                    activeOpacity={0.9}
                   >
-                    <CreditCard size={16} color={COLORS.black} style={{ marginRight: SPACING.sm }} />
-                    <Text style={styles.payNowBtnText}>Pay Rent Instantly</Text>
+                    <CreditCard size={14} color={COLORS.white} style={{ marginRight: SPACING.sm }} />
+                    <Text style={styles.payRentBtnText}>Resettle Ledger</Text>
                   </TouchableOpacity>
                 </View>
               )}
             </View>
 
-            {/* Quick Actions Grid */}
-            <Text style={styles.sectionHeader}>Quick Operations</Text>
+            {/* Quick Actions grid - MyGate style */}
+            <Text style={styles.sectionTitle}>Ecosystem Actions</Text>
             <View style={styles.actionsGrid}>
               <TouchableOpacity 
-                style={styles.gridActionCard}
+                style={[styles.actionCard, { borderLeftColor: COLORS.secondary, borderLeftWidth: 3 }]}
                 onPress={() => setIsVisitorModalOpen(true)}
+                activeOpacity={0.85}
               >
-                <UserCheck size={24} color={COLORS.primary} />
-                <Text style={styles.gridActionTitle}>Pre-Approve Guest</Text>
-                <Text style={styles.gridActionSub}>Gate clearance codes</Text>
+                <View style={[styles.actionIconBg, { backgroundColor: COLORS.secondaryLight }]}>
+                  <UserCheck size={18} color={COLORS.secondary} />
+                </View>
+                <Text style={styles.actionCardTitle}>Pre-Approve</Text>
+                <Text style={styles.actionCardSub}>Register guests</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
-                style={styles.gridActionCard}
+                style={[styles.actionCard, { borderLeftColor: COLORS.warning, borderLeftWidth: 3 }]}
                 onPress={() => setIsRequestModalOpen(true)}
+                activeOpacity={0.85}
               >
-                <Wrench size={24} color={COLORS.warning} />
-                <Text style={styles.gridActionTitle}>Request Repair</Text>
-                <Text style={styles.gridActionSub}>File ticket to admin</Text>
+                <View style={[styles.actionIconBg, { backgroundColor: COLORS.warningLight }]}>
+                  <Wrench size={18} color={COLORS.warning} />
+                </View>
+                <Text style={styles.actionCardTitle}>Support Ticket</Text>
+                <Text style={styles.actionCardSub}>File a complaint</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.actionCard, { borderLeftColor: COLORS.success, borderLeftWidth: 3 }]}
+                onPress={() => {
+                  if (currentTenant.rentStatus === 'Paid') {
+                    Alert.alert('Ledger Settled', 'Your invoices are fully paid!');
+                  } else {
+                    setIsPayRentModalOpen(true);
+                  }
+                }}
+                activeOpacity={0.85}
+              >
+                <View style={[styles.actionIconBg, { backgroundColor: COLORS.successLight }]}>
+                  <CreditCard size={18} color={COLORS.success} />
+                </View>
+                <Text style={styles.actionCardTitle}>Pay Invoice</Text>
+                <Text style={styles.actionCardSub}>Resettle accounts</Text>
+              </TouchableOpacity>
+
+              {/* Locked Amenity Booking Card */}
+              <TouchableOpacity 
+                style={[styles.actionCard, styles.actionCardLocked]}
+                onPress={() => Alert.alert('Premium Amenity', 'Amenities booking is currently locked for this unit. Please contact management.')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.actionIconBg, { backgroundColor: COLORS.textMuted + '15' }]}>
+                  <Building size={18} color={COLORS.textMuted} />
+                </View>
+                <Text style={styles.actionCardTitle}>Book Amenities</Text>
+                <Text style={styles.actionCardSub}>Clubhouse, pool</Text>
+                <View style={styles.lockBadge}>
+                  <Lock size={10} color={COLORS.textSecondary} />
+                </View>
               </TouchableOpacity>
             </View>
 
-            {/* General Announcements */}
-            <Text style={styles.sectionHeader}>Notice Board</Text>
-            <View style={styles.announcementCard}>
-              <AlertTriangle size={18} color={COLORS.warning} style={{ marginRight: SPACING.md }} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.announcementTitle}>Elevator Service Maintenance</Text>
-                <Text style={styles.announcementDesc}>
+            {/* Notices feed */}
+            <Text style={styles.sectionTitle}>Notice Board</Text>
+            <View style={styles.noticeCard}>
+              <View style={styles.noticeIconCircle}>
+                <AlertTriangle size={16} color={COLORS.warning} />
+              </View>
+              <View style={{ flex: 1, marginLeft: SPACING.md }}>
+                <Text style={styles.noticeTitle}>Elevator Service Maintenance</Text>
+                <Text style={styles.noticeDesc}>
                   Elevator B will be shut down for routine cable inspection tomorrow, 1:00 PM to 3:00 PM.
                 </Text>
               </View>
@@ -223,280 +299,333 @@ export default function TenantScreen({
         )}
 
         {activeTab === 'payments' && (
-          <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
-            <Text style={styles.tabTitle}>Receipts & Ledger</Text>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <Text style={styles.tabHeading}>Receipts & Ledger</Text>
+            <Text style={styles.tabSubheading}>Breakdown of monthly fee structure and historical receipts.</Text>
             
-            {/* Bill breakdown */}
-            <View style={styles.dashboardCard}>
-              <Text style={styles.cardTitle}>Monthly Fee Structure</Text>
-              <View style={styles.breakdownRow}>
-                <Text style={styles.breakdownLabel}>Base Rent</Text>
-                <Text style={styles.breakdownValue}>$1,100</Text>
+            <View style={styles.structureCard}>
+              <Text style={styles.structureTitle}>Monthly Fee Structure</Text>
+              <View style={styles.structureRow}>
+                <Text style={styles.structureLabel}>Base Rent</Text>
+                <Text style={styles.structureValue}>$1,100.00</Text>
               </View>
-              <View style={styles.breakdownRow}>
-                <Text style={styles.breakdownLabel}>Amenities & Cleaning</Text>
-                <Text style={styles.breakdownValue}>$70</Text>
+              <View style={styles.structureRow}>
+                <Text style={styles.structureLabel}>Amenities & Cleaning</Text>
+                <Text style={styles.structureValue}>$70.00</Text>
               </View>
-              <View style={styles.breakdownRow}>
-                <Text style={styles.breakdownLabel}>Utility Reserve</Text>
-                <Text style={styles.breakdownValue}>$30</Text>
+              <View style={styles.structureRow}>
+                <Text style={styles.structureLabel}>Utility Reserve</Text>
+                <Text style={styles.structureValue}>$30.00</Text>
               </View>
-              <View style={styles.separator} />
-              <View style={styles.breakdownRow}>
-                <Text style={[styles.breakdownLabel, { fontWeight: 'bold' }]}>Total Monthly Bill</Text>
-                <Text style={[styles.breakdownValue, { fontWeight: 'bold' }]}>$1,200</Text>
+              <View style={styles.structureDivider} />
+              <View style={styles.structureTotalRow}>
+                <Text style={styles.structureTotalLabel}>Total Monthly Rent</Text>
+                <Text style={styles.structureTotalValue}>$1,200.00</Text>
               </View>
             </View>
 
-            <Text style={styles.sectionHeader}>Payment History</Text>
+            <Text style={styles.sectionTitle}>Payment Logs</Text>
             {payments.map(p => (
-              <View key={p.id} style={styles.transactionItem}>
-                <View style={styles.transIconCircle}>
-                  <CheckCircle2 size={16} color={COLORS.accent} />
+              <View key={p.id} style={styles.transactionCard}>
+                <View style={[styles.transIconBox, { backgroundColor: COLORS.successLight }]}>
+                  <CheckCircle2 size={16} color={COLORS.success} />
                 </View>
                 <View style={{ flex: 1, marginLeft: SPACING.md }}>
-                  <Text style={styles.transTitle}>{p.feeType}</Text>
-                  <Text style={styles.transSub}>{p.date}</Text>
+                  <Text style={styles.transCardTitle}>{p.feeType} Payment</Text>
+                  <Text style={styles.transCardSub}>{p.date} • Verified receipt</Text>
                 </View>
-                <Text style={[styles.transAmount, { color: COLORS.accent }]}>+${p.amount}</Text>
+                <Text style={[styles.transCardAmount, { color: COLORS.success }]}>+${p.amount.toFixed(2)}</Text>
               </View>
             ))}
           </ScrollView>
         )}
 
         {activeTab === 'requests' && (
-          <View style={styles.tabContent}>
-            <View style={styles.searchBarRow}>
-              <Text style={styles.tabTitle}>My Support Tickets</Text>
+          <View style={styles.tabBodyWrapper}>
+            <View style={styles.tabHeaderRow}>
+              <View>
+                <Text style={styles.tabHeading}>Support Tickets</Text>
+                <Text style={styles.tabSubheading}>Audit and submit building repair tickets.</Text>
+              </View>
               <TouchableOpacity 
-                style={styles.addBtn}
+                style={styles.addFloatingBtn}
                 onPress={() => setIsRequestModalOpen(true)}
+                activeOpacity={0.8}
               >
                 <Plus size={20} color={COLORS.white} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {requests.filter(r => r.tenantName === currentTenant.name).map(r => (
-                <View key={r.id} style={styles.requestCard}>
-                  <View style={styles.reqHeader}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.reqTitle}>{r.title}</Text>
-                      <Text style={styles.reqSub}>{r.date}</Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACING.xl }}>
+              {requests.filter(r => r.tenantName === currentTenant.name).map(r => {
+                const priorityStyle = r.priority === 'High' 
+                  ? { bg: COLORS.errorLight, txt: COLORS.error }
+                  : r.priority === 'Medium' 
+                    ? { bg: COLORS.warningLight, txt: COLORS.warning } 
+                    : { bg: COLORS.infoLight, txt: COLORS.info };
+
+                const statusStyle = r.status === 'Resolved'
+                  ? { bg: COLORS.successLight, txt: COLORS.success }
+                  : r.status === 'In Progress'
+                    ? { bg: COLORS.warningLight, txt: COLORS.warning }
+                    : { bg: COLORS.background, txt: COLORS.textSecondary };
+
+                return (
+                  <View key={r.id} style={styles.ticketCard}>
+                    <View style={styles.ticketHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.ticketTitle}>{r.title}</Text>
+                        <Text style={styles.ticketDate}>{r.date}</Text>
+                      </View>
+                      <View style={[styles.ticketPriorityBadge, { backgroundColor: priorityStyle.bg }]}>
+                        <Text style={[styles.ticketPriorityText, { color: priorityStyle.txt }]}>{r.priority.toUpperCase()}</Text>
+                      </View>
                     </View>
-                    <View style={[
-                      styles.priorityBadge,
-                      r.priority === 'High' ? styles.badgeHigh : r.priority === 'Medium' ? styles.badgeMedium : styles.badgeLow
-                    ]}>
-                      <Text style={styles.priorityText}>{r.priority}</Text>
+                    <Text style={styles.ticketDesc}>{r.description}</Text>
+                    <View style={styles.ticketFooter}>
+                      <View style={styles.ticketCategory}>
+                        <Text style={styles.ticketCategoryText}>{r.category.toUpperCase()}</Text>
+                      </View>
+                      <View style={[styles.ticketStatusBadge, { backgroundColor: statusStyle.bg }]}>
+                        <Text style={[styles.ticketStatusText, { color: statusStyle.txt }]}>{r.status.toUpperCase()}</Text>
+                      </View>
                     </View>
                   </View>
-                  <Text style={styles.reqDesc}>{r.description}</Text>
-                  <View style={styles.reqFooter}>
-                    <View style={styles.categoryBadge}>
-                      <Text style={styles.categoryBadgeText}>{r.category}</Text>
-                    </View>
-                    <View style={[
-                      styles.statusToggleBtn,
-                      r.status === 'Resolved' ? styles.btnResolved : r.status === 'In Progress' ? styles.btnProgress : styles.btnPending
-                    ]}>
-                      <Text style={styles.statusToggleText}>{r.status}</Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
+                );
+              })}
             </ScrollView>
           </View>
         )}
 
         {activeTab === 'visitors' && (
-          <View style={styles.tabContent}>
-            <View style={styles.searchBarRow}>
-              <Text style={styles.tabTitle}>Pre-Approved Visitors</Text>
+          <View style={styles.tabBodyWrapper}>
+            <View style={styles.tabHeaderRow}>
+              <View>
+                <Text style={styles.tabHeading}>Guest Registers</Text>
+                <Text style={styles.tabSubheading}>Configure pre-approved guest entries.</Text>
+              </View>
               <TouchableOpacity 
-                style={styles.addBtn}
+                style={styles.addFloatingBtn}
                 onPress={() => setIsVisitorModalOpen(true)}
+                activeOpacity={0.8}
               >
                 <Plus size={20} color={COLORS.white} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {visitors.filter(v => v.tenant_id === currentTenant.id).map(v => (
-                <View key={v.id} style={styles.visitorCard}>
-                  <View style={styles.visHeader}>
-                    <UserCheck size={20} color={COLORS.primary} />
-                    <View style={{ flex: 1, marginLeft: SPACING.md }}>
-                      <Text style={styles.visName}>{v.visitor_name}</Text>
-                      <Text style={styles.visSub}>{v.purpose} • Shift Guard: {v.security_staff}</Text>
-                    </View>
-                    <View style={[
-                      styles.visStatusBadge,
-                      v.status === 'PENDING' ? styles.visPending : v.status === 'APPROVED' ? styles.visApproved : styles.visCompleted
-                    ]}>
-                      <Text style={styles.visStatusText}>{v.status}</Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACING.xl }}>
+              {visitors.filter(v => v.tenant_id === currentTenant.id).map(v => {
+                const isApproved = v.status === 'APPROVED';
+                return (
+                  <View key={v.id} style={styles.guestCard}>
+                    <View style={styles.guestCardHeader}>
+                      <View style={styles.guestAvatarCircle}>
+                        <Text style={styles.guestAvatarText}>{v.visitor_name.charAt(0).toUpperCase()}</Text>
+                      </View>
+                      <View style={{ flex: 1, marginLeft: SPACING.md }}>
+                        <Text style={styles.guestName}>{v.visitor_name}</Text>
+                        <Text style={styles.guestSub}>{v.purpose} • Shift: Guard {v.security_staff}</Text>
+                      </View>
+                      <View style={[
+                        styles.guestStatusBadge, 
+                        isApproved ? { backgroundColor: COLORS.successLight } : { backgroundColor: COLORS.warningLight }
+                      ]}>
+                        <Text style={[
+                          styles.guestStatusText, 
+                          isApproved ? { color: COLORS.success } : { color: COLORS.warning }
+                        ]}>
+                          {v.status}
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))}
+                );
+              })}
             </ScrollView>
           </View>
         )}
 
         {activeTab === 'settings' && (
-          <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
-            <Text style={styles.tabTitle}>Resident Settings</Text>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <Text style={styles.tabHeading}>Profile & Settings</Text>
+            <Text style={styles.tabSubheading}>Configure security options and check digital lease logs.</Text>
             
             <View style={styles.profileCard}>
-              <View style={styles.avatarLarge}>
-                <Text style={styles.avatarLargeText}>JS</Text>
+              <View style={styles.profileAvatarLarge}>
+                <Text style={styles.profileAvatarLargeText}>JS</Text>
               </View>
               <Text style={styles.profileName}>{currentTenant.name}</Text>
               <Text style={styles.profileEmail}>{currentTenant.email}</Text>
               <Text style={styles.profileUnit}>{currentTenant.buildingName} • {currentTenant.unit}</Text>
             </View>
 
-            <View style={styles.settingsGroup}>
-              <TouchableOpacity style={styles.settingsItem} onPress={() => Alert.alert('Information', 'Tenant profile edits are disabled in mock mode.')}>
-                <Text style={styles.settingsItemText}>Personal Details</Text>
-                <ChevronRight size={16} color={COLORS.textSecondary} />
+            <View style={styles.optionsList}>
+              <TouchableOpacity style={styles.optionItem} onPress={() => Alert.alert('Offline Mode', 'Profile editing disabled.')} activeOpacity={0.7}>
+                <Text style={styles.optionItemText}>Personal Details</Text>
+                <ChevronRight size={14} color={COLORS.textSecondary} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingsItem} onPress={() => Alert.alert('Information', 'Notifications configuration.')}>
-                <Text style={styles.settingsItemText}>App Notifications</Text>
-                <ChevronRight size={16} color={COLORS.textSecondary} />
+              <TouchableOpacity style={styles.optionItem} onPress={() => Alert.alert('Offline Mode', 'Notifications config.')} activeOpacity={0.7}>
+                <Text style={styles.optionItemText}>App Notifications</Text>
+                <ChevronRight size={14} color={COLORS.textSecondary} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingsItem} onPress={() => Alert.alert('Digital Lease', 'Loading Lease Agreement PDF...')}>
-                <Text style={styles.settingsItemText}>Lease Agreement (PDF)</Text>
-                <ChevronRight size={16} color={COLORS.textSecondary} />
+              <TouchableOpacity style={styles.optionItem} onPress={() => Alert.alert('Lease Agreement', 'Loading digital contract lease logs...')} activeOpacity={0.7}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <FileText size={15} color={COLORS.primary} style={{ marginRight: 8 }} />
+                  <Text style={styles.optionItemText}>Lease Agreement (PDF)</Text>
+                </View>
+                <ChevronRight size={14} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity 
-              style={[styles.loginButton, styles.logoutBtnAction]} 
+              style={styles.actionLogoutBtn} 
               onPress={onLogout}
+              activeOpacity={0.8}
             >
-              <LogOut size={16} color={COLORS.white} style={{ marginRight: SPACING.sm }} />
-              <Text style={styles.loginBtnText}>Log Out</Text>
+              <LogOut size={15} color={COLORS.white} style={{ marginRight: SPACING.sm }} />
+              <Text style={styles.actionLogoutText}>Log Out Account</Text>
             </TouchableOpacity>
           </ScrollView>
         )}
       </View>
 
-      {/* Tabs */}
+      {/* Modern Active-State Bottom Navigation Bar */}
       <View style={styles.bottomTabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => setActiveTab('dashboard')}>
-          <HomeIcon size={20} color={activeTab === 'dashboard' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabelText, activeTab === 'dashboard' && styles.tabLabelActive]}>Home</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={() => setActiveTab('payments')}>
-          <CreditCard size={20} color={activeTab === 'payments' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabelText, activeTab === 'payments' && styles.tabLabelActive]}>Bills</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={() => setActiveTab('requests')}>
-          <Wrench size={20} color={activeTab === 'requests' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabelText, activeTab === 'requests' && styles.tabLabelActive]}>Support</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={() => setActiveTab('visitors')}>
-          <UserCheck size={20} color={activeTab === 'visitors' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabelText, activeTab === 'visitors' && styles.tabLabelActive]}>Guests</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={() => setActiveTab('settings')}>
-          <SettingsIcon size={20} color={activeTab === 'settings' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabelText, activeTab === 'settings' && styles.tabLabelActive]}>Settings</Text>
-        </TouchableOpacity>
+        {([
+          { id: 'dashboard', label: 'Home', Icon: HomeIcon },
+          { id: 'payments', label: 'Bills', Icon: CreditCard },
+          { id: 'requests', label: 'Support', Icon: Wrench },
+          { id: 'visitors', label: 'Guests', Icon: UserCheck },
+          { id: 'settings', label: 'Profile', Icon: SettingsIcon },
+        ] as const).map(tab => {
+          const isActive = activeTab === tab.id;
+          const TabIcon = tab.Icon;
+          return (
+            <TouchableOpacity 
+              key={tab.id}
+              style={styles.tabItem} 
+              onPress={() => setActiveTab(tab.id)} 
+              activeOpacity={0.8}
+            >
+              <View style={[
+                styles.tabIconBox,
+                isActive && styles.tabIconBoxActive
+              ]}>
+                <TabIcon 
+                  size={16} 
+                  color={isActive ? COLORS.primary : COLORS.textMuted} 
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                  fill={isActive ? 'rgba(255, 107, 53, 0.1)' : 'transparent'}
+                />
+              </View>
+              <Text style={[
+                styles.tabLabelText, 
+                isActive && styles.tabLabelActive
+              ]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Modals */}
-      {/* Pay Rent Modal */}
+      {/* MODALS */}
+      
+      {/* Rent Payment Modal */}
       <Modal visible={isPayRentModalOpen} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Rent Paydesk</Text>
-            <Text style={styles.payModalText}>You are checking out for Sunset Apartments, Apt 202.</Text>
+            <Text style={styles.modalSubtitle}>Settle due invoices for {currentTenant.buildingName}, {currentTenant.unit}.</Text>
             
-            <View style={styles.paymentSumCard}>
-              <Text style={styles.paySumLabel}>Total Rent Invoice</Text>
-              <Text style={styles.paySumAmount}>$1,200.00</Text>
+            <View style={styles.ledgerSumCard}>
+              <Text style={styles.ledgerSumLabel}>Invoice Sum Total</Text>
+              <Text style={styles.ledgerSumAmount}>${currentTenant.dueAmount.toFixed(2)}</Text>
             </View>
 
-            <Text style={styles.inputLabel}>Choose Card</Text>
-            <View style={styles.paymentOptionCard}>
-              <Text style={styles.paymentOptionTitle}>Credit Card</Text>
-              <Text style={styles.paymentOptionSub}>Visa •••• 4242</Text>
+            <Text style={styles.modalFieldLabel}>Select payment card</Text>
+            <View style={styles.cardSelectCard}>
+              <Text style={styles.cardSelectTitle}>Credit Card (Default)</Text>
+              <Text style={styles.cardSelectSub}>Visa Card •••• 4242</Text>
             </View>
 
             <View style={styles.modalBtnRow}>
               <TouchableOpacity 
                 style={[styles.modalBtn, styles.modalBtnCancel]} 
                 onPress={() => setIsPayRentModalOpen(false)}
+                activeOpacity={0.8}
               >
                 <Text style={styles.modalBtnCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.modalBtn, styles.modalBtnSubmit, { backgroundColor: COLORS.accent }]} 
+                style={[styles.modalBtn, styles.modalBtnSubmit, { backgroundColor: COLORS.success }]} 
                 onPress={handlePayRentConfirm}
+                activeOpacity={0.9}
               >
-                <Text style={[styles.modalBtnSubmitText, { color: COLORS.black }]}>Pay Now</Text>
+                <Text style={[styles.modalBtnSubmitText, { color: COLORS.white }]}>Settle Payment</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      {/* Request Ticket Modal */}
+      {/* Raise Support Ticket Modal */}
       <Modal visible={isRequestModalOpen} animationType="slide" transparent>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalOverlay}
         >
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>File Maintenance Ticket</Text>
+            <Text style={styles.modalTitle}>File Complaint Ticket</Text>
+            <Text style={styles.modalSubtitle}>Report property/unit issues to the property owner.</Text>
             
-            <Text style={styles.inputLabel}>Issue Title</Text>
+            <Text style={styles.modalFieldLabel}>Ticket Title</Text>
             <TextInput 
-              style={styles.modalInput} 
-              placeholder="e.g. Bathroom light flickering" 
-              placeholderTextColor={COLORS.textMuted}
+              style={[styles.modalTextInputField, focusedField === 'title' && styles.modalTextInputFocused]} 
+              placeholder="e.g. Bathroom sink pipe leaking" 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newReqTitle}
               onChangeText={setNewReqTitle}
+              onFocus={() => setFocusedField('title')}
+              onBlur={() => setFocusedField(null)}
             />
 
-            <Text style={styles.inputLabel}>Description</Text>
+            <Text style={styles.modalFieldLabel}>Issue Description</Text>
             <TextInput 
-              style={[styles.modalInput, { height: 80, textAlignVertical: 'top' }]} 
+              style={[styles.modalTextInputField, { height: 75, textAlignVertical: 'top' }, focusedField === 'desc' && styles.modalTextInputFocused]} 
               multiline
-              placeholder="Write descriptive detail of repair request..." 
-              placeholderTextColor={COLORS.textMuted}
+              placeholder="Provide a detailed description of the maintenance requested..." 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newReqDesc}
               onChangeText={setNewReqDesc}
+              onFocus={() => setFocusedField('desc')}
+              onBlur={() => setFocusedField(null)}
             />
 
-            <Text style={styles.inputLabel}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalSelector}>
+            <Text style={styles.modalFieldLabel}>Category Type</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.selectionScroll}>
               {(['Plumbing', 'Electrical', 'HVAC', 'Appliance', 'Other'] as const).map(cat => (
                 <TouchableOpacity
                   key={cat}
-                  style={[styles.selectionTag, newReqCategory === cat && styles.selectionTagActive]}
+                  style={[styles.pillSelector, newReqCategory === cat && styles.pillSelectorActive]}
                   onPress={() => setNewReqCategory(cat)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[styles.selectionTagText, newReqCategory === cat && styles.selectionTagTextActive]}>{cat}</Text>
+                  <Text style={[styles.pillSelectorText, newReqCategory === cat && styles.pillSelectorTextActive]}>{cat}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
 
-            <Text style={styles.inputLabel}>Priority Level</Text>
-            <View style={styles.radioRow}>
+            <Text style={styles.modalFieldLabel}>Priority Severity</Text>
+            <View style={styles.radioBlock}>
               {(['Low', 'Medium', 'High'] as const).map(prio => (
                 <TouchableOpacity
                   key={prio}
-                  style={[styles.radioOption, newReqPriority === prio && styles.radioActive]}
+                  style={[styles.radioPill, newReqPriority === prio && styles.radioPillActive]}
                   onPress={() => setNewReqPriority(prio)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[styles.radioText, newReqPriority === prio && styles.radioTextActive]}>{prio}</Text>
+                  <Text style={[styles.radioPillText, newReqPriority === prio && styles.radioPillTextActive]}>{prio.toUpperCase()}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -505,21 +634,23 @@ export default function TenantScreen({
               <TouchableOpacity 
                 style={[styles.modalBtn, styles.modalBtnCancel]} 
                 onPress={() => setIsRequestModalOpen(false)}
+                activeOpacity={0.8}
               >
                 <Text style={styles.modalBtnCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.modalBtn, styles.modalBtnSubmit]} 
                 onPress={handleCreateRequest}
+                activeOpacity={0.9}
               >
-                <Text style={styles.modalBtnSubmitText}>Submit Request</Text>
+                <Text style={styles.modalBtnSubmitText}>Create Ticket</Text>
               </TouchableOpacity>
             </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Visitor Pre-approve Modal */}
+      {/* Guest Clearance Modal */}
       <Modal visible={isVisitorModalOpen} animationType="slide" transparent>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -527,54 +658,65 @@ export default function TenantScreen({
         >
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Pre-Approve Guest Entry</Text>
+            <Text style={styles.modalSubtitle}>Dispatch digital clearance code to gate guard roster.</Text>
             
-            <Text style={styles.inputLabel}>Visitor Full Name</Text>
+            <Text style={styles.modalFieldLabel}>Visitor Full Name</Text>
             <TextInput 
-              style={styles.modalInput} 
-              placeholder="e.g. Elon Musk" 
-              placeholderTextColor={COLORS.textMuted}
+              style={[styles.modalTextInputField, focusedField === 'guestName' && styles.modalTextInputFocused]} 
+              placeholder="e.g. Richard Hendricks" 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newVisName}
               onChangeText={setNewVisName}
+              onFocus={() => setFocusedField('guestName')}
+              onBlur={() => setFocusedField(null)}
             />
 
-            <Text style={styles.inputLabel}>Phone Number</Text>
+            <Text style={styles.modalFieldLabel}>Phone Number</Text>
             <TextInput 
-              style={styles.modalInput} 
+              style={[styles.modalTextInputField, focusedField === 'guestPhone' && styles.modalTextInputFocused]} 
               keyboardType="phone-pad"
-              placeholder="e.g. +1 555-9876" 
-              placeholderTextColor={COLORS.textMuted}
+              placeholder="e.g. +1 (555) 0199" 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newVisPhone}
               onChangeText={setNewVisPhone}
+              onFocus={() => setFocusedField('guestPhone')}
+              onBlur={() => setFocusedField(null)}
             />
 
-            <Text style={styles.inputLabel}>Purpose of Visit</Text>
+            <Text style={styles.modalFieldLabel}>Purpose of Visit</Text>
             <TextInput 
-              style={styles.modalInput} 
-              placeholder="e.g. Dinner / Business Meeting" 
-              placeholderTextColor={COLORS.textMuted}
+              style={[styles.modalTextInputField, focusedField === 'guestPurpose' && styles.modalTextInputFocused]} 
+              placeholder="e.g. Dinner Guest / Package Delivery" 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newVisPurpose}
               onChangeText={setNewVisPurpose}
+              onFocus={() => setFocusedField('guestPurpose')}
+              onBlur={() => setFocusedField(null)}
             />
 
-            <Text style={styles.inputLabel}>Expected Arrival Time</Text>
+            <Text style={styles.modalFieldLabel}>Expected Arrival Time</Text>
             <TextInput 
-              style={styles.modalInput} 
-              placeholder="e.g. Today, 7:30 PM" 
-              placeholderTextColor={COLORS.textMuted}
+              style={[styles.modalTextInputField, focusedField === 'guestTime' && styles.modalTextInputFocused]} 
+              placeholder="e.g. Today, 6:00 PM" 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newVisTime}
               onChangeText={setNewVisTime}
+              onFocus={() => setFocusedField('guestTime')}
+              onBlur={() => setFocusedField(null)}
             />
 
             <View style={styles.modalBtnRow}>
               <TouchableOpacity 
                 style={[styles.modalBtn, styles.modalBtnCancel]} 
                 onPress={() => setIsVisitorModalOpen(false)}
+                activeOpacity={0.8}
               >
                 <Text style={styles.modalBtnCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.modalBtn, styles.modalBtnSubmit]} 
+                style={[styles.modalBtn, styles.modalBtnSubmit, { backgroundColor: COLORS.secondary }]} 
                 onPress={handleCreateVisitor}
+                activeOpacity={0.9}
               >
                 <Text style={styles.modalBtnSubmitText}>Register Guest</Text>
               </TouchableOpacity>
@@ -597,309 +739,417 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.cardBorder,
+    ...SHADOWS.sm,
   },
-  headerSubtitle: {
-    fontSize: 9,
-    fontWeight: 'bold',
+  headerTagline: {
+    ...TYPOGRAPHY.labelUpper,
     color: COLORS.primary,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    ...TYPOGRAPHY.titleMedium,
     color: COLORS.textPrimary,
     marginTop: 2,
+    letterSpacing: -0.5,
   },
-  logoutBtn: {
-    padding: SPACING.sm,
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.md,
+  logoutCircleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   body: {
     flex: 1,
   },
-  tabContent: {
-    flex: 1,
+  scrollContent: {
     padding: SPACING.lg,
+    paddingBottom: SPACING.xxl,
   },
-  authNoticeCard: {
-    backgroundColor: 'rgba(242, 105, 34, 0.05)',
+  pendingVisContainer: {
+    backgroundColor: COLORS.warningLight,
     borderWidth: 1,
-    borderColor: 'rgba(242, 105, 34, 0.2)',
-    borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.md,
+    borderColor: 'rgba(245, 158, 11, 0.15)',
+    borderRadius: BORDER_RADIUS.xxl,
+    padding: SPACING.lg,
     marginBottom: SPACING.lg,
+    ...SHADOWS.sm,
   },
-  authHeader: {
+  pendingVisHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
-  authTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#F26922',
-    marginLeft: SPACING.sm,
-  },
-  authDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  shieldPulseContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.white,
+    justifyContent: 'center',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(242, 105, 34, 0.1)',
-    paddingTop: SPACING.md,
-    marginTop: SPACING.xs,
+    marginRight: SPACING.sm,
+    ...SHADOWS.sm,
   },
-  authDetailName: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  pendingVisTitle: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
+    color: COLORS.warningDark,
+  },
+  pendingVisCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.md,
+    marginTop: SPACING.xs,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    ...SHADOWS.sm,
+  },
+  pendingVisInfo: {
+    marginBottom: SPACING.md,
+  },
+  pendingVisName: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  authDetailPurpose: {
-    fontSize: 11,
+  pendingVisDetails: {
+    ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
+    fontWeight: '700',
     marginTop: 2,
   },
-  authActionRow: {
+  pendingVisActions: {
     flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
-  authBtn: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 6,
+  pendingVisBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: BORDER_RADIUS.md,
     marginLeft: SPACING.sm,
   },
-  authRejectBtn: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+  pendingVisDenyBtn: {
+    backgroundColor: COLORS.errorLight,
   },
-  authApproveBtn: {
-    backgroundColor: COLORS.accent,
+  pendingVisApproveBtn: {
+    backgroundColor: COLORS.successLight,
   },
-  authBtnText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: COLORS.white,
+  pendingVisDenyText: {
+    ...TYPOGRAPHY.caption,
+    fontWeight: '800',
+    color: COLORS.error,
   },
-  dashboardCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.lg,
+  pendingVisApproveText: {
+    ...TYPOGRAPHY.caption,
+    fontWeight: '800',
+    color: COLORS.success,
+  },
+  ledgerCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl,
     padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     marginBottom: SPACING.lg,
+    ...SHADOWS.md,
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.md,
+  ledgerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  dashboardCardSub: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
+  ledgerHeaderLabel: {
+    ...TYPOGRAPHY.caption,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontWeight: '700',
+    color: COLORS.textMuted,
   },
-  largeTotalAmount: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: COLORS.textPrimary,
-    marginVertical: SPACING.sm,
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.full,
   },
-  collectionEfficiency: {
-    fontSize: 12,
+  statusBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  ledgerBody: {
+    marginTop: SPACING.sm,
+  },
+  largeAmountText: {
+    ...TYPOGRAPHY.display,
+    marginVertical: SPACING.xs,
+    letterSpacing: -1,
+  },
+  ledgerFooterLabel: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
   },
-  payNowBtn: {
+  payRentBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.black,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
-    marginTop: SPACING.lg,
+    backgroundColor: COLORS.textPrimary,
+    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.xl,
+    marginTop: SPACING.md,
+    ...SHADOWS.sm,
   },
-  payNowBtnText: {
-    fontSize: 15,
-    fontWeight: 'bold',
+  payRentBtnText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.white,
   },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
+  sectionTitle: {
+    ...TYPOGRAPHY.titleSmall,
     marginTop: SPACING.md,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
+    color: COLORS.textPrimary,
   },
   actionsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: SPACING.lg,
   },
-  gridActionCard: {
-    flex: 1,
-    backgroundColor: COLORS.cardBg,
+  actionCard: {
+    width: '48%',
+    backgroundColor: COLORS.white,
     borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.lg,
-    marginHorizontal: 4,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    alignItems: 'flex-start',
+    ...SHADOWS.sm,
+  },
+  actionCardLocked: {
+    opacity: 0.55,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.textMuted,
+  },
+  lockBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(71, 85, 105, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  actionCardTitle: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textPrimary,
+    fontWeight: '800',
+  },
+  actionCardSub: {
+    fontSize: 9,
+    color: COLORS.textMuted,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  noticeCard: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     alignItems: 'center',
+    ...SHADOWS.sm,
   },
-  gridActionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  noticeIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.warningLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noticeTitle: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.textPrimary,
-    marginTop: SPACING.md,
-    textAlign: 'center',
   },
-  gridActionSub: {
-    fontSize: 11,
+  noticeDesc: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
     marginTop: 2,
-    textAlign: 'center',
-  },
-  announcementCard: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(245, 158, 11, 0.05)',
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.2)',
-  },
-  announcementTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.warning,
-  },
-  announcementDesc: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 4,
     lineHeight: 16,
   },
 
-  // BILLS
-  breakdownRow: {
+  // BILLS TAB
+  tabHeading: {
+    ...TYPOGRAPHY.titleMedium,
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  tabSubheading: {
+    ...TYPOGRAPHY.bodyMedium,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.lg,
+  },
+  structureCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl,
+    padding: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    marginBottom: SPACING.lg,
+    ...SHADOWS.md,
+  },
+  structureTitle: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.md,
+  },
+  structureRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: SPACING.sm,
   },
-  breakdownLabel: {
-    fontSize: 13,
+  structureLabel: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
   },
-  breakdownValue: {
-    fontSize: 13,
+  structureValue: {
+    ...TYPOGRAPHY.bodyMedium,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  separator: {
+  structureDivider: {
     height: 1,
     backgroundColor: COLORS.cardBorder,
     marginVertical: SPACING.sm,
   },
-  transactionItem: {
+  structureTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.xs,
+  },
+  structureTotalLabel: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+  },
+  structureTotalValue: {
+    ...TYPOGRAPHY.titleSmall,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  transactionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+    ...SHADOWS.sm,
   },
-  transIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+  transIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  transTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  transCardTitle: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  transSub: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
+  transCardSub: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textMuted,
     marginTop: 2,
   },
-  transAmount: {
-    fontSize: 15,
-    fontWeight: 'bold',
+  transCardAmount: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
   },
 
-  // SUPPORT
-  searchBarRow: {
+  // SUPPORT TAB
+  tabBodyWrapper: {
+    flex: 1,
+    padding: SPACING.lg,
+  },
+  tabHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SPACING.lg,
   },
-  addBtn: {
-    width: 40,
-    height: 40,
+  addFloatingBtn: {
+    width: 44,
+    height: 44,
     backgroundColor: COLORS.primary,
-    borderRadius: BORDER_RADIUS.lg,
+    borderRadius: BORDER_RADIUS.xl,
     justifyContent: 'center',
     alignItems: 'center',
+    ...SHADOWS.md,
   },
-  requestCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.xl,
+  ticketCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl,
     padding: SPACING.lg,
     marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+    ...SHADOWS.md,
   },
-  reqHeader: {
+  ticketHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
-  reqTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
+  ticketTitle: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
     color: COLORS.textPrimary,
   },
-  reqSub: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
+  ticketDate: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textMuted,
     marginTop: 2,
   },
-  priorityBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.sm,
+  ticketPriorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BORDER_RADIUS.xs,
   },
-  badgeHigh: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  ticketPriorityText: {
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
-  badgeMedium: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-  },
-  badgeLow: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-  },
-  priorityText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: COLORS.white,
-  },
-  reqDesc: {
-    fontSize: 13,
+  ticketDesc: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
     lineHeight: 18,
     marginBottom: SPACING.md,
   },
-  reqFooter: {
+  ticketFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -907,344 +1157,359 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.cardBorder,
     paddingTop: SPACING.md,
   },
-  categoryBadge: {
-    paddingHorizontal: SPACING.md,
+  ticketCategory: {
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: COLORS.cardBorder,
-    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.xs,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
-  categoryBadgeText: {
-    fontSize: 10,
+  ticketCategoryText: {
+    fontSize: 8,
     color: COLORS.textSecondary,
-    fontWeight: '600',
+    fontWeight: '800',
   },
-  statusToggleBtn: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 6,
-    borderRadius: BORDER_RADIUS.md,
+  ticketStatusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.xs,
   },
-  statusToggleText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  btnResolved: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-  },
-  btnProgress: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-  },
-  btnPending: {
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+  ticketStatusText: {
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 
-  // GUESTS
-  visitorCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.lg,
+  // GUESTS TAB
+  guestCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+    ...SHADOWS.sm,
   },
-  visHeader: {
+  guestCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  visName: {
-    fontSize: 14,
-    fontWeight: 'bold',
+  guestAvatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.secondaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  guestAvatarText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
+    color: COLORS.secondary,
+  },
+  guestName: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  visSub: {
-    fontSize: 11,
+  guestSub: {
+    ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
-  visStatusBadge: {
-    paddingHorizontal: SPACING.sm,
+  guestStatusBadge: {
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.sm,
+    borderRadius: BORDER_RADIUS.xs,
   },
-  visPending: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-  },
-  visApproved: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-  },
-  visCompleted: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-  },
-  visStatusText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: COLORS.white,
+  guestStatusText: {
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 
-  // SETTINGS
+  // SETTINGS TAB
   profileCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.xl,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl,
+    padding: SPACING.lg,
     alignItems: 'center',
     marginBottom: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+    ...SHADOWS.md,
   },
-  avatarLarge: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+  profileAvatarLarge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
+    ...SHADOWS.sm,
   },
-  avatarLargeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  profileAvatarLargeText: {
+    fontSize: 22,
+    fontWeight: '800',
     color: COLORS.white,
   },
   profileName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.titleSmall,
     color: COLORS.textPrimary,
   },
   profileEmail: {
-    fontSize: 12,
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
   profileUnit: {
-    fontSize: 12,
+    ...TYPOGRAPHY.caption,
+    fontWeight: '700',
     color: COLORS.textMuted,
-    marginTop: SPACING.xs,
+    marginTop: 4,
   },
-  settingsGroup: {
-    backgroundColor: COLORS.cardBg,
+  optionsList: {
+    backgroundColor: COLORS.white,
     borderRadius: BORDER_RADIUS.xl,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     marginBottom: SPACING.xl,
+    ...SHADOWS.sm,
   },
-  settingsItem: {
+  optionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
+    borderBottomColor: COLORS.background,
   },
-  settingsItemText: {
-    fontSize: 14,
+  optionItemText: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textPrimary,
+    fontWeight: '600',
   },
-  logoutBtnAction: {
-    backgroundColor: COLORS.accentUnpaid,
-    justifyContent: 'center',
-  },
-  loginButton: {
+  actionLogoutBtn: {
+    backgroundColor: COLORS.error,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: 14,
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
-    marginBottom: SPACING.md,
+    ...SHADOWS.sm,
   },
-  loginBtnText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  actionLogoutText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.white,
   },
 
   // BOTTOM TAB NAVIGATION
   bottomTabBar: {
     flexDirection: 'row',
-    height: 60,
-    backgroundColor: COLORS.cardBg,
+    height: 65,
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.cardBorder,
-    paddingBottom: Platform.OS === 'ios' ? 12 : 0,
+    paddingBottom: Platform.OS === 'ios' ? 15 : 0,
+    ...SHADOWS.lg,
   },
   tabItem: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  tabIconBox: {
+    width: 44,
+    height: 28,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  tabIconBoxActive: {
+    backgroundColor: COLORS.primaryLight,
+  },
   tabLabelText: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-    fontWeight: '500',
+    fontSize: 9,
+    color: COLORS.textMuted,
+    fontWeight: '700',
   },
   tabLabelActive: {
     color: COLORS.primary,
   },
 
-  // MODAL
+  // MODALS STYLE
   modalOverlay: {
     flex: 1,
     backgroundColor: COLORS.overlay,
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: COLORS.cardBg,
-    borderTopLeftRadius: BORDER_RADIUS.xl,
-    borderTopRightRadius: BORDER_RADIUS.xl,
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: BORDER_RADIUS.xxl,
+    borderTopRightRadius: BORDER_RADIUS.xxl,
     padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     paddingBottom: Platform.OS === 'ios' ? 34 : SPACING.lg,
+    ...SHADOWS.xl,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.titleMedium,
     color: COLORS.textPrimary,
-    marginBottom: SPACING.lg,
+    marginBottom: 4,
   },
-  inputLabel: {
-    fontSize: 12,
+  modalSubtitle: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    marginBottom: SPACING.xs,
-    marginTop: SPACING.md,
-    fontWeight: 'bold',
+    marginBottom: SPACING.md,
   },
-  modalInput: {
+  modalFieldLabel: {
+    ...TYPOGRAPHY.labelUpper,
+    fontSize: 8,
+    marginTop: SPACING.md,
+    marginBottom: 6,
+  },
+  modalTextInputField: {
     backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 12,
     color: COLORS.textPrimary,
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '600',
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
   },
-  radioRow: {
+  modalTextInputFocused: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.white,
+    ...SHADOWS.sm,
+  },
+  selectionScroll: {
     flexDirection: 'row',
     marginTop: SPACING.xs,
+    marginBottom: SPACING.xs,
   },
-  radioOption: {
+  pillSelector: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: COLORS.background,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+  },
+  pillSelectorActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  pillSelectorText: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    fontWeight: '700',
+  },
+  pillSelectorTextActive: {
+    color: COLORS.white,
+    fontWeight: '800',
+  },
+  radioBlock: {
+    flexDirection: 'row',
+    marginTop: SPACING.xs,
+    marginHorizontal: -4,
+  },
+  radioPill: {
     flex: 1,
-    paddingVertical: SPACING.md,
+    paddingVertical: 12,
     alignItems: 'center',
     backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.md,
+    borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     marginHorizontal: 4,
   },
-  radioActive: {
+  radioPillActive: {
     borderColor: COLORS.primary,
-    backgroundColor: 'rgba(59, 130, 246, 0.08)',
+    backgroundColor: COLORS.primaryLight,
   },
-  radioText: {
+  radioPillText: {
     color: COLORS.textSecondary,
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 10,
+    fontWeight: '800',
   },
-  radioTextActive: {
+  radioPillTextActive: {
     color: COLORS.primary,
   },
   modalBtnRow: {
     flexDirection: 'row',
     marginTop: SPACING.xl,
-    justifyContent: 'space-between',
+    marginHorizontal: -4,
   },
   modalBtn: {
     flex: 1,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
+    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.xl,
     alignItems: 'center',
     marginHorizontal: 4,
   },
   modalBtnCancel: {
-    backgroundColor: COLORS.cardBorder,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   modalBtnCancelText: {
+    ...TYPOGRAPHY.bodyLarge,
     color: COLORS.textSecondary,
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   modalBtnSubmit: {
     backgroundColor: COLORS.primary,
+    ...SHADOWS.sm,
   },
   modalBtnSubmitText: {
+    ...TYPOGRAPHY.bodyLarge,
     color: COLORS.white,
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
-  payModalText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    marginBottom: SPACING.lg,
-  },
-  paymentSumCard: {
+  ledgerSumCard: {
     backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.md,
     alignItems: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
   },
-  paySumLabel: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
+  ledgerSumLabel: {
+    ...TYPOGRAPHY.labelUpper,
+    fontSize: 8,
   },
-  paySumAmount: {
-    fontSize: 28,
-    fontWeight: 'bold',
+  ledgerSumAmount: {
+    ...TYPOGRAPHY.titleLarge,
     color: COLORS.textPrimary,
-    marginTop: SPACING.sm,
+    marginTop: 4,
   },
-  paymentOptionCard: {
-    backgroundColor: COLORS.background,
+  cardSelectCard: {
+    backgroundColor: COLORS.primaryLight,
     borderWidth: 1,
     borderColor: COLORS.primary,
-    borderRadius: BORDER_RADIUS.lg,
+    borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
   },
-  paymentOptionTitle: {
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: 'bold',
+  cardSelectTitle: {
+    ...TYPOGRAPHY.bodyLarge,
+    color: COLORS.primary,
+    fontWeight: '700',
   },
-  paymentOptionSub: {
+  cardSelectSub: {
+    ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
-    fontSize: 11,
     marginTop: 2,
-  },
-  horizontalSelector: {
-    flexDirection: 'row',
-    marginTop: SPACING.xs,
-    marginBottom: SPACING.xs,
-  },
-  selectionTag: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.background,
-    marginRight: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  selectionTagActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  selectionTagText: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-  },
-  selectionTagTextActive: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-  },
-  tabTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
+    fontWeight: '600',
   },
 });

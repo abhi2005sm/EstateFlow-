@@ -8,6 +8,7 @@ export interface Building {
   rentPaid: number;
   rentDue: number;
   address: string;
+  units?: any[];
 }
 
 export interface Tenant {
@@ -64,6 +65,7 @@ export interface SecurityStaff {
   id: string;
   name: string;
   status: 'On Duty' | 'Off Duty';
+  role?: string;
 }
 
 export const securityStaffData: SecurityStaff[] = [
