@@ -6,6 +6,7 @@ import { Shield, LogOut, Building2, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ThemeToggle } from '../../../components/ThemeToggle';
+import { apiRequest } from '../../api/api';
 
 export default function SecuritySidebar() {
   const pathname = usePathname();
@@ -116,8 +117,10 @@ export default function SecuritySidebar() {
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => {
-            localStorage.clear();
-            router.push('/login');
+            apiRequest('/auth/logout/', { method: 'POST' }).catch(() => {}).finally(() => {
+              localStorage.clear();
+              router.push('/login');
+            });
           }}
           className="flex items-center space-x-3 w-full px-3 py-2.5 text-zinc-500 dark:text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors font-bold text-xs"
         >

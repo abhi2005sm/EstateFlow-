@@ -18,11 +18,12 @@ const config: NextConfig = {
   
   // THE FIX: The Next.js Proxy!
   async rewrites() {
+    const dest = `${process.env.NEXT_PUBLIC_API_URL || 'https://estateflow-api-gateway.onrender.com'}/:path*`;
+    console.log("[NextConfig] API Rewrite Destination:", dest);
     return [
       {
-        // Whenever the frontend calls /api/..., silently forward it to Ngrok!
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://estateflow-api-gateway.onrender.com'}/:path*`,
+        destination: dest,
       },
     ]
   },

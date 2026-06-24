@@ -15,9 +15,9 @@ import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, TYPOGRAPHY } from '../styles/t
 import { apiRequest, setAuthToken, setLoggedInUser } from '../api/api';
 
 const MOCK_CREDENTIALS = {
-  superadmin: { email: 'superadmin@estateflow.com', password: 'Admin@123' },
-  admin: { email: 'admin@example.com', password: 'password123' },
-  tenant: { email: 'user@example.com', password: 'password123' },
+  superadmin: { email: 'superadmin@estateflow.com', password: 'admin123' },
+  admin: { email: 'johndoe@example.com', password: 'password123' },
+  tenant: { email: 'tenant@example.com', password: 'password123' },
   security: { email: 'security@example.com', password: 'password123' }
 };
 
@@ -102,17 +102,21 @@ export default function LoginScreen({ onLogin, onAbort }: LoginScreenProps) {
     } catch (err: any) {
       console.warn('[API Login Failed, checking offline fallback]', err);
 
-      const credentialsMatch = MOCK_CREDENTIALS[role];
-      if (email.toLowerCase() === credentialsMatch.email.toLowerCase() && password === credentialsMatch.password) {
-        setTimeout(() => {
-          setIsLoading(false);
-          const routeRole = role === 'superadmin' ? 'superadmin' : role === 'admin' ? 'admin' : role === 'security' ? 'security' : 'tenant';
-          onLogin(routeRole as any);
-        }, 800);
-      } else {
-        setIsLoading(false);
-        setErrorMessage(err.message || 'Connection failed. Please check credentials or backend service.');
+      // Only allow offline fallback if it is a network error (backend is unreachable)
+      if (err.isNetworkError) {
+        const credentialsMatch = MOCK_CREDENTIALS[role];
+        if (email.toLowerCase() === credentialsMatch.email.toLowerCase() && password === credentialsMatch.password) {
+          setTimeout(() => {
+            setIsLoading(false);
+            const routeRole = role === 'superadmin' ? 'superadmin' : role === 'admin' ? 'admin' : role === 'security' ? 'security' : 'tenant';
+            onLogin(routeRole as any);
+          }, 800);
+          return;
+        }
       }
+
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Connection failed. Please check credentials or backend service.');
     }
   };
 
