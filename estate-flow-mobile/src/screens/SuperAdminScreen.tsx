@@ -25,8 +25,10 @@ import {
   TrendingUp,
   Mail,
   Sliders,
+  Lock,
+  Database,
 } from 'lucide-react-native';
-import { COLORS, SPACING, BORDER_RADIUS } from '../styles/theme';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, TYPOGRAPHY } from '../styles/theme';
 import { Owner as OwnerType } from '../mock/data';
 
 interface SuperAdminScreenProps {
@@ -50,6 +52,8 @@ export default function SuperAdminScreen({
   const [newOwnerBuildings, setNewOwnerBuildings] = useState('');
   const [newOwnerResCount, setNewOwnerResCount] = useState('');
   const [newOwnerComCount, setNewOwnerComCount] = useState('');
+
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // Calculations
   const totalBuildings = owners.reduce((acc, o) => acc + o.totalBuildings, 0);
@@ -87,85 +91,155 @@ export default function SuperAdminScreen({
       {/* Top Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerSubtitle}>PORTFOLIO GLOBAL COMMAND</Text>
+          <Text style={styles.headerSubtitle}>PORTFOLIO COMMAND CENTRE</Text>
           <Text style={styles.headerTitle}>Super Admin Portal</Text>
         </View>
-        <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>
-          <LogOut size={18} color={COLORS.textSecondary} />
+        <TouchableOpacity onPress={onLogout} style={styles.logoutCircleBtn} activeOpacity={0.8}>
+          <LogOut size={16} color={COLORS.textSecondary} />
         </TouchableOpacity>
       </View>
 
       {/* Main Body */}
       <View style={styles.body}>
         {activeTab === 'dashboard' && (
-          <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
-            <Text style={styles.tabTitle}>Global Overview</Text>
-            <Text style={styles.tabSubtitle}>Performance and status metrics across your entire real estate portfolio.</Text>
-
-            {/* Metrics Grid */}
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            
+            {/* Global Metrics Grid */}
             <View style={styles.metricsGrid}>
               <View style={styles.metricCard}>
-                <View style={[styles.iconCircle, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
-                  <Users size={20} color="#3B82F6" />
+                <View style={styles.metricCardHeader}>
+                  <View style={[styles.iconCircle, { backgroundColor: COLORS.infoLight }]}>
+                    <Users size={16} color={COLORS.info} />
+                  </View>
                 </View>
-                <Text style={styles.metricLabel}>TOTAL OWNERS</Text>
                 <Text style={styles.metricValue}>{owners.length}</Text>
+                <Text style={styles.metricLabel}>Total Owners</Text>
               </View>
 
               <View style={styles.metricCard}>
-                <View style={[styles.iconCircle, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-                  <Building2 size={20} color="#10B981" />
+                <View style={styles.metricCardHeader}>
+                  <View style={[styles.iconCircle, { backgroundColor: COLORS.primaryLight }]}>
+                    <Building2 size={16} color={COLORS.primary} />
+                  </View>
                 </View>
-                <Text style={styles.metricLabel}>TOTAL BUILDINGS</Text>
                 <Text style={styles.metricValue}>{totalBuildings}</Text>
+                <Text style={styles.metricLabel}>Total Buildings</Text>
               </View>
             </View>
 
             <View style={styles.metricsGrid}>
               <View style={styles.metricCard}>
-                <View style={[styles.iconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
-                  <History size={20} color="#EF4444" />
+                <View style={styles.metricCardHeader}>
+                  <View style={[styles.iconCircle, { backgroundColor: COLORS.errorLight }]}>
+                    <History size={16} color={COLORS.error} />
+                  </View>
                 </View>
-                <Text style={styles.metricLabel}>INACTIVE OWNERS</Text>
                 <Text style={styles.metricValue}>{inactiveOwners}</Text>
+                <Text style={styles.metricLabel}>Inactive Owners</Text>
               </View>
 
               <View style={styles.metricCard}>
-                <View style={[styles.iconCircle, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
-                  <UserCheck size={20} color="#8B5CF6" />
+                <View style={styles.metricCardHeader}>
+                  <View style={[styles.iconCircle, { backgroundColor: COLORS.successLight }]}>
+                    <UserCheck size={16} color={COLORS.success} />
+                  </View>
                 </View>
-                <Text style={styles.metricLabel}>ACTIVE OWNERS</Text>
                 <Text style={styles.metricValue}>{activeOwners}</Text>
+                <Text style={styles.metricLabel}>Active Owners</Text>
               </View>
             </View>
 
-            {/* Performance Card */}
+            {/* SLA Integrity Monitoring Dashboard Card */}
             <View style={styles.performanceCard}>
               <View style={styles.perfHeader}>
                 <View style={styles.perfTitleRow}>
-                  <TrendingUp size={20} color={COLORS.primary} />
+                  <Activity size={18} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
                   <Text style={styles.perfTitle}>System Integrity & SLA</Text>
                 </View>
-                <View style={styles.slaBadge}>
-                  <Text style={styles.slaText}>99.9% Uptime</Text>
+                <View style={[styles.slaBadge, { backgroundColor: COLORS.successLight }]}>
+                  <Text style={[styles.slaText, { color: COLORS.success }]}>99.9% Uptime</Text>
                 </View>
               </View>
               <Text style={styles.perfDesc}>
-                All microservices (Gateway, Auth, Users, Security) are running normally. Local sync latencies are sub-10ms.
+                All cloud microservices are active. Local database checkins latency averages sub-10ms. Operational checks complete.
               </Text>
               <View style={styles.liveIndicatorRow}>
-                <View style={styles.pulseDot} />
-                <Text style={styles.liveIndicatorText}>LIVE SYSTEM MONITOR STATUS OK</Text>
+                <View style={styles.pulseContainer}>
+                  <View style={styles.pulseInner} />
+                </View>
+                <Text style={styles.liveIndicatorText}>LIVE SYSTEM MONITOR OK</Text>
               </View>
             </View>
 
-            {/* Portfolio Insights */}
-            <Text style={styles.sectionHeader}>Portfolio Insights</Text>
-            {owners.slice(0, 3).map((o, idx) => (
+            {/* System Management Utilities */}
+            <Text style={styles.sectionHeader}>System Core Utilities</Text>
+            <View style={styles.utilityGrid}>
+              <TouchableOpacity 
+                style={[styles.utilityCard, { borderLeftColor: COLORS.primary, borderLeftWidth: 3 }]}
+                onPress={() => Alert.alert('Database Backup', 'Executing cloud database hot-backup. Finished.')}
+                activeOpacity={0.85}
+              >
+                <View style={[styles.utilityIconBg, { backgroundColor: COLORS.primaryLight }]}>
+                  <Database size={18} color={COLORS.primary} />
+                </View>
+                <Text style={styles.utilityCardTitle}>DB Backup</Text>
+                <Text style={styles.utilityCardSub}>Hot snapshot log</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.utilityCard, { borderLeftColor: COLORS.secondary, borderLeftWidth: 3 }]}
+                onPress={() => Alert.alert('System Logs', 'Opening federated microservice cloud logs.')}
+                activeOpacity={0.85}
+              >
+                <View style={[styles.utilityIconBg, { backgroundColor: COLORS.secondaryLight }]}>
+                  <Sliders size={18} color={COLORS.secondary} />
+                </View>
+                <Text style={styles.utilityCardTitle}>Log Viewers</Text>
+                <Text style={styles.utilityCardSub}>Audit microservices</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.utilityGrid}>
+              {/* Locked server scale Card */}
+              <TouchableOpacity 
+                style={[styles.utilityCard, styles.utilityCardLocked]}
+                onPress={() => Alert.alert('Enterprise License', 'Dynamic Server Scale-up requires an active Enterprise Platform License.')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.utilityIconBg, { backgroundColor: COLORS.textMuted + '15' }]}>
+                  <Activity size={18} color={COLORS.textMuted} />
+                </View>
+                <Text style={styles.utilityCardTitle}>Scale Server</Text>
+                <Text style={styles.utilityCardSub}>Auto-scale nodes</Text>
+                <View style={styles.lockBadge}>
+                  <Lock size={10} color={COLORS.textSecondary} />
+                </View>
+              </TouchableOpacity>
+
+              {/* Locked security export Card */}
+              <TouchableOpacity 
+                style={[styles.utilityCard, styles.utilityCardLocked]}
+                onPress={() => Alert.alert('Enterprise License', 'Global Security Audit Export requires an active Enterprise Platform License.')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.utilityIconBg, { backgroundColor: COLORS.textMuted + '15' }]}>
+                  <Globe size={18} color={COLORS.textMuted} />
+                </View>
+                <Text style={styles.utilityCardTitle}>Global Audits</Text>
+                <Text style={styles.utilityCardSub}>Security logs compliance</Text>
+                <View style={styles.lockBadge}>
+                  <Lock size={10} color={COLORS.textSecondary} />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* Portfolio Insights list */}
+            <Text style={styles.sectionHeader}>Portfolio Highlights</Text>
+            {owners.slice(0, 3).map((o) => (
               <View key={o.id} style={styles.insightCard}>
                 <View style={styles.insightLeft}>
-                  <View style={styles.avatarCircle}>
-                    <Text style={styles.avatarText}>{o.name.charAt(0)}</Text>
+                  <View style={[styles.avatarCircle, { backgroundColor: COLORS.primaryLight }]}>
+                    <Text style={[styles.avatarText, { color: COLORS.primary }]}>{o.name.charAt(0)}</Text>
                   </View>
                   <View style={{ marginLeft: SPACING.md }}>
                     <Text style={styles.insightName}>{o.name}</Text>
@@ -174,8 +248,14 @@ export default function SuperAdminScreen({
                     </Text>
                   </View>
                 </View>
-                <View style={[styles.statusBadge, o.isActive ? styles.statusActive : styles.statusInactive]}>
-                  <Text style={[styles.statusBadgeText, { color: o.isActive ? '#10B981' : '#EF4444' }]}>
+                <View style={[
+                  styles.statusBadge, 
+                  o.isActive ? { backgroundColor: COLORS.successLight } : { backgroundColor: COLORS.errorLight }
+                ]}>
+                  <Text style={[
+                    styles.statusBadgeText, 
+                    { color: o.isActive ? COLORS.success : COLORS.error }
+                  ]}>
                     {o.isActive ? 'Active' : 'Inactive'}
                   </Text>
                 </View>
@@ -185,226 +265,228 @@ export default function SuperAdminScreen({
         )}
 
         {activeTab === 'owners' && (
-          <View style={styles.tabContent}>
-            <Text style={styles.tabTitle}>Manager Roster</Text>
-            <Text style={styles.tabSubtitle}>Audit and configure security privileges or building manager assignments.</Text>
-
-            {/* Search Bar */}
-            <View style={styles.searchBarRow}>
-              <View style={styles.searchBarContainer}>
-                <Search size={18} color={COLORS.textSecondary} style={{ marginRight: SPACING.sm }} />
+          <View style={styles.tabBodyWrapper}>
+            <View style={styles.searchHeader}>
+              <View style={[styles.searchContainer, focusedField === 'search' && styles.searchContainerFocused]}>
+                <Search size={15} color={focusedField === 'search' ? COLORS.primary : COLORS.textMuted} style={{ marginRight: SPACING.sm }} />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search owners or emails..."
-                  placeholderTextColor={COLORS.textMuted}
+                  placeholder="Search owners roster..."
+                  placeholderTextColor={COLORS.textPlaceholder}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
+                  onFocus={() => setFocusedField('search')}
+                  onBlur={() => setFocusedField(null)}
                 />
               </View>
-              <TouchableOpacity style={styles.addBtn} onPress={() => setIsModalOpen(true)}>
-                <Plus size={22} color={COLORS.white} />
+              <TouchableOpacity 
+                style={styles.addBtn}
+                onPress={() => setIsModalOpen(true)}
+                activeOpacity={0.8}
+              >
+                <Plus size={18} color={COLORS.white} />
               </TouchableOpacity>
             </View>
 
-            {/* List of Owners */}
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {filteredOwners.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No owners match your search.</Text>
-                </View>
-              ) : (
-                filteredOwners.map(o => (
-                  <View key={o.id} style={styles.ownerItemCard}>
-                    <View style={styles.ownerHeaderRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={styles.avatarCircleSmall}>
-                          <Text style={styles.avatarTextSmall}>{o.name.charAt(0)}</Text>
-                        </View>
-                        <View style={{ marginLeft: SPACING.sm }}>
-                          <Text style={styles.ownerNameText}>{o.name}</Text>
-                          <Text style={styles.ownerEmailText}>{o.email}</Text>
-                        </View>
-                      </View>
-                      <View style={[styles.statusBadge, o.isActive ? styles.statusActive : styles.statusInactive]}>
-                        <Text style={[styles.statusBadgeText, { color: o.isActive ? '#10B981' : '#EF4444' }]}>
-                          {o.isActive ? 'Active' : 'Inactive'}
-                        </Text>
-                      </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: SPACING.xl }}>
+              {filteredOwners.map(o => (
+                <View key={o.id} style={styles.ownerCard}>
+                  <View style={styles.ownerCardTop}>
+                    <View style={styles.ownerAvatar}>
+                      <Text style={styles.ownerAvatarText}>{o.name.charAt(0)}</Text>
                     </View>
-                    <View style={styles.ownerStatsRow}>
-                      <View style={styles.ownerStatItem}>
-                        <Text style={styles.ownerStatLabel}>BUILDINGS</Text>
-                        <Text style={styles.ownerStatValue}>{o.totalBuildings}</Text>
-                      </View>
-                      <View style={styles.ownerStatItem}>
-                        <Text style={styles.ownerStatLabel}>RESIDENTIAL</Text>
-                        <Text style={styles.ownerStatValue}>{o.residentialCount}</Text>
-                      </View>
-                      <View style={styles.ownerStatItem}>
-                        <Text style={styles.ownerStatLabel}>COMMERCIAL</Text>
-                        <Text style={styles.ownerStatValue}>{o.commercialCount}</Text>
-                      </View>
+                    <View style={{ flex: 1, marginLeft: SPACING.md }}>
+                      <Text style={styles.ownerName}>{o.name}</Text>
+                      <Text style={styles.ownerEmail}>{o.email}</Text>
+                    </View>
+                    <View style={[
+                      styles.statusBadge, 
+                      o.isActive ? { backgroundColor: COLORS.successLight } : { backgroundColor: COLORS.errorLight }
+                    ]}>
+                      <Text style={[
+                        styles.statusBadgeText, 
+                        { color: o.isActive ? COLORS.success : COLORS.error }
+                      ]}>
+                        {o.isActive ? 'Active' : 'Inactive'}
+                      </Text>
                     </View>
                   </View>
-                ))
-              )}
+
+                  <View style={styles.ownerCardDivider} />
+
+                  <View style={styles.ownerCardBottom}>
+                    <View style={styles.ownerMetricCol}>
+                      <Text style={styles.ownerMetricVal}>{o.totalBuildings}</Text>
+                      <Text style={styles.ownerMetricLabel}>Properties</Text>
+                    </View>
+                    <View style={styles.ownerMetricCol}>
+                      <Text style={styles.ownerMetricVal}>{o.residentialCount}</Text>
+                      <Text style={styles.ownerMetricLabel}>Residential</Text>
+                    </View>
+                    <View style={styles.ownerMetricCol}>
+                      <Text style={styles.ownerMetricVal}>{o.commercialCount}</Text>
+                      <Text style={styles.ownerMetricLabel}>Commercial</Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
             </ScrollView>
           </View>
         )}
 
         {activeTab === 'settings' && (
-          <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
-            <Text style={styles.tabTitle}>Global Platform Config</Text>
-            <Text style={styles.tabSubtitle}>System governance parameters and deployment controls.</Text>
-
-            <View style={styles.settingsGroup}>
-              <View style={styles.settingsItem}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Globe size={18} color={COLORS.primary} style={{ marginRight: SPACING.md }} />
-                  <Text style={styles.settingsItemText}>Multi-Tenant Gateway Routing</Text>
-                </View>
-                <ChevronRight size={16} color={COLORS.textSecondary} />
-              </View>
-
-              <View style={styles.settingsItem}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Activity size={18} color={COLORS.primary} style={{ marginRight: SPACING.md }} />
-                  <Text style={styles.settingsItemText}>Gateway SLA Latency Logs</Text>
-                </View>
-                <ChevronRight size={16} color={COLORS.textSecondary} />
-              </View>
-
-              <View style={styles.settingsItem}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Sliders size={18} color={COLORS.primary} style={{ marginRight: SPACING.md }} />
-                  <Text style={styles.settingsItemText}>Environment Variables & API Keys</Text>
-                </View>
-                <ChevronRight size={16} color={COLORS.textSecondary} />
-              </View>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <Text style={styles.tabHeading}>Global Command Setup</Text>
+            <Text style={styles.tabSubheading}>Operational guidelines and deployment checks for system core.</Text>
+            
+            <View style={styles.settingsCard}>
+              <Globe size={18} color={COLORS.primary} style={{ marginBottom: SPACING.sm }} />
+              <Text style={styles.settingsCardTitle}>Federated Nodes</Text>
+              <Text style={styles.settingsCardText}>
+                EstateFlow mobile gateways are connected directly to the primary cloud server on port 443. Keep checkins within latency guidelines.
+              </Text>
             </View>
 
             <TouchableOpacity 
-              style={[styles.settingsItem, styles.logoutBtnAction]} 
+              style={styles.logoutBtn} 
               onPress={onLogout}
+              activeOpacity={0.8}
             >
-              <Text style={styles.logoutBtnActionText}>Exit Platform Portal</Text>
+              <LogOut size={15} color={COLORS.white} style={{ marginRight: SPACING.sm }} />
+              <Text style={styles.logoutBtnText}>Log Out Account</Text>
             </TouchableOpacity>
           </ScrollView>
         )}
       </View>
 
-      {/* Bottom Navigation Tabs */}
+      {/* Active-State Bottom Navigation Bar */}
       <View style={styles.bottomTabBar}>
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('dashboard')}
-        >
-          <Activity size={20} color={activeTab === 'dashboard' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabelText, activeTab === 'dashboard' && styles.tabLabelActive]}>
-            Insights
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('owners')}
-        >
-          <Users size={20} color={activeTab === 'owners' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabelText, activeTab === 'owners' && styles.tabLabelActive]}>
-            Owners
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => setActiveTab('settings')}
-        >
-          <Sliders size={20} color={activeTab === 'settings' ? COLORS.primary : COLORS.textSecondary} />
-          <Text style={[styles.tabLabelText, activeTab === 'settings' && styles.tabLabelActive]}>
-            Settings
-          </Text>
-        </TouchableOpacity>
+        {([
+          { id: 'dashboard', label: 'Global Info', Icon: Globe },
+          { id: 'owners', label: 'Managers', Icon: Users },
+          { id: 'settings', label: 'Setup', Icon: Sliders },
+        ] as const).map(tab => {
+          const isActive = activeTab === tab.id;
+          const TabIcon = tab.Icon;
+          return (
+            <TouchableOpacity 
+              key={tab.id}
+              style={styles.tabItem} 
+              onPress={() => setActiveTab(tab.id)} 
+              activeOpacity={0.8}
+            >
+              <View style={[
+                styles.tabIconBox,
+                isActive && styles.tabIconBoxActive
+              ]}>
+                <TabIcon 
+                  size={16} 
+                  color={isActive ? COLORS.primary : COLORS.textMuted} 
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                  fill={isActive ? 'rgba(255, 107, 53, 0.1)' : 'transparent'}
+                />
+              </View>
+              <Text style={[
+                styles.tabLabelText, 
+                isActive && styles.tabLabelActive
+              ]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {/* Register Owner Modal */}
-      <Modal visible={isModalOpen} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.modalContainer}
-          >
-            <Text style={styles.modalTitle}>Register New Owner Manager</Text>
+      {/* MODALS */}
 
-            <Text style={styles.inputLabel}>Full Name</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g. Richard Hendricks"
-              placeholderTextColor={COLORS.textMuted}
+      {/* Register Owner Modal */}
+      <Modal visible={isModalOpen} animationType="slide" transparent>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Register Property Manager</Text>
+            <Text style={styles.modalSubtitle}>Create a new owner account to oversee buildings portfolios.</Text>
+            
+            <Text style={styles.modalFieldLabel}>Manager Name</Text>
+            <TextInput 
+              style={[styles.modalTextInputField, focusedField === 'ownerName' && styles.modalTextInputFocused]} 
+              placeholder="e.g. Jared Dunn" 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newOwnerName}
               onChangeText={setNewOwnerName}
+              onFocus={() => setFocusedField('ownerName')}
+              onBlur={() => setFocusedField(null)}
             />
 
-            <Text style={styles.inputLabel}>Primary Contact Email</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g. richard@piedpiper.com"
-              placeholderTextColor={COLORS.textMuted}
+            <Text style={styles.modalFieldLabel}>Email Address</Text>
+            <TextInput 
+              style={[styles.modalTextInputField, focusedField === 'ownerEmail' && styles.modalTextInputFocused]} 
               keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="e.g. jared@piedpiper.com" 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newOwnerEmail}
               onChangeText={setNewOwnerEmail}
+              onFocus={() => setFocusedField('ownerEmail')}
+              onBlur={() => setFocusedField(null)}
             />
 
-            <Text style={styles.inputLabel}>Total Managed Buildings</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="e.g. 3"
-              placeholderTextColor={COLORS.textMuted}
-              keyboardType="numeric"
+            <Text style={styles.modalFieldLabel}>Buildings Owned Count</Text>
+            <TextInput 
+              style={[styles.modalTextInputField, focusedField === 'ownerBld' && styles.modalTextInputFocused]} 
+              keyboardType="number-pad"
+              placeholder="e.g. 5" 
+              placeholderTextColor={COLORS.textPlaceholder}
               value={newOwnerBuildings}
               onChangeText={setNewOwnerBuildings}
+              onFocus={() => setFocusedField('ownerBld')}
+              onBlur={() => setFocusedField(null)}
             />
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <View style={{ flex: 1, marginRight: SPACING.sm }}>
-                <Text style={styles.inputLabel}>Residential Properties</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="e.g. 2"
-                  placeholderTextColor={COLORS.textMuted}
-                  keyboardType="numeric"
-                  value={newOwnerResCount}
-                  onChangeText={setNewOwnerResCount}
-                />
-              </View>
-              <View style={{ flex: 1, marginLeft: SPACING.sm }}>
-                <Text style={styles.inputLabel}>Commercial Properties</Text>
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="e.g. 1"
-                  placeholderTextColor={COLORS.textMuted}
-                  keyboardType="numeric"
-                  value={newOwnerComCount}
-                  onChangeText={setNewOwnerComCount}
-                />
-              </View>
-            </View>
+            <Text style={styles.modalFieldLabel}>Residential Properties Count</Text>
+            <TextInput 
+              style={[styles.modalTextInputField, focusedField === 'ownerRes' && styles.modalTextInputFocused]} 
+              keyboardType="number-pad"
+              placeholder="e.g. 3" 
+              placeholderTextColor={COLORS.textPlaceholder}
+              value={newOwnerResCount}
+              onChangeText={setNewOwnerResCount}
+              onFocus={() => setFocusedField('ownerRes')}
+              onBlur={() => setFocusedField(null)}
+            />
+
+            <Text style={styles.modalFieldLabel}>Commercial Properties Count</Text>
+            <TextInput 
+              style={[styles.modalTextInputField, focusedField === 'ownerCom' && styles.modalTextInputFocused]} 
+              keyboardType="number-pad"
+              placeholder="e.g. 2" 
+              placeholderTextColor={COLORS.textPlaceholder}
+              value={newOwnerComCount}
+              onChangeText={setNewOwnerComCount}
+              onFocus={() => setFocusedField('ownerCom')}
+              onBlur={() => setFocusedField(null)}
+            />
 
             <View style={styles.modalBtnRow}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnCancel]}
+              <TouchableOpacity 
+                style={[styles.modalBtn, styles.modalBtnCancel]} 
                 onPress={() => setIsModalOpen(false)}
+                activeOpacity={0.8}
               >
                 <Text style={styles.modalBtnCancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnSubmit]}
+              <TouchableOpacity 
+                style={[styles.modalBtn, styles.modalBtnSubmit, { backgroundColor: COLORS.success }]} 
                 onPress={handleRegisterOwner}
+                activeOpacity={0.9}
               >
-                <Text style={styles.modalBtnSubmitText}>Register</Text>
+                <Text style={[styles.modalBtnSubmitText, { color: COLORS.white }]}>Register Owner</Text>
               </TouchableOpacity>
             </View>
-          </KeyboardAvoidingView>
-        </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -421,89 +503,88 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.cardBorder,
+    ...SHADOWS.sm,
   },
   headerSubtitle: {
-    fontSize: 9,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.labelUpper,
     color: COLORS.primary,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    ...TYPOGRAPHY.titleMedium,
     color: COLORS.textPrimary,
     marginTop: 2,
+    letterSpacing: -0.5,
   },
-  logoutBtn: {
-    padding: SPACING.sm,
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.md,
+  logoutCircleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   body: {
     flex: 1,
   },
-  tabContent: {
-    flex: 1,
+  scrollContent: {
     padding: SPACING.lg,
-  },
-  tabTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-  },
-  tabSubtitle: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.lg,
+    paddingBottom: SPACING.xxl,
   },
   metricsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   metricCard: {
     flex: 1,
-    backgroundColor: COLORS.cardBg,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
+    marginHorizontal: 4,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    marginHorizontal: 4,
+    ...SHADOWS.sm,
+  },
+  metricCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.xs,
   },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
-  },
-  metricLabel: {
-    fontSize: 9,
-    color: COLORS.textSecondary,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
   },
   metricValue: {
-    fontSize: 26,
+    ...TYPOGRAPHY.titleMedium,
+    fontSize: 22,
     fontWeight: '800',
     color: COLORS.textPrimary,
     marginTop: 4,
   },
+  metricLabel: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
+    marginTop: 2,
+  },
   performanceCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl,
     padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     marginBottom: SPACING.lg,
     marginTop: SPACING.sm,
+    ...SHADOWS.md,
   },
   perfHeader: {
     flexDirection: 'row',
@@ -516,48 +597,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   perfTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
     color: COLORS.textPrimary,
-    marginLeft: SPACING.sm,
   },
   slaBadge: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.xs,
   },
   slaText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#10B981',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   perfDesc: {
-    fontSize: 12,
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
-    lineHeight: 16,
+    lineHeight: 18,
     marginBottom: SPACING.md,
   },
   liveIndicatorRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.cardBorder,
+    paddingTop: SPACING.md,
   },
-  pulseDot: {
+  pulseContainer: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6,
+  },
+  pulseInner: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#10B981',
-    marginRight: 6,
+    backgroundColor: COLORS.success,
   },
   liveIndicatorText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#10B981',
-    letterSpacing: 1,
+    fontSize: 8,
+    fontWeight: '800',
+    color: COLORS.success,
+    letterSpacing: 0.5,
   },
   sectionHeader: {
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPOGRAPHY.titleSmall,
     color: COLORS.textPrimary,
     marginTop: SPACING.md,
     marginBottom: SPACING.md,
@@ -566,271 +655,398 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+    ...SHADOWS.sm,
   },
   insightLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   avatarCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.white,
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
   },
   insightName: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
   insightSub: {
-    fontSize: 11,
+    ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
+    fontWeight: '600',
     marginTop: 2,
   },
   statusBadge: {
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.sm,
-  },
-  statusActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-  },
-  statusInactive: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: BORDER_RADIUS.xs,
   },
   statusBadgeText: {
-    fontSize: 9,
-    fontWeight: 'bold',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
-  searchBarRow: {
+
+  // OWNERS TAB
+  tabBodyWrapper: {
+    flex: 1,
+    padding: SPACING.lg,
+  },
+  searchHeader: {
     flexDirection: 'row',
-    marginBottom: SPACING.md,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.lg,
   },
-  searchBarContainer: {
+  searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.lg,
-    paddingHorizontal: SPACING.md,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    height: 48,
+    paddingHorizontal: SPACING.md,
+    marginRight: SPACING.sm,
+    ...SHADOWS.sm,
+  },
+  searchContainerFocused: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.white,
   },
   searchInput: {
     flex: 1,
     color: COLORS.textPrimary,
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '600',
+    paddingVertical: 10,
   },
   addBtn: {
-    width: 48,
-    height: 48,
+    width: 38,
+    height: 38,
     backgroundColor: COLORS.primary,
-    borderRadius: BORDER_RADIUS.lg,
+    borderRadius: BORDER_RADIUS.xl,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: SPACING.sm,
+    ...SHADOWS.sm,
   },
-  emptyContainer: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.xl,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-  },
-  emptyText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-  },
-  ownerItemCard: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.lg,
+  ownerCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl,
+    padding: SPACING.md,
     marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+    ...SHADOWS.md,
   },
-  ownerHeaderRow: {
+  ownerCardTop: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
-    paddingBottom: SPACING.md,
+    paddingBottom: SPACING.sm,
   },
-  avatarCircleSmall: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary,
+  ownerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarTextSmall: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.white,
+  ownerAvatarText: {
+    ...TYPOGRAPHY.caption,
+    fontWeight: '800',
+    color: COLORS.primary,
   },
-  ownerNameText: {
-    fontSize: 15,
-    fontWeight: 'bold',
+  ownerName: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
     color: COLORS.textPrimary,
   },
-  ownerEmailText: {
-    fontSize: 11,
+  ownerEmail: {
+    ...TYPOGRAPHY.caption,
     color: COLORS.textSecondary,
+    fontWeight: '600',
     marginTop: 2,
   },
-  ownerStatsRow: {
-    flexDirection: 'row',
-    paddingTop: SPACING.md,
+  ownerCardDivider: {
+    height: 1,
+    backgroundColor: COLORS.cardBorder,
+    marginVertical: SPACING.sm,
   },
-  ownerStatItem: {
+  ownerCardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+  },
+  ownerMetricCol: {
     flex: 1,
     alignItems: 'center',
   },
-  ownerStatLabel: {
-    fontSize: 9,
-    color: COLORS.textSecondary,
-  },
-  ownerStatValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  ownerMetricVal: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
     color: COLORS.textPrimary,
+  },
+  ownerMetricLabel: {
+    fontSize: 8,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    textTransform: 'uppercase',
     marginTop: 2,
   },
-  settingsGroup: {
-    backgroundColor: COLORS.cardBg,
-    borderRadius: BORDER_RADIUS.xl,
-    overflow: 'hidden',
+
+  // SETTINGS TAB
+  tabHeading: {
+    ...TYPOGRAPHY.titleMedium,
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  tabSubheading: {
+    ...TYPOGRAPHY.bodyMedium,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.lg,
+  },
+  settingsCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xxl,
+    padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     marginBottom: SPACING.xl,
+    ...SHADOWS.md,
   },
-  settingsItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.cardBorder,
-  },
-  settingsItemText: {
-    fontSize: 14,
+  settingsCardTitle: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '800',
     color: COLORS.textPrimary,
+    marginBottom: SPACING.xs,
   },
-  logoutBtnAction: {
-    backgroundColor: COLORS.cardBg,
+  settingsCardText: {
+    ...TYPOGRAPHY.bodyMedium,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+  },
+  logoutBtn: {
+    backgroundColor: COLORS.error,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: 14,
+    flexDirection: 'row',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    borderRadius: BORDER_RADIUS.lg,
-    paddingVertical: SPACING.md,
+    alignItems: 'center',
+    ...SHADOWS.sm,
   },
-  logoutBtnActionText: {
-    color: '#EF4444',
-    fontWeight: 'bold',
-    fontSize: 14,
+  logoutBtnText: {
+    ...TYPOGRAPHY.bodyLarge,
+    fontWeight: '700',
+    color: COLORS.white,
   },
+
+  // BOTTOM TAB NAVIGATION
   bottomTabBar: {
     flexDirection: 'row',
-    height: 60,
-    backgroundColor: COLORS.cardBg,
+    height: 65,
+    backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.cardBorder,
-    paddingBottom: Platform.OS === 'ios' ? 12 : 0,
+    paddingBottom: Platform.OS === 'ios' ? 15 : 0,
+    ...SHADOWS.lg,
   },
   tabItem: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  tabIconBox: {
+    width: 44,
+    height: 28,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  tabIconBoxActive: {
+    backgroundColor: COLORS.primaryLight,
+  },
   tabLabelText: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-    fontWeight: '500',
+    fontSize: 9,
+    color: COLORS.textMuted,
+    fontWeight: '700',
   },
   tabLabelActive: {
     color: COLORS.primary,
   },
+
+  // MODALS STYLE
   modalOverlay: {
     flex: 1,
     backgroundColor: COLORS.overlay,
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: COLORS.cardBg,
-    borderTopLeftRadius: BORDER_RADIUS.xl,
-    borderTopRightRadius: BORDER_RADIUS.xl,
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: BORDER_RADIUS.xxl,
+    borderTopRightRadius: BORDER_RADIUS.xxl,
     padding: SPACING.lg,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
     paddingBottom: Platform.OS === 'ios' ? 34 : SPACING.lg,
+    ...SHADOWS.xl,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    ...TYPOGRAPHY.titleMedium,
     color: COLORS.textPrimary,
-    marginBottom: SPACING.lg,
   },
-  inputLabel: {
-    fontSize: 12,
+  modalSubtitle: {
+    ...TYPOGRAPHY.bodyMedium,
     color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    marginBottom: SPACING.xs,
-    marginTop: SPACING.md,
-    fontWeight: 'bold',
+    marginBottom: SPACING.md,
   },
-  modalInput: {
+  modalFieldLabel: {
+    ...TYPOGRAPHY.labelUpper,
+    fontSize: 8,
+    marginTop: SPACING.md,
+    marginBottom: 6,
+  },
+  modalTextInputField: {
     backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 12,
     color: COLORS.textPrimary,
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '600',
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
+  },
+  modalTextInputFocused: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.white,
+    ...SHADOWS.sm,
+  },
+  radioBlock: {
+    flexDirection: 'row',
+    marginTop: SPACING.xs,
+    marginHorizontal: -4,
+  },
+  radioPill: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.xl,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    marginHorizontal: 4,
+  },
+  radioPillActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primaryLight,
+  },
+  radioPillText: {
+    color: COLORS.textSecondary,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  radioPillTextActive: {
+    color: COLORS.primary,
   },
   modalBtnRow: {
     flexDirection: 'row',
     marginTop: SPACING.xl,
-    justifyContent: 'space-between',
+    marginHorizontal: -4,
   },
   modalBtn: {
     flex: 1,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
+    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.xl,
     alignItems: 'center',
     marginHorizontal: 4,
   },
   modalBtnCancel: {
-    backgroundColor: COLORS.cardBorder,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
   },
   modalBtnCancelText: {
+    ...TYPOGRAPHY.bodyLarge,
     color: COLORS.textSecondary,
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   modalBtnSubmit: {
     backgroundColor: COLORS.primary,
+    ...SHADOWS.sm,
   },
   modalBtnSubmitText: {
+    ...TYPOGRAPHY.bodyLarge,
     color: COLORS.white,
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+  utilityGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  utilityCard: {
+    width: '48%',
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+    alignItems: 'flex-start',
+    ...SHADOWS.sm,
+  },
+  utilityCardLocked: {
+    opacity: 0.55,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.textMuted,
+  },
+  utilityIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  utilityCardTitle: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textPrimary,
+    fontWeight: '800',
+  },
+  utilityCardSub: {
+    fontSize: 9,
+    color: COLORS.textMuted,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  lockBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(71, 85, 105, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

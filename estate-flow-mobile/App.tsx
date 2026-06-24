@@ -121,7 +121,7 @@ export default function App() {
               feeType: p.fee_type || 'Rent',
               amount: parseFloat(p.amount) || 0,
               date: p.payment_date || p.created_at?.split('T')[0] || '',
-              status: p.status === 'Paid' ? 'Paid' : 'Pending',
+              status: (p.status === 'Paid' ? 'Paid' : 'Pending') as 'Paid' | 'Pending',
             }));
             setPayments(mappedPayments);
           }
@@ -135,8 +135,8 @@ export default function App() {
               unit: `${r.building_name || 'Building'}, ${r.unit_code || 'Unit'}`,
               title: r.issue_title || 'Maintenance Request',
               description: r.description || '',
-              category: 'Plumbing',
-              priority: 'Medium',
+              category: 'Plumbing' as 'Plumbing' | 'Electrical' | 'HVAC' | 'Appliance' | 'Other',
+              priority: 'Medium' as 'High' | 'Medium' | 'Low',
               status: r.status as any,
               date: r.created_at?.split('T')[0] || '',
             }));
@@ -156,7 +156,7 @@ export default function App() {
               feeType: p.fee_type || 'Rent',
               amount: parseFloat(p.amount) || 0,
               date: p.payment_date || p.created_at?.split('T')[0] || '',
-              status: p.status === 'Paid' ? 'Paid' : 'Pending',
+              status: (p.status === 'Paid' ? 'Paid' : 'Pending') as 'Paid' | 'Pending',
             }));
             setPayments(mappedPayments);
           }
@@ -170,8 +170,8 @@ export default function App() {
               unit: `${r.building_name || 'Building'}, ${r.unit_code || 'Unit'}`,
               title: r.issue_title || 'Maintenance Request',
               description: r.description || '',
-              category: 'Plumbing',
-              priority: 'Medium',
+              category: 'Plumbing' as 'Plumbing' | 'Electrical' | 'HVAC' | 'Appliance' | 'Other',
+              priority: 'Medium' as 'High' | 'Medium' | 'Low',
               status: r.status as any,
               date: r.created_at?.split('T')[0] || '',
             }));
@@ -207,10 +207,11 @@ export default function App() {
               name: t.name || 'Unknown',
               unit: t.unit ? `Unit ${t.unit}` : 'N/A',
               buildingId: String(t.building),
+              buildingName: 'Sunset Apartments',
               phone: t.phone_number || '',
               email: t.email || '',
               rentAmount: parseFloat(t.rent_amount) || 0,
-              rentStatus: t.rent_status as any,
+              rentStatus: (t.rent_status === 'Paid' ? 'Paid' : 'Unpaid') as 'Paid' | 'Unpaid',
               dueAmount: parseFloat(t.due_amount) || 0,
               moveInDate: t.lease_start_date || 'N/A',
               complainRate: 100,

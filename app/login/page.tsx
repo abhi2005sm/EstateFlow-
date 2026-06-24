@@ -32,9 +32,9 @@ const INSIGHTS = [
 ];
 
 const MOCK_CREDENTIALS = {
-  superadmin: { email: 'superadmin@estateflow.com', password: 'Admin@123' },
-  admin: { email: 'admin@example.com', password: 'password123' },
-  user: { email: 'user@example.com', password: 'password123' },
+  superadmin: { email: 'superadmin@estateflow.com', password: 'super123' },
+  admin: { email: 'johndoe@example.com', password: 'password123' },
+  user: { email: 'tenant@example.com', password: 'password123' },
   security: { email: 'security@example.com', password: 'password123' }
 };
 

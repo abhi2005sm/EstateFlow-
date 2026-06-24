@@ -4,14 +4,17 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Shield, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { apiRequest } from '../../api/api';
 
 export default function SecurityBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.clear();
-    router.push('/login');
+    apiRequest('/auth/logout/', { method: 'POST' }).catch(() => {}).finally(() => {
+      localStorage.clear();
+      router.push('/login');
+    });
   };
 
   const isDashboardActive = pathname === '/security/dashboard';

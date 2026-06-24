@@ -2,17 +2,13 @@ import { Platform } from 'react-native';
 
 // Set this to your machine's local IP address (e.g. '192.168.1.100')
 // to test on physical devices via Expo Go on the same Wi-Fi network.
-const DEV_HOST_IP = 'localhost';
+const DEV_HOST_IP = '10.15.230.199';
 
 export const getBaseUrl = (): string => {
   if (Platform.OS === 'web') {
     return 'http://localhost:8000';
   }
-  if (Platform.OS === 'android') {
-    // 10.0.2.2 is the standard loopback IP pointing to the host machine in Android Emulator
-    return 'http://10.0.2.2:8000';
-  }
-  // iOS Simulator or real devices
+  // Use local machine IP for both iOS and Android to support physical devices
   return `http://${DEV_HOST_IP}:8000`;
 };
 
@@ -96,6 +92,7 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}): P
     return data;
   } catch (error: any) {
     console.error(`[Mobile API Error] ${url}:`, error.message);
+    error.isNetworkError = true;
     throw error;
   }
 }

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ThemeToggle } from '../../../../components/ThemeToggle';
+import { apiRequest } from '@/src/features/api/api';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -122,8 +123,10 @@ export default function Sidebar() {
         {/* Logout */}
         <button
           onClick={() => {
-            localStorage.clear();
-            router.push('/login');
+            apiRequest('/auth/logout/', { method: 'POST' }).catch(() => {}).finally(() => {
+              localStorage.clear();
+              router.push('/login');
+            });
           }}
           className="
             w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold
